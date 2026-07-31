@@ -4,9 +4,10 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **Status:** in development. The solution scaffolding is in place (FEATURE-3E11 PHASE01); the
-> backup engine, encryption container and user interface land in the following phases. See
-> [docs/roadmap.md](docs/roadmap.md).
+> **Status:** in development. The solution scaffolding, the backup profiles and their store, and the
+> input scan (glob excludes, overlapping inputs, missing-path handling) are in place
+> (FEATURE-3E11 PHASE01–PHASE02); the archive pipeline, encryption container and user interface land
+> in the following phases. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Planned capabilities (v1)
 

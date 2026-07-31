@@ -191,7 +191,7 @@ empty main window; solution opens cleanly.
 > part of this phase (agreed with the user before building). See
 > `docs/done/FEATURE-3E11-PHASE01.md`.
 
-### PHASE02 — Core: profiles & input scanning (TODO)
+### PHASE02 — Core: profiles & input scanning (DONE)
 
 Branch: `feature/feature-3e11-phase02-profiles-scanning`
 
@@ -205,6 +205,12 @@ Branch: `feature/feature-3e11-phase02-profiles-scanning`
    excludes, missing paths, output-inside-input, name collisions.
 
 **Acceptance:** all listed behaviors covered by green tests; zero-warning build.
+
+> **Note (build 2026-07-31):** the plan's public surface named `IBackupErrorHandler` under PHASE03,
+> but PHASE02 step 3 routes missing paths through it, so the whole error seam
+> (`IBackupErrorHandler`, `BackupError`, `BackupErrorDecision`, `ErrorDecisionPolicy` with the
+> apply-to-all semantics, `BackupAbortedException`, `SkippedEntry`) landed here and PHASE03 consumes
+> it as-is. See `docs/done/FEATURE-3E11-PHASE02.md`.
 
 ### PHASE03 — Core: tar + compression pipeline & verify (TODO)
 
