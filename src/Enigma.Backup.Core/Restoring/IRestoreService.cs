@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Enigma.Backup.Core.Archiving;
+using Enigma.Backup.Core.Encryption;
 
 namespace Enigma.Backup.Core.Restoring;
 
@@ -28,6 +29,7 @@ public interface IRestoreService
     /// </param>
     /// <returns>The end-of-run summary.</returns>
     /// <exception cref="ArchiveFormatException">The file is not a readable archive, or contains an entry that would be written outside the destination.</exception>
+    /// <exception cref="EncryptedArchiveException">The archive is encrypted and the password is missing or wrong, or the container is damaged.</exception>
     /// <exception cref="OperationCanceledException">The restore was cancelled.</exception>
     Task<RestoreResult> RestoreAsync(
         string archivePath,

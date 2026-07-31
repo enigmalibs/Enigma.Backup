@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Enigma.Backup.Core.Archiving;
+using Enigma.Backup.Core.Encryption;
 using Enigma.Backup.Core.Errors;
 using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Core.Scanning;
@@ -21,10 +22,10 @@ namespace Enigma.Backup.Core.Backups;
 /// they are written, so the finished archive never has to be read back.
 /// </para>
 /// <para>
-/// The layers are built inside-out — file, digest, compression, tar — and disposed in that same
-/// order, because the compressor's epilogue has to reach the file before it closes. PHASE04's
-/// encrypting stream slots in between the digest and the compression, which leaves the digest
-/// covering the bytes that are actually on disk.
+/// The layers are built inside-out — file, digest, encryption, compression, tar — and disposed in
+/// that same order, because each layer's epilogue has to reach the file before the one below it
+/// closes. The digest sits closest to the file, so it covers the bytes that are actually on disk,
+/// encrypted ones included: a <c>.sha256</c> sidecar can be checked without the password.
 /// </para>
 /// <para>
 /// If anything goes wrong — a failure, an Abort, a cancellation — the partial archive is deleted:
@@ -37,17 +38,21 @@ public sealed class BackupService : IBackupService
 
     private readonly IInputScanner _scanner;
     private readonly TimeProvider _timeProvider;
+    private readonly Ebk1Options _encryption;
 
     /// <summary>Creates a backup service.</summary>
     /// <param name="scanner">Turns the profile's inputs into the entries to write.</param>
     /// <param name="timeProvider">Supplies the run's timestamp and measures its duration.</param>
-    public BackupService(IInputScanner scanner, TimeProvider timeProvider)
+    /// <param name="encryption">The parameters new encrypted containers are written with.</param>
+    public BackupService(IInputScanner scanner, TimeProvider timeProvider, Ebk1Options encryption)
     {
         ArgumentNullException.ThrowIfNull(scanner);
         ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentNullException.ThrowIfNull(encryption);
 
         _scanner = scanner;
         _timeProvider = timeProvider;
+        _encryption = encryption;
     }
 
     /// <inheritdoc />
@@ -66,10 +71,11 @@ public sealed class BackupService : IBackupService
             throw new ArgumentException("The profile has no output directory.", nameof(profile));
         }
 
-        if (profile.Encrypt)
+        if (profile.Encrypt && string.IsNullOrEmpty(password))
         {
-            throw new NotSupportedException(
-                "Encrypted archives are not supported by this build yet: the EBK1 container arrives with PHASE04.");
+            // Empty rather than whitespace: a password of spaces is a password, and refusing it here
+            // would make an archive nobody could restore.
+            throw new ArgumentException("The profile encrypts its archives, but no password was supplied.", nameof(password));
         }
 
         long startedAt = _timeProvider.GetTimestamp();
@@ -98,7 +104,7 @@ public sealed class BackupService : IBackupService
 
         try
         {
-            hashHex = await WriteArchiveAsync(scan, profile, outputPath, reporter, policy, skipped, warnings, cancellationToken)
+            hashHex = await WriteArchiveAsync(scan, profile, password, outputPath, reporter, policy, skipped, warnings, cancellationToken)
                 .ConfigureAwait(false);
             sidecarPath = await Sha256Sidecar.WriteAsync(outputPath, hashHex, cancellationToken).ConfigureAwait(false);
         }
@@ -130,9 +136,10 @@ public sealed class BackupService : IBackupService
     }
 
     /// <summary>Writes the whole archive and returns its SHA-256 digest as lowercase hex.</summary>
-    private static async Task<string> WriteArchiveAsync(
+    private async Task<string> WriteArchiveAsync(
         ScanResult scan,
         BackupProfile profile,
+        string? password,
         string outputPath,
         BackupProgressReporter reporter,
         ErrorDecisionPolicy policy,
@@ -154,26 +161,36 @@ public sealed class BackupService : IBackupService
         await using FileStream file = new(outputPath, output);
         await using HashingWriteStream hashing = new(file);
 
-        await using (Stream compressor = CompressionStreams.CreateCompressor(hashing, profile.Compression))
+        // Null when the profile does not encrypt, in which case the compressor writes straight to the
+        // digest. `await using` on a null is a no-op, so the two cases need no separate code path.
+        Ebk1EncryptStream? encryptor = profile.Encrypt
+            ? await Ebk1EncryptStream.CreateAsync(hashing, password!, _encryption, leaveOpen: true, cancellationToken).ConfigureAwait(false)
+            : null;
+
+        await using (encryptor)
         {
-            await using TarWriter tar = new(compressor, TarEntryFormat.Pax, leaveOpen: true);
-
-            foreach (ScanEntry entry in scan.Entries)
+            await using (Stream compressor = CompressionStreams.CreateCompressor(encryptor ?? (Stream)hashing, profile.Compression))
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                await using TarWriter tar = new(compressor, TarEntryFormat.Pax, leaveOpen: true);
 
-                if (entry.Kind == ScanEntryKind.Directory)
+                foreach (ScanEntry entry in scan.Entries)
                 {
-                    await WriteDirectoryEntryAsync(tar, entry, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    await WriteFileEntryAsync(tar, entry, reporter, policy, skipped, warnings, cancellationToken).ConfigureAwait(false);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (entry.Kind == ScanEntryKind.Directory)
+                    {
+                        await WriteDirectoryEntryAsync(tar, entry, cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await WriteFileEntryAsync(tar, entry, reporter, policy, skipped, warnings, cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
         }
 
-        // The compressor has flushed its epilogue by now, so the digest covers the complete file.
+        // Every layer has flushed its epilogue by now — the compressor's, and the container's
+        // end-of-stream marker — so the digest covers the complete file.
         await hashing.FlushAsync(cancellationToken).ConfigureAwait(false);
 
         return hashing.GetHashHex();

@@ -5,10 +5,10 @@ and folders into a single compressed — optionally password-encrypted — archi
 and verifies what it wrote.
 
 > **Status:** in development. The solution scaffolding, the backup profiles and their store, the input
-> scan (glob excludes, overlapping inputs, missing-path handling) and the streaming archive pipeline —
-> backup, restore and verification, in Zstandard or gzip — are in place (FEATURE-3E11 PHASE01–PHASE03);
-> the encryption container and the user interface land in the following phases. See
-> [docs/roadmap.md](docs/roadmap.md).
+> scan (glob excludes, overlapping inputs, missing-path handling), the streaming archive pipeline —
+> backup, restore and verification, in Zstandard or gzip — and the AES-256-GCM encryption container
+> are in place (FEATURE-3E11 PHASE01–PHASE04); the user interface and release packaging land in the
+> following phases. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Planned capabilities (v1)
 

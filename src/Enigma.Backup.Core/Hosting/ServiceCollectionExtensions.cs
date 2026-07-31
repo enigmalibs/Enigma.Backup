@@ -1,5 +1,6 @@
 using System;
 using Enigma.Backup.Core.Backups;
+using Enigma.Backup.Core.Encryption;
 using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Core.Restoring;
 using Enigma.Backup.Core.Scanning;
@@ -16,7 +17,7 @@ public static class ServiceCollectionExtensions
     {
         /// <summary>
         /// Registers every Enigma.Backup core service (profile store, scanner, backup, restore
-        /// and verification services) in the container.
+        /// and verification services) and the encryption defaults in the container.
         /// </summary>
         /// <returns>The same collection, so registrations can be chained.</returns>
         public IServiceCollection AddEnigmaBackupCore()
@@ -33,11 +34,15 @@ public static class ServiceCollectionExtensions
             // a backup at a fixed instant.
             services.TryAddSingleton(TimeProvider.System);
 
+            // What a *new* EBK1 container is written with. Reading never consults it — an archive's own
+            // header carries everything needed to open it — so replacing this only changes future
+            // backups, never the ability to restore old ones.
+            services.TryAddSingleton(new Ebk1Options());
+
             services.TryAddSingleton<IBackupService, BackupService>();
             services.TryAddSingleton<IRestoreService, RestoreService>();
             services.TryAddSingleton<IVerificationService, VerificationService>();
 
-            // The encryption container (PHASE04) registers here too.
             return services;
         }
     }

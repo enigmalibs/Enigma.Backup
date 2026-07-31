@@ -14,4 +14,16 @@ public enum VerificationOutcome
 
     /// <summary>The sidecar exists but holds no readable SHA-256 digest.</summary>
     SidecarUnreadable,
+
+    /// <summary>
+    /// The archive is encrypted and no password was supplied, so only the file itself could be
+    /// checked — its contents were not opened.
+    /// </summary>
+    PasswordRequired,
+
+    /// <summary>
+    /// A chunk of an encrypted archive failed its authentication tag: the password is wrong, or the
+    /// payload has been altered.
+    /// </summary>
+    AuthenticationFailed,
 }

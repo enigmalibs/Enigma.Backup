@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Enigma.Backup.Core.Archiving;
 using Enigma.Backup.Core.Backups;
+using Enigma.Backup.Core.Encryption;
 using Enigma.Backup.Core.Errors;
 using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Core.Restoring;
@@ -233,14 +234,19 @@ public sealed class RestoreServiceTests
     }
 
     [Fact]
-    public async Task RestoreAsync_OfAnEncryptedArchive_SaysEncryptionIsNotAvailableYet()
+    public async Task RestoreAsync_OfAnEncryptedArchive_AsksForThePassword()
     {
         using TempDirectory temp = new();
         string encrypted = temp.Resolve("out/backup.tar.zst.enc");
         Directory.CreateDirectory(temp.Resolve("out"));
         await File.WriteAllBytesAsync(encrypted, [.. "EBK1"u8, 1, 1, 0, 0], Token);
 
-        await Assert.ThrowsAsync<NotSupportedException>(() => RestoreAsync(encrypted, temp.Resolve("restored")));
+        // The password is demanded from the marker alone, before the header is even parsed — the
+        // container tests cover what happens once one is given.
+        EncryptedArchiveException exception = await Assert.ThrowsAsync<EncryptedArchiveException>(() =>
+            RestoreAsync(encrypted, temp.Resolve("restored")));
+
+        Assert.Equal(EncryptedArchiveProblem.PasswordRequired, exception.Problem);
     }
 
     [Fact]

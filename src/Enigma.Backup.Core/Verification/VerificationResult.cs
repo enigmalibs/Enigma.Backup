@@ -29,6 +29,16 @@ public sealed class VerificationResult
     /// <summary>A ready-to-display explanation of the outcome.</summary>
     public required string Message { get; init; }
 
+    /// <summary>Whether the archive is an encrypted <c>EBK1</c> container.</summary>
+    public bool IsEncrypted { get; init; }
+
+    /// <summary>
+    /// Whether every chunk of an encrypted archive passed its authentication tag;
+    /// <see langword="null"/> when the payload was not opened — an unencrypted archive, no password,
+    /// or a check that stopped before reading it.
+    /// </summary>
+    public bool? PayloadAuthenticated { get; init; }
+
     /// <summary>Whether the archive passed.</summary>
     public bool Succeeded => Outcome == VerificationOutcome.Succeeded;
 }

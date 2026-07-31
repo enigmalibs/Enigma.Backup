@@ -128,20 +128,31 @@ Header:
   iterations   u32 LE (default 3)
   parallelism  u32 LE (default 4)
   saltLen      u8 (default 16) + salt bytes
-  chunkSize    u32 LE (default 64 MiB)
+  chunkSize    u32 LE (default 1 MiB)
   noncePrefix  8 random bytes
 Per chunk:
-  plainLen     u32 LE (≤ chunkSize; last chunk may be smaller)
+  plainLen     u32 LE (≤ chunkSize; the last data chunk may be smaller)
   ciphertext   plainLen bytes + 16-byte GCM tag
   nonce        = noncePrefix ‖ u32 BE chunk counter (not stored per chunk)
   AAD          = full header bytes ‖ u32 BE chunk counter
+End marker:
+  one final chunk with plainLen = 0 — framing plus tag, 20 bytes — authenticated like any other
 ```
 
 Key = Argon2id(password, salt, params) → 32 bytes. Wrong password or tampering fails the first
-affected chunk's GCM tag → a specific, user-friendly error ("wrong password or corrupted file");
-truncation → incomplete final chunk → error. Encrypted output file extension: `.enc` appended to
+affected chunk's GCM tag → a specific, user-friendly error ("wrong password or corrupted file").
+Truncation is caught by the end marker: a file cut mid-chunk *or* exactly on a chunk boundary runs
+out of bytes before reaching it. Encrypted output file extension: `.enc` appended to
 the compressed name. The build may refine field details **within** version 1 before first
 release; any post-release change bumps the version byte.
+
+> **Refined during the PHASE04 build (2026-08-01), within version 1, agreed with the user before
+> building:** the default `chunkSize` is 1 MiB rather than 64 MiB — a chunk has to be held in memory
+> to be sealed, so the chunk size is the pipeline's memory floor, and framing costs 20 bytes per
+> chunk (0.002% at 1 MiB), so the larger value bought nothing and cost ~128 MiB of buffers per run.
+> The `plainLen = 0` end marker is also new; without it a file cut exactly on a chunk boundary
+> decrypts perfectly and simply stops early. `chunkSize` is a header field, so containers written
+> with any value stay readable.
 
 ### Profile JSON (v1)
 
@@ -234,7 +245,7 @@ Branch: `feature/feature-3e11-phase03-archive-pipeline`
 > output file to discard and what was already written has to be reported. See
 > `docs/done/FEATURE-3E11-PHASE03.md`.
 
-### PHASE04 — Core: encryption container (Enigma.Core) (TODO)
+### PHASE04 — Core: encryption container (Enigma.Core) (DONE)
 
 Branch: `feature/feature-3e11-phase04-encryption`
 
@@ -248,6 +259,15 @@ Branch: `feature/feature-3e11-phase04-encryption`
 
 **Acceptance:** encrypted backup→verify→restore proven by tests; tampering/wrong password
 produce the specific errors; zero-warning build.
+
+> **Notes (build 2026-08-01):** two container-format refinements were agreed with the user before
+> building and are folded into the `EBK1` spec above (1 MiB default `chunkSize`; a `plainLen = 0`
+> end marker). The cipher stays on **Enigma.Core** for both Argon2id and AES-256-GCM as the plan
+> validates, with the trade-off measured and accepted: its BouncyCastle GCM runs at ~71 MiB/s
+> against ~3 100 MiB/s for the BCL's hardware-accelerated `AesGcm`, which puts encrypted backups at
+> roughly 34 MiB/s end to end. The plan's "specific error types" are one public
+> `EncryptedArchiveException` carrying an `EncryptedArchiveProblem` discriminator rather than a
+> family of exception types. See `docs/done/FEATURE-3E11-PHASE04.md`.
 
 ### PHASE05 — Avalonia desktop app (TODO)
 

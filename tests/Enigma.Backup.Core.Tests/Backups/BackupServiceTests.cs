@@ -293,17 +293,27 @@ public sealed class BackupServiceTests
     }
 
     [Fact]
-    public async Task RunAsync_WithAnEncryptingProfile_SaysEncryptionIsNotAvailableYet()
+    public async Task RunAsync_WithAnEncryptingProfile_WritesAnEbk1Container()
     {
         using TempDirectory temp = new();
         temp.WriteFile("source/a.txt", "hello");
         BackupProfile profile = Profile(temp);
         profile.Encrypt = true;
 
-        await Assert.ThrowsAsync<NotSupportedException>(() =>
-            Pipeline.Backup(Clock()).RunAsync(profile, "password", Strict(), progress: null, Token));
+        BackupResult result = await Pipeline.Backup(Clock()).RunAsync(profile, "password", Strict(), progress: null, Token);
 
-        Assert.False(Directory.Exists(temp.Resolve("out")));
+        // The naming and the bytes have to agree: `.enc` on the end, and the container's marker at the
+        // front. Everything the container itself guarantees is covered by the Encryption tests.
+        Assert.Equal(temp.Resolve("out/Documents_2026-07-31_234506.tar.zst.enc"), result.OutputPath);
+        Assert.Equal(1, result.FileCount);
+
+        byte[] leading = new byte[4];
+        using (FileStream file = File.OpenRead(result.OutputPath))
+        {
+            Assert.Equal(4, file.ReadAtLeast(leading, 4, throwOnEndOfStream: false));
+        }
+
+        Assert.Equal("EBK1"u8.ToArray(), leading);
     }
 
     [Fact]

@@ -65,4 +65,30 @@ internal static class ArchiveFormatDetector
 
         return Detect(signature);
     }
+
+    /// <summary>
+    /// Identifies the layer at the head of a stream that cannot be rewound, and returns a stream that
+    /// still starts at its first byte.
+    /// </summary>
+    /// <remarks>
+    /// This is how a decrypted payload is identified: an <c>EBK1</c> container does not record which
+    /// compression it wraps, and it does not need to — the payload says so itself, in the same four
+    /// bytes that identify an unencrypted archive.
+    /// </remarks>
+    /// <param name="source">A forward-only stream positioned at the payload's first byte.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>The layer, and the stream to read the payload from.</returns>
+    /// <exception cref="ArchiveFormatException">The payload is too short, or matches no known layer.</exception>
+    public static async Task<(ArchiveLayer Layer, Stream Payload)> DetectForwardOnlyAsync(Stream source, CancellationToken cancellationToken = default)
+    {
+        byte[] signature = new byte[SignatureLength];
+        int read = await source.ReadAtLeastAsync(signature, SignatureLength, throwOnEndOfStream: false, cancellationToken).ConfigureAwait(false);
+
+        if (read < SignatureLength)
+        {
+            throw new ArchiveFormatException("The archive's contents are too small to be a compressed archive.");
+        }
+
+        return (Detect(signature), new PrefixedReadStream(signature, source));
+    }
 }

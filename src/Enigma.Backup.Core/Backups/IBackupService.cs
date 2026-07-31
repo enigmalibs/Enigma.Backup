@@ -25,6 +25,7 @@ public interface IBackupService
     /// <param name="progress">Receives progress reports; may be <see langword="null"/>.</param>
     /// <param name="cancellationToken">Cancels the run and deletes the partial archive.</param>
     /// <returns>The end-of-run summary.</returns>
+    /// <exception cref="ArgumentException">The profile has no output directory, or encrypts without a password.</exception>
     /// <exception cref="BackupAbortedException">An error was answered with Abort; no archive remains.</exception>
     /// <exception cref="OperationCanceledException">The run was cancelled; no archive remains.</exception>
     Task<BackupResult> RunAsync(

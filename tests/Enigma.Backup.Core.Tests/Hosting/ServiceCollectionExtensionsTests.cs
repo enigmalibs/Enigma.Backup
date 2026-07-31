@@ -1,5 +1,6 @@
 using System;
 using Enigma.Backup.Core.Backups;
+using Enigma.Backup.Core.Encryption;
 using Enigma.Backup.Core.Hosting;
 using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Core.Restoring;
@@ -77,6 +78,34 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.Same(backup, provider.GetRequiredService<IBackupService>());
         Assert.Same(restore, provider.GetRequiredService<IRestoreService>());
         Assert.Same(verification, provider.GetRequiredService<IVerificationService>());
+    }
+
+    [Fact]
+    public void AddEnigmaBackupCore_ResolvesTheShippedEncryptionParameters()
+    {
+        using ServiceProvider provider = BuildProvider();
+
+        Ebk1Options options = provider.GetRequiredService<Ebk1Options>();
+
+        Assert.Equal(Ebk1Options.DefaultMemoryKiB, options.MemoryKiB);
+        Assert.Equal(Ebk1Options.DefaultIterations, options.Iterations);
+        Assert.Equal(Ebk1Options.DefaultParallelism, options.Parallelism);
+        Assert.Equal(Ebk1Options.DefaultSaltLength, options.SaltLength);
+        Assert.Equal(Ebk1Options.DefaultChunkSize, options.ChunkSize);
+        Assert.Same(options, provider.GetRequiredService<Ebk1Options>());
+    }
+
+    [Fact]
+    public void AddEnigmaBackupCore_LeavesExistingEncryptionParametersInPlace()
+    {
+        ServiceCollection services = new();
+        Ebk1Options replacement = new() { Iterations = 1 };
+        services.AddSingleton(replacement);
+
+        services.AddEnigmaBackupCore();
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Same(replacement, provider.GetRequiredService<Ebk1Options>());
     }
 
     [Fact]

@@ -5,18 +5,25 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Enigma.Backup.Core.Archiving;
+using Enigma.Backup.Core.Encryption;
 using Enigma.Backup.Core.Errors;
 
 namespace Enigma.Backup.Core.Restoring;
 
 /// <summary>
-/// The streaming <see cref="IRestoreService"/>: <c>file → decompress → untar → destination</c>, one
-/// entry at a time, in the order they were written.
+/// The streaming <see cref="IRestoreService"/>: <c>file → [decrypt] → decompress → untar →
+/// destination</c>, one entry at a time, in the order they were written.
 /// </summary>
 /// <remarks>
 /// <para>
 /// What the archive is, is decided by its leading bytes rather than its name, so a renamed archive
-/// still restores and a file that only looks like one is refused before anything is written.
+/// still restores and a file that only looks like one is refused before anything is written. An
+/// encrypted archive says which compression it holds in the same way, once it has been opened.
+/// </para>
+/// <para>
+/// Nothing is written to disk before it has been authenticated: a chunk of an encrypted archive is
+/// only handed to the decompressor after its GCM tag has verified, so a tampered archive fails before
+/// its contents reach the destination.
 /// </para>
 /// <para>
 /// Entry names are checked before they are used: an absolute path, a <c>..</c> segment or a hidden
@@ -90,28 +97,60 @@ public sealed class RestoreService : IRestoreService
             state.ArchiveBytes = archive.Length;
 
             ArchiveLayer layer = await ArchiveFormatDetector.DetectAsync(archive, cancellationToken).ConfigureAwait(false);
-            if (layer == ArchiveLayer.Ebk1)
-            {
-                throw new NotSupportedException(
-                    "Encrypted archives are not supported by this build yet: the EBK1 container arrives with PHASE04.");
-            }
 
             await using CountingReadStream counting = new(archive);
             state.Counting = counting;
 
-            await using Stream decompressor = CompressionStreams.CreateDecompressor(counting, layer);
+            Ebk1DecryptStream? decryptor = null;
+            Stream? payload = null;
 
             try
             {
-                await ReadEntriesAsync(decompressor, state, cancellationToken).ConfigureAwait(false);
+                if (layer == ArchiveLayer.Ebk1)
+                {
+                    if (string.IsNullOrEmpty(password))
+                    {
+                        throw new EncryptedArchiveException(
+                            EncryptedArchiveProblem.PasswordRequired,
+                            $"'{Path.GetFileName(archivePath)}' is encrypted, so its password is needed to restore it.");
+                    }
+
+                    decryptor = await Ebk1DecryptStream.CreateAsync(counting, password, leaveOpen: true, cancellationToken).ConfigureAwait(false);
+                    (layer, payload) = await ArchiveFormatDetector.DetectForwardOnlyAsync(decryptor, cancellationToken).ConfigureAwait(false);
+
+                    if (layer == ArchiveLayer.Ebk1)
+                    {
+                        throw new ArchiveFormatException(
+                            $"'{Path.GetFileName(archivePath)}' holds another encrypted container instead of a compressed archive, which this application does not produce.");
+                    }
+                }
+
+                await using Stream decompressor = CompressionStreams.CreateDecompressor(payload ?? (Stream)counting, layer);
+
+                try
+                {
+                    await ReadEntriesAsync(decompressor, state, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception exception) when (CompressionStreams.IsCorruptData(exception))
+                {
+                    // A file that was cut short, or whose bytes rotted, fails somewhere inside the
+                    // decompressor or the tar reader. Whatever had already been restored stays.
+                    throw new ArchiveFormatException(
+                        $"'{Path.GetFileName(archivePath)}' is damaged or incomplete and could not be read to the end: {exception.Message}",
+                        exception);
+                }
             }
-            catch (Exception exception) when (CompressionStreams.IsCorruptData(exception))
+            finally
             {
-                // A file that was cut short, or whose bytes rotted, fails somewhere inside the
-                // decompressor or the tar reader. Whatever had already been restored stays.
-                throw new ArchiveFormatException(
-                    $"'{Path.GetFileName(archivePath)}' is damaged or incomplete and could not be read to the end: {exception.Message}",
-                    exception);
+                if (payload is not null)
+                {
+                    await payload.DisposeAsync().ConfigureAwait(false);
+                }
+
+                if (decryptor is not null)
+                {
+                    await decryptor.DisposeAsync().ConfigureAwait(false);
+                }
             }
         }
 

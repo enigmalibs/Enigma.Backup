@@ -7,15 +7,17 @@ namespace Enigma.Backup.Core.Verification;
 
 /// <summary>
 /// Checks an archive against the <c>.sha256</c> sidecar written beside it, on demand, long after the
-/// backup ran.
+/// backup ran — and, for an encrypted archive, that every one of its chunks still authenticates.
 /// </summary>
 public interface IVerificationService
 {
     /// <summary>Verifies <paramref name="archivePath"/>.</summary>
     /// <param name="archivePath">The archive to check.</param>
     /// <param name="password">
-    /// The password for an encrypted archive, prompted for this check only. Not needed for the
-    /// sidecar comparison, which reads the file exactly as it is on disk.
+    /// The password for an encrypted archive, prompted for this check only. The sidecar comparison
+    /// does not need it — it reads the file exactly as it is on disk — but without it the archive's
+    /// contents cannot be opened, and the check reports
+    /// <see cref="VerificationOutcome.PasswordRequired"/>.
     /// </param>
     /// <param name="progress">Receives progress reports; may be <see langword="null"/>.</param>
     /// <param name="cancellationToken">Cancels the verification.</param>
