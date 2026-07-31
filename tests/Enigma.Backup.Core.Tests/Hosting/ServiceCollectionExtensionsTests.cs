@@ -1,6 +1,11 @@
+using System;
+using Enigma.Backup.Core.Backups;
 using Enigma.Backup.Core.Hosting;
 using Enigma.Backup.Core.Profiles;
+using Enigma.Backup.Core.Restoring;
 using Enigma.Backup.Core.Scanning;
+using Enigma.Backup.Core.Tests.TestSupport;
+using Enigma.Backup.Core.Verification;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -55,6 +60,44 @@ public sealed class ServiceCollectionExtensionsTests
 
         Assert.IsType<InputScanner>(scanner);
         Assert.Same(scanner, provider.GetRequiredService<IInputScanner>());
+    }
+
+    [Fact]
+    public void AddEnigmaBackupCore_ResolvesTheArchiveServicesAsSingletons()
+    {
+        using ServiceProvider provider = BuildProvider();
+
+        IBackupService backup = provider.GetRequiredService<IBackupService>();
+        IRestoreService restore = provider.GetRequiredService<IRestoreService>();
+        IVerificationService verification = provider.GetRequiredService<IVerificationService>();
+
+        Assert.IsType<BackupService>(backup);
+        Assert.IsType<RestoreService>(restore);
+        Assert.IsType<VerificationService>(verification);
+        Assert.Same(backup, provider.GetRequiredService<IBackupService>());
+        Assert.Same(restore, provider.GetRequiredService<IRestoreService>());
+        Assert.Same(verification, provider.GetRequiredService<IVerificationService>());
+    }
+
+    [Fact]
+    public void AddEnigmaBackupCore_ResolvesTheSystemClock()
+    {
+        using ServiceProvider provider = BuildProvider();
+
+        Assert.Same(TimeProvider.System, provider.GetRequiredService<TimeProvider>());
+    }
+
+    [Fact]
+    public void AddEnigmaBackupCore_LeavesAnExistingClockInPlace()
+    {
+        ServiceCollection services = new();
+        FixedTimeProvider replacement = new(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
+        services.AddSingleton<TimeProvider>(replacement);
+
+        services.AddEnigmaBackupCore();
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Same(replacement, provider.GetRequiredService<TimeProvider>());
     }
 
     [Fact]

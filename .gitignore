@@ -363,3 +363,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Enigma.Backup: this solution is a backup application, so its own source folders are called things
+# like "Backups". The Backup*/ rule above is meant for Visual Studio's conversion-backup folders and
+# would swallow them, so src/ and tests/ are exempted from it.
+!src/**/Backup*/
+!tests/**/Backup*/

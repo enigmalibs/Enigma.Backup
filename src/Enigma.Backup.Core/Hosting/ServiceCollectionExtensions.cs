@@ -1,5 +1,9 @@
+using System;
+using Enigma.Backup.Core.Backups;
 using Enigma.Backup.Core.Profiles;
+using Enigma.Backup.Core.Restoring;
 using Enigma.Backup.Core.Scanning;
+using Enigma.Backup.Core.Verification;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -24,7 +28,16 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton<IProfileStore>(static _ => new ProfileStore());
             services.TryAddSingleton<IInputScanner, InputScanner>();
 
-            // The archive pipeline (PHASE03) and the encryption container (PHASE04) register here too.
+            // The clock the archive services take: the timestamp in an output file's name and the
+            // duration in a summary. Registered rather than reached for statically, so a test can run
+            // a backup at a fixed instant.
+            services.TryAddSingleton(TimeProvider.System);
+
+            services.TryAddSingleton<IBackupService, BackupService>();
+            services.TryAddSingleton<IRestoreService, RestoreService>();
+            services.TryAddSingleton<IVerificationService, VerificationService>();
+
+            // The encryption container (PHASE04) registers here too.
             return services;
         }
     }

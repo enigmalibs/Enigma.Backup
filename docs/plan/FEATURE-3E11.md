@@ -212,7 +212,7 @@ Branch: `feature/feature-3e11-phase02-profiles-scanning`
 > apply-to-all semantics, `BackupAbortedException`, `SkippedEntry`) landed here and PHASE03 consumes
 > it as-is. See `docs/done/FEATURE-3E11-PHASE02.md`.
 
-### PHASE03 — Core: tar + compression pipeline & verify (TODO)
+### PHASE03 — Core: tar + compression pipeline & verify (DONE)
 
 Branch: `feature/feature-3e11-phase03-archive-pipeline`
 
@@ -226,6 +226,13 @@ Branch: `feature/feature-3e11-phase03-archive-pipeline`
    cleanup, skip/retry/abort flows, sidecar tamper detection, empty dirs & odd names.
 
 **Acceptance:** round-trip fidelity proven by tests for Zstd and Gzip; zero-warning build.
+
+> **Notes (build 2026-07-31):** the public surface keeps the plan's `password` parameter on all three
+> services, but PHASE03 refuses an encrypting profile (and an `EBK1` file) with a clear
+> `NotSupportedException` — PHASE04 replaces those two throw sites. A restore's Abort is reported as
+> `RestoreResult.Outcome = Aborted` rather than by throwing, because unlike a backup there is no
+> output file to discard and what was already written has to be reported. See
+> `docs/done/FEATURE-3E11-PHASE03.md`.
 
 ### PHASE04 — Core: encryption container (Enigma.Core) (TODO)
 

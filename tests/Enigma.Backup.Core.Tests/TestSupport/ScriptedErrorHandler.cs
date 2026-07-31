@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,10 +27,17 @@ public sealed class ScriptedErrorHandler : IBackupErrorHandler
     /// <summary>Every error the handler was asked about, in order.</summary>
     public List<BackupError> Errors { get; } = [];
 
+    /// <summary>
+    /// Run before each answer is given. This is where a test that scripts a Retry repairs whatever
+    /// made the entry fail, the way a user would before clicking it.
+    /// </summary>
+    public Action<BackupError>? BeforeAnswering { get; set; }
+
     /// <inheritdoc />
     public Task<BackupErrorDecision> HandleAsync(BackupError error, CancellationToken cancellationToken = default)
     {
         Errors.Add(error);
+        BeforeAnswering?.Invoke(error);
 
         return Task.FromResult(_scripted.Count > 0 ? _scripted.Dequeue() : _fallback);
     }
