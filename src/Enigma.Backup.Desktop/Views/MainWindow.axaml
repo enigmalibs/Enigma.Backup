@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+        x:Class="Enigma.Backup.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Icon="/Assets/enigma-backup.ico"
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterScreen">
+
+    <!-- Intentionally empty shell: the real UI (profile bar, inputs list, output picker, compression
+         and encryption options, Backup / Restore / Verify, progress and summary) arrives in PHASE05.
+         Strings are hardcoded English throughout, per the plan's validated decisions. -->
+    <TextBlock Text="Enigma.Backup — the user interface arrives in PHASE05."
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               Opacity="0.6" />
+
+</Window>

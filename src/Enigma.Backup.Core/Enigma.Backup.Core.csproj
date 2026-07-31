@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Deviation from the netstandard2.0 library default: this library carries all of
+    Enigma.Backup's functionality and is consumed only by the net10 Desktop app (and,
+    later, a possible CLI). It targets net10 because the archive pipeline is built on
+    System.Formats.Tar, which does not exist on netstandard2.0, and it uses modern
+    Span/Stream APIs throughout without polyfills.
+
+    Zero UI dependencies by design: every interactive decision (password prompt, error
+    policy, restore conflicts) enters through an interface, so the core stays CLI-ready.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Enigma.Backup.Core</RootNamespace>
+    <AssemblyName>Enigma.Backup.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+</Project>

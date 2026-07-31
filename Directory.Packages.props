@@ -1,0 +1,48 @@
+<Project>
+
+  <!-- Central Package Management: every PackageReference version in the solution is pinned
+       here so shared dependencies (e.g. Avalonia) cannot drift between projects. Projects
+       reference packages WITHOUT a Version attribute (<PackageReference Include="Foo" />);
+       the version comes from the matching <PackageVersion> below.
+
+       The full v1 dependency set is declared up front (FEATURE-3E11 plan, "Central package
+       versions"); entries the later phases consume are already pinned here, unused for now. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- Core library. No netstandard2.0 target, so the System.Buffers / PolySharp support pair
+       from the house library template is deliberately absent. -->
+  <ItemGroup>
+    <!-- AES-256-GCM + Argon2id primitives for the EBK1 container (PHASE04). -->
+    <PackageVersion Include="Enigma.Core" Version="1.0.0" />
+    <!-- Zstandard compression (managed port); Gzip comes from the BCL (PHASE03). -->
+    <PackageVersion Include="ZstdSharp.Port" Version="0.8.8" />
+    <!-- Glob exclusion patterns applied during the input scan (PHASE02). -->
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.10" />
+    <!-- DI + logging seams only: the core takes abstractions, never a container or a sink. -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+  </ItemGroup>
+
+  <!-- Desktop (Avalonia) — this is a version-coupled ecosystem: bump Avalonia and the
+       Fluent/theme/font packages TOGETHER, never one package at a time. Mixing versions within
+       the set breaks the build, so the whole group is held back until it moves as a unit. -->
+  <ItemGroup>
+    <PackageVersion Include="Avalonia" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+  </ItemGroup>
+
+  <!-- Tests (MTP-native: xunit.v3 only). No Microsoft.NET.Test.Sdk. -->
+  <ItemGroup>
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <!-- Concrete ServiceCollection for the DI-registration tests (the core only takes abstractions). -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+  </ItemGroup>
+
+</Project>

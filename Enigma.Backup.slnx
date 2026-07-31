@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Enigma.Backup.Core/Enigma.Backup.Core.csproj" />
+    <Project Path="src/Enigma.Backup.Desktop/Enigma.Backup.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Enigma.Backup.Core.Tests/Enigma.Backup.Core.Tests.csproj" />
+    <Project Path="tests/Enigma.Backup.Desktop.Tests/Enigma.Backup.Desktop.Tests.csproj" />
+  </Folder>
+</Solution>
