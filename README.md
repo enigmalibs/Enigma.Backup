@@ -4,13 +4,14 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **Status:** in development. The solution scaffolding, the backup profiles and their store, the input
-> scan (glob excludes, overlapping inputs, missing-path handling), the streaming archive pipeline —
-> backup, restore and verification, in Zstandard or gzip — and the AES-256-GCM encryption container
-> are in place (FEATURE-3E11 PHASE01–PHASE04); the user interface and release packaging land in the
-> following phases. See [docs/roadmap.md](docs/roadmap.md).
+> **Status:** in development. The backup profiles and their store, the input scan (glob excludes,
+> overlapping inputs, missing-path handling), the streaming archive pipeline — backup, restore and
+> verification, in Zstandard or gzip — the AES-256-GCM encryption container, and the Avalonia desktop
+> app that drives all of it are in place (FEATURE-3E11 PHASE01–PHASE05). Release packaging — the
+> self-contained zips for Windows and Linux — is the remaining phase. See
+> [docs/roadmap.md](docs/roadmap.md).
 
-## Planned capabilities (v1)
+## Capabilities (v1)
 
 - **Reusable profiles** — the input paths, output folder, compression and encryption choices of a
   backup, stored as JSON in the per-user config folder, with import/export.

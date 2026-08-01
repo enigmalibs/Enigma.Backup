@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+        x:Class="Enigma.Backup.Desktop.Views.ProfileNameDialog"
+        x:DataType="vm:ProfileNameDialogViewModel"
+        Title="{Binding Title}"
+        Icon="/Assets/enigma-backup.ico"
+        Width="520"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+  <StackPanel Margin="20" Spacing="12">
+
+    <TextBlock Text="{Binding Prompt}" TextWrapping="Wrap" />
+
+    <TextBox x:Name="NameInput" Text="{Binding Name}" PlaceholderText="Profile name" />
+
+    <TextBlock Text="{Binding ValidationMessage}"
+               Foreground="{DynamicResource AppDangerBrush}"
+               TextWrapping="Wrap"
+               IsVisible="{Binding ValidationMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="90" />
+      <Button Content="OK" Command="{Binding AcceptCommand}" IsDefault="True" Classes="accent" MinWidth="90" />
+    </StackPanel>
+
+  </StackPanel>
+
+</Window>

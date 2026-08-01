@@ -43,6 +43,11 @@ Invariants that are easy to violate and must be preserved:
   conflict handler, progress via `IProgress<T>`. Never reference Avalonia, show a dialog, or read the
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
+- **The Desktop's view models never name Avalonia either.** File pickers, modal dialogs and UI-thread
+  marshaling enter through `IFilePicker` / `IDialogService` / `IUiDispatcher` (`Desktop/Services/`,
+  with the Avalonia implementations beside them); only the Views, `App` and those implementations
+  touch Avalonia types. This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the
+  end-to-end test that drives the real pipeline through the real container.
 - **Passwords are parameters, never state.** They cross the API as a parameter, are prompted per run,
   and are never persisted, logged, or cached.
 - **The pipeline is single-pass and streaming.** No temp files, constant memory regardless of archive

@@ -269,7 +269,7 @@ produce the specific errors; zero-warning build.
 > `EncryptedArchiveException` carrying an `EncryptedArchiveProblem` discriminator rather than a
 > family of exception types. See `docs/done/FEATURE-3E11-PHASE04.md`.
 
-### PHASE05 — Avalonia desktop app (TODO)
+### PHASE05 — Avalonia desktop app (DONE)
 
 Branch: `feature/feature-3e11-phase05-desktop-app`
 
@@ -286,6 +286,15 @@ Branch: `feature/feature-3e11-phase05-desktop-app`
 
 **Acceptance:** full backup/restore/verify usable end-to-end from the UI on Windows + Linux;
 ViewModel tests green; zero-warning build.
+
+> **Notes (build 2026-08-01):** the window gained an **exclude-pattern editor** the plan's UI sketch
+> did not list — without it the validated per-profile glob excludes would have had no way into a
+> profile, and PHASE06 adds no UI. Everything the view models need from the UI enters through three
+> new seams (`IFilePicker`, `IDialogService`, `IUiDispatcher`), which is what keeps the desktop tests
+> headless and let the phase add an end-to-end test that drives the *real* pipeline through the real
+> container. Switching profiles or starting a new one discards unsaved editor edits without asking —
+> the title's `*` and the profile bar say so, and only the irreversible action (Delete) confirms. See
+> `docs/done/FEATURE-3E11-PHASE05.md`.
 
 ### PHASE06 — Release readiness (TODO)
 
