@@ -9,3 +9,4 @@
 | - PHASE04    | Core: encryption container (Enigma.Core)       | DONE        | (in FEATURE-3E11.md)      |
 | - PHASE05    | Avalonia desktop app                           | DONE        | (in FEATURE-3E11.md)      |
 | - PHASE06    | Release readiness                              | DONE        | (in FEATURE-3E11.md)      |
+| FEATURE-3A2D | Enigma.Core 1.1.0 upgrade & 1.0.1 release      | TODO        | docs/plan/FEATURE-3A2D.md |
