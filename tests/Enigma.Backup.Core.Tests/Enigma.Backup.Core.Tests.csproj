@@ -12,6 +12,9 @@
 
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The golden archive an earlier release wrote, read by GoldenArchiveCompatibilityTests from
+         beside the assembly. See Fixtures/README.md — these bytes are evidence, not test input. -->
+    <Content Include="Fixtures/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 # FEATURE-3A2D — Enigma.Core 1.1.0 upgrade & 1.0.1 release
 
-**Status:** TODO
+**Status:** DONE
 **Type:** single-phase feature (routine release, per the `dotnet-release` skill)
 **Branch (created by `/build`, from `HEAD`):** `feature/feature-3a2d-enigma-core-1-1-release`
 
