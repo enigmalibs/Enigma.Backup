@@ -1,6 +1,6 @@
 # FEATURE-3E11 — Enigma.Backup v1 — cross-platform backup app
 
-**Status:** IN PROGRESS
+**Status:** DONE
 **Type:** multi-phase feature (6 phases)
 **Branches (created by `/build`, one per phase):** `feature/feature-3e11-phaseNN-<slug>`
 
@@ -296,7 +296,7 @@ ViewModel tests green; zero-warning build.
 > the title's `*` and the profile bar say so, and only the irreversible action (Delete) confirms. See
 > `docs/done/FEATURE-3E11-PHASE05.md`.
 
-### PHASE06 — Release readiness (TODO)
+### PHASE06 — Release readiness (DONE)
 
 Branch: `feature/feature-3e11-phase06-release`
 
@@ -311,6 +311,26 @@ Branch: `feature/feature-3e11-phase06-release`
 
 **Acceptance:** both zips produced from the scripts and smoke-tested; README accurate;
 Definition of Done for the item as a whole met.
+
+> **Notes (build 2026-08-01):** the phase added `SECURITY.md`, `RELEASENOTES.md` (first-release
+> section) and `docs/RELEASE.md` beyond the steps above, per the `dotnet-release` skill's app
+> variant — agreed with the user before building. The skill's **MSI profile offer was declined**, the
+> plan's "no installer" decision winning; the app icon ships as **placeholder art** for 1.0.0, also
+> confirmed with the user. `<Version>` lives in `Directory.Build.props` rather than a csproj: one
+> product, neither project packable, never released apart.
+>
+> Two defects were found by packaging and running the artifact, and fixed here. The Windows zip was
+> shipping 105 MB of Skia/HarfBuzz native `.pdb` files (package content, so `DebugType` does not
+> reach them) — a publish-time target now strips them, 71 MB → 46 MB. And the app **ignored
+> `SIGTERM`**: `Host.CreateApplicationBuilder`'s `ConsoleLifetime` cancels the signal and waits for a
+> `StopAsync` this app never makes, since Avalonia owns the loop and the host is `Start`ed rather
+> than `Run`. A session logout would have hung. `AvaloniaHostLifetime` replaces it. This was outside
+> the phase's step list and was raised with the user before building.
+>
+> **The acceptance criterion is met for Linux only.** The build machine is Linux; the `win-x64` zip
+> was cross-published and inspected but never executed, and no button has been pressed on either
+> platform (no input-automation tooling, Wayland session — the PHASE05 gap). `docs/QA-CHECKLIST.md`
+> carries the outstanding manual pass. See `docs/done/FEATURE-3E11-PHASE06.md`.
 
 ## Overall acceptance criteria (v1)
 

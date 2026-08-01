@@ -3,6 +3,7 @@ using Enigma.Backup.Desktop.ViewModels;
 using Enigma.Backup.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Enigma.Backup.Desktop.Hosting;
 
@@ -20,6 +21,10 @@ public static class ServiceCollectionExtensions
             // cycle, since the window is built from the view model that depends on them.
             services.TryAddSingleton<MainWindowProvider>();
             services.TryAddSingleton<IMainWindowProvider>(static provider => provider.GetRequiredService<MainWindowProvider>());
+
+            // Replace, not TryAdd: the host builder has already registered its ConsoleLifetime by
+            // the time this runs, and that one swallows SIGTERM (see AvaloniaHostLifetime).
+            services.Replace(ServiceDescriptor.Singleton<IHostLifetime, AvaloniaHostLifetime>());
 
             // Stateless UI seams: one instance serves the whole app.
             services.TryAddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();

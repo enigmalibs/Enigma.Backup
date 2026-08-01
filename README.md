@@ -1,17 +1,15 @@
 # Enigma.Backup
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
+
 A cross-platform desktop backup tool for Windows and Linux. It packs any number of selected files
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **Status:** in development. The backup profiles and their store, the input scan (glob excludes,
-> overlapping inputs, missing-path handling), the streaming archive pipeline — backup, restore and
-> verification, in Zstandard or gzip — the AES-256-GCM encryption container, and the Avalonia desktop
-> app that drives all of it are in place (FEATURE-3E11 PHASE01–PHASE05). Release packaging — the
-> self-contained zips for Windows and Linux — is the remaining phase. See
-> [docs/roadmap.md](docs/roadmap.md).
+> **What's new in 1.0** — the first release: profiles, glob excludes, Zstandard/gzip archives,
+> AES-256-GCM encryption, restore and verification. See [RELEASENOTES.md](RELEASENOTES.md).
 
-## Capabilities (v1)
+## Capabilities
 
 - **Reusable profiles** — the input paths, output folder, compression and encryption choices of a
   backup, stored as JSON in the per-user config folder, with import/export.
@@ -26,6 +24,97 @@ and verifies what it wrote.
 - **Glob excludes**, live progress with cancel, and a per-error Skip / Retry / Abort policy with an
   end-of-run summary of everything skipped.
 
+## Installing
+
+Download the zip for your platform from the release, unpack it anywhere, and run the single
+executable inside. It is self-contained — **no .NET runtime needs to be installed.**
+
+| Platform | Zip | Run |
+|----------|-----|-----|
+| Windows x64 | `Enigma.Backup-1.0.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.0.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+
+There is no installer and nothing is written outside your home directory. To uninstall, delete the
+executable and — if you want your profiles gone too — the config folder listed below.
+
+If the Linux binary is not executable after unpacking (some archivers drop the permission bit),
+`chmod +x Enigma.Backup.Desktop`.
+
+## Using it
+
+The app is a single window, top to bottom:
+
+1. **Profile** — pick a saved profile from the drop-down, or start from `New`. A profile is just the
+   settings below, under a name; `Save`, `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…`
+   are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
+   discards them.
+2. **Files and folders to back up** — `Add files…`, `Add folder…`, or drop them anywhere on the
+   window. Overlapping entries are merged automatically when the backup runs.
+3. **Exclude patterns** — optional globs applied during the scan, one per line: `**/bin/**`,
+   `*.log`, `**/node_modules/**`.
+4. **Save backups in** — the output folder. It is always excluded from the backup itself, so
+   pointing it inside an input folder is safe.
+5. **Compression** — Zstandard (`.tar.zst`, the default: faster and smaller) or gzip (`.tar.gz`,
+   readable by anything).
+6. **Encrypt with a password** — tick it to get AES-256-GCM encryption. You are prompted for the
+   password each run, with a confirmation field; it is never saved anywhere.
+7. **Back up** — runs the backup, showing the current file and overall progress, with `Cancel`
+   available throughout. **Restore…** asks for an archive and a destination; **Verify…** re-reads an
+   archive and checks it against its sidecar. Every run ends in the **Last run** panel with the
+   counts, the duration, the output path, and a prominent list of anything skipped.
+
+If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort**, with an
+*apply to all further errors* option. Aborting — like cancelling — deletes the partial archive, so a
+half-written backup is never left behind.
+
+Profiles live in `%APPDATA%\Enigma.Backup\profiles` on Windows and
+`~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile.
+
+## What a backup run writes
+
+A run produces exactly two files in the output folder:
+
+```
+Documents_2026-08-01_143012.tar.zst          the archive
+Documents_2026-08-01_143012.tar.zst.sha256   its checksum
+```
+
+Encrypted runs add `.enc` to the archive name (`…tar.zst.enc`, with the sidecar alongside it as
+`…tar.zst.enc.sha256`). Nothing is ever overwritten or pruned — the timestamp makes each run a new
+pair of files, and deleting old ones is up to you.
+
+## Restoring without Enigma.Backup
+
+**Unencrypted archives are ordinary tar files** — the app is a convenience, not a dependency. If you
+ever lose it, any standard tool will unpack your data:
+
+```bash
+# gzip
+tar -xzf Documents_2026-08-01_143012.tar.gz -C ./restored
+
+# Zstandard, with a tar that speaks zstd
+tar --zstd -xf Documents_2026-08-01_143012.tar.zst -C ./restored
+
+# Zstandard, with any tar
+zstd -dc Documents_2026-08-01_143012.tar.zst | tar -xf - -C ./restored
+```
+
+The sidecar is in `sha256sum` format, so it verifies with the standard tool — run it from the folder
+holding the archive:
+
+```bash
+sha256sum -c Documents_2026-08-01_143012.tar.zst.sha256
+```
+
+On Windows, 7-Zip opens `.tar.gz` directly and `.tar.zst` with the Zstandard-enabled build; the
+checksum can be compared against `certutil -hashfile <archive> SHA256`.
+
+**Encrypted archives (`.enc`) need Enigma.Backup** — or an implementation of its container format.
+They are not a standard format: the `EBK1` container is specified in full in
+[docs/plan/FEATURE-3E11.md](docs/plan/FEATURE-3E11.md), down to the header layout and per-chunk
+framing, so the data is recoverable from the specification alone. **If you lose the password, the
+data is gone** — there is no recovery path, by design.
+
 ## Layout
 
 ```
@@ -33,7 +122,7 @@ src/Enigma.Backup.Core       net10.0 library — profiles, scanning, archive pip
 src/Enigma.Backup.Desktop    net10.0 Avalonia 12 desktop app — MVVM layer over the core
 tests/Enigma.Backup.Core.Tests
 tests/Enigma.Backup.Desktop.Tests
-docs/                        roadmap, per-item plans, completion records
+docs/                        roadmap, per-item plans, completion records, release runbook
 ```
 
 ## Building
@@ -48,6 +137,31 @@ dotnet run --project src/Enigma.Backup.Desktop
 ```
 
 The build treats warnings as errors and enforces the repository `.editorconfig` at build time.
+
+### Publishing the release zips
+
+```bash
+./publish.sh                 # both runtimes
+./publish.sh linux-x64       # just one
+```
+
+```powershell
+./publish.ps1                # both runtimes
+./publish.ps1 -Rid win-x64   # just one
+```
+
+Each produces a self-contained, single-file build in `artifacts/publish/<rid>/` and zips it to
+`artifacts/Enigma.Backup-<version>-<rid>.zip`. The version comes from `<Version>` in
+`Directory.Build.props`, so the zip name cannot disagree with the binary inside it. Cross-publishing
+works in both directions, with one caveat: build the **linux-x64** zip from Linux, because
+PowerShell's `Compress-Archive` stores no Unix file mode and the extracted binary would lose its
+executable bit.
+
+The full release procedure is in [docs/RELEASE.md](docs/RELEASE.md).
+
+## Security
+
+For how to report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## License
 

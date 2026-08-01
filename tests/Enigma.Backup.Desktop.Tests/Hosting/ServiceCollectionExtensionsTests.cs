@@ -5,6 +5,8 @@ using Enigma.Backup.Desktop.Services;
 using Enigma.Backup.Desktop.ViewModels;
 using Enigma.Backup.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using Xunit;
 
 namespace Enigma.Backup.Desktop.Tests.Hosting;
@@ -37,6 +39,25 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.IsType<AvaloniaUiDispatcher>(provider.GetRequiredService<IUiDispatcher>());
         Assert.IsType<FilePicker>(provider.GetRequiredService<IFilePicker>());
         Assert.IsType<DialogService>(provider.GetRequiredService<IDialogService>());
+    }
+
+    /// <remarks>
+    /// The default <c>ConsoleLifetime</c> cancels SIGTERM and then waits for a <c>StopAsync</c> this
+    /// app never makes (Avalonia owns the loop, so the host is started, not run) — an app that cannot
+    /// be shut down at logout. It is registered by the host builder before this extension runs, so
+    /// the registration has to replace it rather than defer to it.
+    /// </remarks>
+    [Fact]
+    public void TheHostLifetimeReplacesTheConsoleOne_SoSigtermIsNotSwallowed()
+    {
+        ServiceCollection services = [];
+        services.AddSingleton<IHostLifetime, ConsoleLifetime>();
+
+        services.AddEnigmaBackupDesktop();
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.IsType<AvaloniaHostLifetime>(provider.GetRequiredService<IHostLifetime>());
+        Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IHostLifetime));
     }
 
     [Fact]

@@ -31,6 +31,21 @@
     <AvaloniaResource Include="Assets/**" />
   </ItemGroup>
 
+  <!--
+    Skia and HarfBuzz (Avalonia's rendering stack) ship native .pdb symbol files beside their
+    runtime libraries — 105 MB of them on win-x64, more than the app itself. They arrive as
+    package content, so DebugType has no effect on them, and they are debug symbols for
+    someone else's C++ code: never useful in a release zip. Drop every native .pdb from the
+    publish set; the app's own managed symbols are unaffected.
+  -->
+  <Target Name="RemoveNativeSymbolsFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish
+        Remove="@(ResolvedFileToPublish)"
+        Condition="'%(Extension)' == '.pdb' And '%(ResolvedFileToPublish.AssetType)' == 'native'" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\Enigma.Backup.Core\Enigma.Backup.Core.csproj" />
   </ItemGroup>
