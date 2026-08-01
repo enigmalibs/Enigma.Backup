@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+        x:Class="Enigma.Backup.Desktop.Views.ErrorDecisionDialog"
+        x:DataType="vm:ErrorDecisionDialogViewModel"
+        Title="{Binding Title}"
+        Icon="/Assets/enigma-backup.ico"
+        Width="620"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+  <StackPanel Margin="20" Spacing="14">
+
+    <TextBlock Text="{Binding Title}"
+               FontSize="16"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource AppDangerBrush}"
+               TextWrapping="Wrap" />
+
+    <SelectableTextBlock Text="{Binding Path}" TextWrapping="Wrap" FontFamily="monospace" />
+
+    <TextBlock Text="{Binding Message}"
+               TextWrapping="Wrap"
+               Foreground="{DynamicResource AppMutedBrush}" />
+
+    <CheckBox Content="Use this answer for every further error in this run"
+              IsChecked="{Binding ApplyToAll}" />
+
+    <TextBlock Text="Retry always asks again, even with the box ticked — a failure that never clears would otherwise loop forever."
+               TextWrapping="Wrap"
+               FontSize="12"
+               Foreground="{DynamicResource AppMutedBrush}" />
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Abort the backup" Command="{Binding AbortCommand}" IsCancel="True" />
+      <Button Content="Retry" Command="{Binding RetryCommand}" MinWidth="90" />
+      <Button Content="Skip" Command="{Binding SkipCommand}" IsDefault="True" Classes="accent" MinWidth="90" />
+    </StackPanel>
+
+  </StackPanel>
+
+</Window>

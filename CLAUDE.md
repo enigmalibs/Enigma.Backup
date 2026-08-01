@@ -16,7 +16,12 @@ dotnet build Enigma.Backup.slnx                 # build all (solution is .slnx, 
 dotnet build Enigma.Backup.slnx -c Release      # also check Release: DiagnosticsSupport/#if DEBUG paths
 dotnet run --project src/Enigma.Backup.Desktop  # run the desktop app
 dotnet test --solution Enigma.Backup.slnx       # xUnit v3 on MTP — note: --solution, not a positional arg
+./publish.sh                                    # release zips for win-x64 + linux-x64 (publish.ps1 on Windows)
 ```
+
+`publish.sh` / `publish.ps1` build self-contained single-file apps into `artifacts/publish/<rid>/`
+and zip them; `<Version>` in `Directory.Build.props` names the zips. Build the **linux-x64** zip from
+Linux — `Compress-Archive` records no Unix file mode. Full procedure: `docs/RELEASE.md`.
 
 **Warnings are build errors solution-wide** (`TreatWarningsAsErrors`), and the root `.editorconfig`
 is enforced at build time (`EnforceCodeStyleInBuild`) — a style rule at `warning` severity fails the
@@ -43,6 +48,11 @@ Invariants that are easy to violate and must be preserved:
   conflict handler, progress via `IProgress<T>`. Never reference Avalonia, show a dialog, or read the
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
+- **The Desktop's view models never name Avalonia either.** File pickers, modal dialogs and UI-thread
+  marshaling enter through `IFilePicker` / `IDialogService` / `IUiDispatcher` (`Desktop/Services/`,
+  with the Avalonia implementations beside them); only the Views, `App` and those implementations
+  touch Avalonia types. This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the
+  end-to-end test that drives the real pipeline through the real container.
 - **Passwords are parameters, never state.** They cross the API as a parameter, are prompted per run,
   and are never persisted, logged, or cached.
 - **The pipeline is single-pass and streaming.** No temp files, constant memory regardless of archive
@@ -50,6 +60,12 @@ Invariants that are easy to violate and must be preserved:
 - **Composition roots are the two `AddEnigmaBackup*` extensions** (`Core/Hosting/`,
   `Desktop/Hosting/ServiceCollectionExtensions.cs`). Register services there; nothing news up a
   service.
+- **`AvaloniaHostLifetime` is load-bearing, not dead code.** It is a no-op `IHostLifetime` that
+  `AddEnigmaBackupDesktop` *replaces* the host builder's `ConsoleLifetime` with. Delete it as
+  "an empty class" and the app silently goes back to **ignoring `SIGTERM`** — `ConsoleLifetime`
+  cancels the signal and then waits for a `StopAsync` that never comes, because Avalonia owns the
+  foreground loop and `App` calls `_host.Start()`, not `Run()`. A session logout hangs. Keep the
+  `Replace` too: the host builder registers its own lifetime first, so `TryAdd` would do nothing.
 - **The `EBK1` container format is specified in the plan.** Field details may be refined *within*
   version 1 before the first release; any post-release change bumps the version byte.
 

@@ -1,6 +1,6 @@
 # FEATURE-3E11 — Enigma.Backup v1 — cross-platform backup app
 
-**Status:** IN PROGRESS
+**Status:** DONE
 **Type:** multi-phase feature (6 phases)
 **Branches (created by `/build`, one per phase):** `feature/feature-3e11-phaseNN-<slug>`
 
@@ -128,20 +128,31 @@ Header:
   iterations   u32 LE (default 3)
   parallelism  u32 LE (default 4)
   saltLen      u8 (default 16) + salt bytes
-  chunkSize    u32 LE (default 64 MiB)
+  chunkSize    u32 LE (default 1 MiB)
   noncePrefix  8 random bytes
 Per chunk:
-  plainLen     u32 LE (≤ chunkSize; last chunk may be smaller)
+  plainLen     u32 LE (≤ chunkSize; the last data chunk may be smaller)
   ciphertext   plainLen bytes + 16-byte GCM tag
   nonce        = noncePrefix ‖ u32 BE chunk counter (not stored per chunk)
   AAD          = full header bytes ‖ u32 BE chunk counter
+End marker:
+  one final chunk with plainLen = 0 — framing plus tag, 20 bytes — authenticated like any other
 ```
 
 Key = Argon2id(password, salt, params) → 32 bytes. Wrong password or tampering fails the first
-affected chunk's GCM tag → a specific, user-friendly error ("wrong password or corrupted file");
-truncation → incomplete final chunk → error. Encrypted output file extension: `.enc` appended to
+affected chunk's GCM tag → a specific, user-friendly error ("wrong password or corrupted file").
+Truncation is caught by the end marker: a file cut mid-chunk *or* exactly on a chunk boundary runs
+out of bytes before reaching it. Encrypted output file extension: `.enc` appended to
 the compressed name. The build may refine field details **within** version 1 before first
 release; any post-release change bumps the version byte.
+
+> **Refined during the PHASE04 build (2026-08-01), within version 1, agreed with the user before
+> building:** the default `chunkSize` is 1 MiB rather than 64 MiB — a chunk has to be held in memory
+> to be sealed, so the chunk size is the pipeline's memory floor, and framing costs 20 bytes per
+> chunk (0.002% at 1 MiB), so the larger value bought nothing and cost ~128 MiB of buffers per run.
+> The `plainLen = 0` end marker is also new; without it a file cut exactly on a chunk boundary
+> decrypts perfectly and simply stops early. `chunkSize` is a header field, so containers written
+> with any value stay readable.
 
 ### Profile JSON (v1)
 
@@ -191,7 +202,7 @@ empty main window; solution opens cleanly.
 > part of this phase (agreed with the user before building). See
 > `docs/done/FEATURE-3E11-PHASE01.md`.
 
-### PHASE02 — Core: profiles & input scanning (TODO)
+### PHASE02 — Core: profiles & input scanning (DONE)
 
 Branch: `feature/feature-3e11-phase02-profiles-scanning`
 
@@ -206,7 +217,13 @@ Branch: `feature/feature-3e11-phase02-profiles-scanning`
 
 **Acceptance:** all listed behaviors covered by green tests; zero-warning build.
 
-### PHASE03 — Core: tar + compression pipeline & verify (TODO)
+> **Note (build 2026-07-31):** the plan's public surface named `IBackupErrorHandler` under PHASE03,
+> but PHASE02 step 3 routes missing paths through it, so the whole error seam
+> (`IBackupErrorHandler`, `BackupError`, `BackupErrorDecision`, `ErrorDecisionPolicy` with the
+> apply-to-all semantics, `BackupAbortedException`, `SkippedEntry`) landed here and PHASE03 consumes
+> it as-is. See `docs/done/FEATURE-3E11-PHASE02.md`.
+
+### PHASE03 — Core: tar + compression pipeline & verify (DONE)
 
 Branch: `feature/feature-3e11-phase03-archive-pipeline`
 
@@ -221,7 +238,14 @@ Branch: `feature/feature-3e11-phase03-archive-pipeline`
 
 **Acceptance:** round-trip fidelity proven by tests for Zstd and Gzip; zero-warning build.
 
-### PHASE04 — Core: encryption container (Enigma.Core) (TODO)
+> **Notes (build 2026-07-31):** the public surface keeps the plan's `password` parameter on all three
+> services, but PHASE03 refuses an encrypting profile (and an `EBK1` file) with a clear
+> `NotSupportedException` — PHASE04 replaces those two throw sites. A restore's Abort is reported as
+> `RestoreResult.Outcome = Aborted` rather than by throwing, because unlike a backup there is no
+> output file to discard and what was already written has to be reported. See
+> `docs/done/FEATURE-3E11-PHASE03.md`.
+
+### PHASE04 — Core: encryption container (Enigma.Core) (DONE)
 
 Branch: `feature/feature-3e11-phase04-encryption`
 
@@ -236,7 +260,16 @@ Branch: `feature/feature-3e11-phase04-encryption`
 **Acceptance:** encrypted backup→verify→restore proven by tests; tampering/wrong password
 produce the specific errors; zero-warning build.
 
-### PHASE05 — Avalonia desktop app (TODO)
+> **Notes (build 2026-08-01):** two container-format refinements were agreed with the user before
+> building and are folded into the `EBK1` spec above (1 MiB default `chunkSize`; a `plainLen = 0`
+> end marker). The cipher stays on **Enigma.Core** for both Argon2id and AES-256-GCM as the plan
+> validates, with the trade-off measured and accepted: its BouncyCastle GCM runs at ~71 MiB/s
+> against ~3 100 MiB/s for the BCL's hardware-accelerated `AesGcm`, which puts encrypted backups at
+> roughly 34 MiB/s end to end. The plan's "specific error types" are one public
+> `EncryptedArchiveException` carrying an `EncryptedArchiveProblem` discriminator rather than a
+> family of exception types. See `docs/done/FEATURE-3E11-PHASE04.md`.
+
+### PHASE05 — Avalonia desktop app (DONE)
 
 Branch: `feature/feature-3e11-phase05-desktop-app`
 
@@ -254,7 +287,16 @@ Branch: `feature/feature-3e11-phase05-desktop-app`
 **Acceptance:** full backup/restore/verify usable end-to-end from the UI on Windows + Linux;
 ViewModel tests green; zero-warning build.
 
-### PHASE06 — Release readiness (TODO)
+> **Notes (build 2026-08-01):** the window gained an **exclude-pattern editor** the plan's UI sketch
+> did not list — without it the validated per-profile glob excludes would have had no way into a
+> profile, and PHASE06 adds no UI. Everything the view models need from the UI enters through three
+> new seams (`IFilePicker`, `IDialogService`, `IUiDispatcher`), which is what keeps the desktop tests
+> headless and let the phase add an end-to-end test that drives the *real* pipeline through the real
+> container. Switching profiles or starting a new one discards unsaved editor edits without asking —
+> the title's `*` and the profile bar say so, and only the irreversible action (Delete) confirms. See
+> `docs/done/FEATURE-3E11-PHASE05.md`.
+
+### PHASE06 — Release readiness (DONE)
 
 Branch: `feature/feature-3e11-phase06-release`
 
@@ -269,6 +311,26 @@ Branch: `feature/feature-3e11-phase06-release`
 
 **Acceptance:** both zips produced from the scripts and smoke-tested; README accurate;
 Definition of Done for the item as a whole met.
+
+> **Notes (build 2026-08-01):** the phase added `SECURITY.md`, `RELEASENOTES.md` (first-release
+> section) and `docs/RELEASE.md` beyond the steps above, per the `dotnet-release` skill's app
+> variant — agreed with the user before building. The skill's **MSI profile offer was declined**, the
+> plan's "no installer" decision winning; the app icon ships as **placeholder art** for 1.0.0, also
+> confirmed with the user. `<Version>` lives in `Directory.Build.props` rather than a csproj: one
+> product, neither project packable, never released apart.
+>
+> Two defects were found by packaging and running the artifact, and fixed here. The Windows zip was
+> shipping 105 MB of Skia/HarfBuzz native `.pdb` files (package content, so `DebugType` does not
+> reach them) — a publish-time target now strips them, 71 MB → 46 MB. And the app **ignored
+> `SIGTERM`**: `Host.CreateApplicationBuilder`'s `ConsoleLifetime` cancels the signal and waits for a
+> `StopAsync` this app never makes, since Avalonia owns the loop and the host is `Start`ed rather
+> than `Run`. A session logout would have hung. `AvaloniaHostLifetime` replaces it. This was outside
+> the phase's step list and was raised with the user before building.
+>
+> **The acceptance criterion is met for Linux only.** The build machine is Linux; the `win-x64` zip
+> was cross-published and inspected but never executed, and no button has been pressed on either
+> platform (no input-automation tooling, Wayland session — the PHASE05 gap). `docs/QA-CHECKLIST.md`
+> carries the outstanding manual pass. See `docs/done/FEATURE-3E11-PHASE06.md`.
 
 ## Overall acceptance criteria (v1)
 

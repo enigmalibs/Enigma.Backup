@@ -7,4 +7,31 @@
         <FluentTheme />
     </Application.Styles>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- The app's own accents. Defined here rather than taken from the theme so they are
+                 guaranteed to resolve in both variants and read the same on Windows and Linux. -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="AppDangerBrush" Color="#B3261E" />
+                    <SolidColorBrush x:Key="AppWarningBrush" Color="#8A5300" />
+                    <SolidColorBrush x:Key="AppSuccessBrush" Color="#1B6B36" />
+                    <SolidColorBrush x:Key="AppMutedBrush" Color="#5F6368" />
+                    <!-- Translucent, so the panels lift off whatever the theme's window colour is
+                         instead of being pinned to one that may not match it. -->
+                    <SolidColorBrush x:Key="AppPanelBrush" Color="#FFFFFF" Opacity="0.55" />
+                    <SolidColorBrush x:Key="AppPanelBorderBrush" Color="#000000" Opacity="0.13" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AppDangerBrush" Color="#F2B8B5" />
+                    <SolidColorBrush x:Key="AppWarningBrush" Color="#F3C669" />
+                    <SolidColorBrush x:Key="AppSuccessBrush" Color="#7EE2A8" />
+                    <SolidColorBrush x:Key="AppMutedBrush" Color="#A9AEB6" />
+                    <SolidColorBrush x:Key="AppPanelBrush" Color="#FFFFFF" Opacity="0.04" />
+                    <SolidColorBrush x:Key="AppPanelBorderBrush" Color="#FFFFFF" Opacity="0.12" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
 </Application>

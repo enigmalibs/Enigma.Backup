@@ -1,19 +1,255 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="using:System"
         xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
         x:Class="Enigma.Backup.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
         Icon="/Assets/enigma-backup.ico"
-        Width="1000" Height="700"
+        Width="1080" Height="780"
+        MinWidth="900" MinHeight="660"
+        DragDrop.AllowDrop="True"
         WindowStartupLocation="CenterScreen">
 
-    <!-- Intentionally empty shell: the real UI (profile bar, inputs list, output picker, compression
-         and encryption options, Backup / Restore / Verify, progress and summary) arrives in PHASE05.
-         Strings are hardcoded English throughout, per the plan's validated decisions. -->
-    <TextBlock Text="Enigma.Backup — the user interface arrives in PHASE05."
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               Opacity="0.6" />
+  <Window.Styles>
+    <Style Selector="Border.panel">
+      <Setter Property="Background" Value="{DynamicResource AppPanelBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AppPanelBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="12" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="{DynamicResource AppMutedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.headline.success">
+      <Setter Property="Foreground" Value="{DynamicResource AppSuccessBrush}" />
+    </Style>
+    <Style Selector="TextBlock.headline.warning">
+      <Setter Property="Foreground" Value="{DynamicResource AppWarningBrush}" />
+    </Style>
+    <Style Selector="TextBlock.headline.failure">
+      <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid Margin="14" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="10">
+
+    <!-- Profile bar: which profile is loaded, and everything that can be done to it. -->
+    <Border Grid.Row="0" Classes="panel" IsEnabled="{Binding IsIdle}">
+      <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="Auto,280,*">
+          <TextBlock Grid.Column="0" Text="Profile" Classes="section" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <ComboBox Grid.Column="1"
+                    ItemsSource="{Binding ProfileNames}"
+                    SelectedItem="{Binding SelectedProfileName}"
+                    PlaceholderText="No profile loaded"
+                    HorizontalAlignment="Stretch" />
+          <TextBlock Grid.Column="2"
+                     Text="{Binding ProfileStatus}"
+                     Classes="muted"
+                     VerticalAlignment="Center"
+                     Margin="12,0,0,0" />
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Content="New" Command="{Binding NewProfileCommand}" />
+          <Button Content="Save" Command="{Binding SaveProfileCommand}" />
+          <Button Content="Save as…" Command="{Binding SaveProfileAsCommand}" />
+          <Button Content="Rename…" Command="{Binding RenameProfileCommand}" />
+          <Button Content="Delete…" Command="{Binding DeleteProfileCommand}" />
+          <Button Content="Import…" Command="{Binding ImportProfileCommand}" />
+          <Button Content="Export…" Command="{Binding ExportProfileCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+
+      <!-- What to back up. -->
+      <Border Grid.Column="0" Classes="panel" IsEnabled="{Binding IsIdle}">
+        <Grid RowDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+
+          <TextBlock Grid.Row="0" Text="Files and folders to back up" Classes="section" />
+
+          <ListBox Grid.Row="1"
+                   ItemsSource="{Binding Editor.Inputs}"
+                   SelectedItem="{Binding Editor.SelectedInput}"
+                   MinHeight="150">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="sys:String">
+                <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding}" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
+            <Button Content="Add files…" Command="{Binding Editor.AddFilesCommand}" />
+            <Button Content="Add folder…" Command="{Binding Editor.AddFolderCommand}" />
+            <Button Content="Remove" Command="{Binding Editor.RemoveInputCommand}" />
+            <Button Content="Remove all" Command="{Binding Editor.ClearInputsCommand}" />
+          </StackPanel>
+
+          <TextBlock Grid.Row="3"
+                     Text="Files and folders dropped anywhere on this window are added here too."
+                     Classes="muted"
+                     FontSize="12"
+                     TextWrapping="Wrap" />
+
+          <TextBlock Grid.Row="4" Text="Exclude patterns" Classes="section" Margin="0,6,0,0" />
+
+          <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+            <TextBox Grid.Column="0"
+                     Text="{Binding Editor.NewExcludeGlob}"
+                     PlaceholderText="e.g. **/bin/** or *.log">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding Editor.AddExcludeCommand}" />
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Grid.Column="1" Content="Add" Command="{Binding Editor.AddExcludeCommand}" />
+            <Button Grid.Column="2" Content="Remove" Command="{Binding Editor.RemoveExcludeCommand}" />
+          </Grid>
+
+          <ListBox Grid.Row="6"
+                   ItemsSource="{Binding Editor.ExcludeGlobs}"
+                   SelectedItem="{Binding Editor.SelectedExcludeGlob}"
+                   Height="98" />
+
+        </Grid>
+      </Border>
+
+      <!-- What the last run produced. -->
+      <Border Grid.Column="1" Classes="panel">
+        <Grid RowDefinitions="Auto,*" RowSpacing="8">
+
+          <TextBlock Grid.Row="0" Text="Last run" Classes="section" />
+
+          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="12">
+
+              <TextBlock Text="Nothing has run yet. Back up, restore or verify — what happened appears here."
+                         Classes="muted"
+                         TextWrapping="Wrap"
+                         IsVisible="{Binding !HasSummary}" />
+
+              <StackPanel Spacing="12" IsVisible="{Binding HasSummary}">
+
+                <TextBlock Text="{Binding Summary.Headline}"
+                           Classes="headline"
+                           Classes.success="{Binding Summary.IsSuccess}"
+                           Classes.warning="{Binding Summary.IsWarning}"
+                           Classes.failure="{Binding Summary.IsFailure}"
+                           FontWeight="SemiBold"
+                           TextWrapping="Wrap" />
+
+                <ItemsControl ItemsSource="{Binding Summary.Details}" IsVisible="{Binding Summary.HasDetails}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SummaryDetail">
+                      <Grid ColumnDefinitions="130,*" Margin="0,0,0,3">
+                        <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" />
+                        <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel Spacing="4" IsVisible="{Binding Summary.HasSkipped}">
+                  <TextBlock Text="{Binding Summary.SkippedHeader}"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource AppWarningBrush}" />
+                  <ItemsControl ItemsSource="{Binding Summary.Skipped}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="sys:String">
+                        <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,0,0,3" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+
+                <StackPanel Spacing="4" IsVisible="{Binding Summary.HasWarnings}">
+                  <TextBlock Text="{Binding Summary.WarningsHeader}" FontWeight="SemiBold" />
+                  <ItemsControl ItemsSource="{Binding Summary.Warnings}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="sys:String">
+                        <SelectableTextBlock Text="{Binding}" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,3" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- Where it goes, and how. -->
+    <Border Grid.Row="2" Classes="panel" IsEnabled="{Binding IsIdle}">
+      <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="10" ColumnSpacing="10">
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Save backups in" Classes="section" VerticalAlignment="Center" />
+        <TextBox Grid.Row="0" Grid.Column="1"
+                 Text="{Binding Editor.OutputDirectory}"
+                 PlaceholderText="Choose the folder the archives are written to" />
+        <Button Grid.Row="0" Grid.Column="2" Content="Browse…" Command="{Binding Editor.BrowseOutputCommand}" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Compression" Classes="section" VerticalAlignment="Center" />
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="12">
+          <ComboBox ItemsSource="{Binding Editor.CompressionOptions}"
+                    SelectedItem="{Binding Editor.SelectedCompression}"
+                    Width="210">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:CompressionOption">
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBlock Text="{Binding Editor.SelectedCompression.Description}"
+                     Classes="muted"
+                     VerticalAlignment="Center"
+                     TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <CheckBox Grid.Row="1" Grid.Column="2"
+                  Content="Encrypt with a password"
+                  IsChecked="{Binding Editor.Encrypt}"
+                  ToolTip.Tip="The password is asked for at the start of every run and is never stored." />
+
+      </Grid>
+    </Border>
+
+    <!-- What to do, and how far it has got. -->
+    <Border Grid.Row="3" Classes="panel">
+      <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
+          <Button Grid.Column="0" Content="Back up" Command="{Binding BackupCommand}" Classes="accent" MinWidth="130" Height="34" />
+          <Button Grid.Column="1" Content="Restore…" Command="{Binding RestoreCommand}" MinWidth="110" Height="34" />
+          <Button Grid.Column="2" Content="Verify…" Command="{Binding VerifyCommand}" MinWidth="110" Height="34" />
+          <Button Grid.Column="4" Content="Cancel" Command="{Binding CancelCommand}" MinWidth="100" Height="34" />
+        </Grid>
+
+        <ProgressBar Grid.Row="1"
+                     Minimum="0" Maximum="100"
+                     Value="{Binding ProgressPercent}"
+                     IsIndeterminate="{Binding IsProgressIndeterminate}"
+                     Height="6" />
+
+        <StackPanel Grid.Row="2" Spacing="2">
+          <TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding CurrentItem}"
+                     Classes="muted"
+                     FontSize="12"
+                     TextTrimming="CharacterEllipsis"
+                     IsVisible="{Binding CurrentItem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+
+      </Grid>
+    </Border>
+
+  </Grid>
 
 </Window>
