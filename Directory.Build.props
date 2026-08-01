@@ -1,0 +1,23 @@
+<Project>
+
+  <!-- Shared settings for every project in the solution. Package versions are
+       centralized separately in Directory.Packages.props (Central Package Management). -->
+  <PropertyGroup>
+    <Authors>Josué Clément</Authors>
+    <Copyright>Copyright © 2026 Josué Clément</Copyright>
+    <!-- One product, one version: the Core and the Desktop app ship together and are never
+         published separately (neither project is packable), so the version lives here rather
+         than in either .csproj. publish.sh / publish.ps1 name the release zips after it, which
+         they read back through `dotnet msbuild -getProperty:Version`. -->
+    <Version>1.0.1</Version>
+    <LangVersion>14</LangVersion>
+    <Nullable>enable</Nullable>
+    <!-- Explicit usings everywhere: every file declares its own using directives. -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- Warnings are treated as errors across the whole solution (library, Desktop, tests). -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Enforce the .editorconfig code-style rules (the warning-level subset) at build time. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+</Project>

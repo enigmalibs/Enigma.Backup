@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Enigma.Backup.Desktop</RootNamespace>
+    <AssemblyName>Enigma.Backup.Desktop</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Windows-only: embeds the icon in the .exe. The running window's icon is set in
+         MainWindow.axaml (Icon="/Assets/enigma-backup.ico"), which is what Linux uses. -->
+    <ApplicationIcon>Assets/enigma-backup.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Needed for the Windows clipboard / drag-and-drop interop the UI uses (PHASE05). -->
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+
+  <!--
+    Skia and HarfBuzz (Avalonia's rendering stack) ship native .pdb symbol files beside their
+    runtime libraries — 105 MB of them on win-x64, more than the app itself. They arrive as
+    package content, so DebugType has no effect on them, and they are debug symbols for
+    someone else's C++ code: never useful in a release zip. Drop every native .pdb from the
+    publish set; the app's own managed symbols are unaffected.
+  -->
+  <Target Name="RemoveNativeSymbolsFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish
+        Remove="@(ResolvedFileToPublish)"
+        Condition="'%(Extension)' == '.pdb' And '%(ResolvedFileToPublish.AssetType)' == 'native'" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Enigma.Backup.Core\Enigma.Backup.Core.csproj" />
+  </ItemGroup>
+
+</Project>

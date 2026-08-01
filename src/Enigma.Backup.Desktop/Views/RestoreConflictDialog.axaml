@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+        x:Class="Enigma.Backup.Desktop.Views.RestoreConflictDialog"
+        x:DataType="vm:RestoreConflictDialogViewModel"
+        Title="The file already exists"
+        Icon="/Assets/enigma-backup.ico"
+        Width="640"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+  <StackPanel Margin="20" Spacing="14">
+
+    <TextBlock Text="This file is already on disk"
+               FontSize="16"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource AppWarningBrush}" />
+
+    <SelectableTextBlock Text="{Binding DestinationPath}" TextWrapping="Wrap" FontFamily="monospace" />
+
+    <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto">
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="In the archive" Foreground="{DynamicResource AppMutedBrush}" />
+      <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ArchiveDescription}" />
+
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="On disk now" Foreground="{DynamicResource AppMutedBrush}" Margin="0,4,0,0" />
+      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExistingDescription}" Margin="0,4,0,0" />
+
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Entry" Foreground="{DynamicResource AppMutedBrush}" Margin="0,4,0,0" />
+      <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ArchivePath}" TextWrapping="Wrap" Margin="0,4,0,0" />
+    </Grid>
+
+    <CheckBox Content="Use this answer for every further file in this restore"
+              IsChecked="{Binding ApplyToAll}" />
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Stop the restore" Command="{Binding AbortCommand}" IsCancel="True" />
+      <Button Content="Overwrite" Command="{Binding OverwriteCommand}" MinWidth="90" />
+      <Button Content="Keep the file" Command="{Binding SkipCommand}" IsDefault="True" Classes="accent" MinWidth="90" />
+    </StackPanel>
+
+  </StackPanel>
+
+</Window>
