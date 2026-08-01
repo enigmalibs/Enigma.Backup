@@ -5,7 +5,7 @@ NuGet: neither project is packable, and the release artifacts are the two self-c
 by `publish.sh` / `publish.ps1`. There are consequently no `dotnet pack` or `dotnet nuget push`
 steps, and no API key to handle.
 
-Replace `X.Y.Z` with the version being released (e.g. `1.1.0`) throughout. The version lives in
+Replace `X.Y.Z` with the version being released (e.g. `1.0.1`) throughout. The version lives in
 `Directory.Build.props` (`<Version>`) and covers the whole solution — the Core and the Desktop app
 ship together and are never versioned apart.
 
@@ -65,8 +65,19 @@ are manual.
 
 ## 4. Merge to the default branch
 
-Merge the release branch into `main` via a pull request (or fast-forward), then check it out
-locally:
+The repository branches **feature → develop → main**: work lands on a `feature/…` (or `bugfix/…`,
+`review/…`) branch, merges into `develop`, and only `develop` merges into `main`. A release therefore
+takes two merges, not one — the release branch never goes straight to `main`.
+
+```bash
+git switch develop
+git merge --no-ff feature/<the-release-branch>
+
+git switch main
+git merge --no-ff develop
+```
+
+Then make sure `main` is what gets tagged:
 
 ```bash
 git switch main
@@ -75,8 +86,9 @@ git pull
 
 ## 5. Tag the release
 
-The repository had no tags before 1.0.0, so the convention is a **bare** `X.Y.Z`. Run `git tag` to
-confirm before adding a new one. Tag the merge commit and push the tag:
+The convention is a **bare** `X.Y.Z` — the repository had no tags before 1.0.1, because 1.0.0 was
+built but never published. Run `git tag` to confirm before adding a new one. Tag the merge commit on
+`main` and push the tag:
 
 ```bash
 git tag X.Y.Z

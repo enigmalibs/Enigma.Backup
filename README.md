@@ -6,8 +6,10 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.0** — the first release: profiles, glob excludes, Zstandard/gzip archives,
-> AES-256-GCM encryption, restore and verification. See [RELEASENOTES.md](RELEASENOTES.md).
+> **What's new in 1.0.1** — a maintenance release: the cryptography dependency moves to
+> Enigma.Core 1.1.0, and a checked-in archive from the previous release is now part of the test suite,
+> so "your old backups still open" is something the build proves rather than promises. Nothing about
+> the archive format changed. See [RELEASENOTES.md](RELEASENOTES.md).
 
 ## Capabilities
 
@@ -31,8 +33,8 @@ executable inside. It is self-contained — **no .NET runtime needs to be instal
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.0.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.0.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.0.1-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.0.1-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 There is no installer and nothing is written outside your home directory. To uninstall, delete the
 executable and — if you want your profiles gone too — the config folder listed below.

@@ -68,6 +68,15 @@ Invariants that are easy to violate and must be preserved:
   `Replace` too: the host builder registers its own lifetime first, so `TryAdd` would do nothing.
 - **The `EBK1` container format is specified in the plan.** Field details may be refined *within*
   version 1 before the first release; any post-release change bumps the version byte.
+- **`tests/Enigma.Backup.Core.Tests/Fixtures/` is evidence, not test input — never regenerate it.**
+  It holds a real encrypted archive written by the 1.0.0 build, and `GoldenArchiveCompatibilityTests`
+  verifies and restores it on every run. That is the only check that can catch a behavioural change
+  in Argon2id or AES-256-GCM arriving through an `Enigma.Core` / BouncyCastle bump: every other
+  encryption test seals and opens with the *same* build, so it agrees with itself whatever the
+  primitives do. Regenerating the fixture to make a red test pass turns it into a same-version round
+  trip, silently deletes the evidence, and leaves "your old backups still open" untested — which is
+  why `Fixtures/README.md` says so too. A failure there means archives people already hold can no
+  longer be read; investigate what changed under the cipher.
 
 ## Conventions (deliberate, enforced)
 

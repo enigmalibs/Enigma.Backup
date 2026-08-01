@@ -15,7 +15,7 @@
        from the house library template is deliberately absent. -->
   <ItemGroup>
     <!-- AES-256-GCM + Argon2id primitives for the EBK1 container (PHASE04). -->
-    <PackageVersion Include="Enigma.Core" Version="1.0.0" />
+    <PackageVersion Include="Enigma.Core" Version="1.1.0" />
     <!-- Zstandard compression (managed port); Gzip comes from the BCL (PHASE03). -->
     <PackageVersion Include="ZstdSharp.Port" Version="0.8.8" />
     <!-- Glob exclusion patterns applied during the input scan (PHASE02). -->

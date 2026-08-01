@@ -100,6 +100,41 @@ Legend: **L** = Linux x64 · **W** = Windows x64. Tick both.
 
 ---
 
+## What was verified for 1.0.1
+
+**Linux x64 — automated, against the extracted release zip** (`Enigma.Backup-1.0.1-linux-x64.zip`):
+
+| # | Check | Result |
+|---|-------|--------|
+| 1.1 | Extracts to exactly one file | Pass — one entry, `Enigma.Backup.Desktop` |
+| 1.2 | Executable bit survives extraction | Pass — `-rwxr-xr-x` |
+| 1.4 | Window opens with the app icon and title | Pass — titled `Enigma.Backup — QA Release`, icon in the title bar; screenshotted |
+| 1.6 | `kill -TERM <pid>` terminates it | Pass — exited within a second |
+| 2.3 / 2.4 | A profile in the per-user config folder loads at startup | Pass — a `.json` placed under `XDG_CONFIG_HOME` appeared in the drop-down with its inputs, exclude glob, output folder and compression all populated |
+| 3.5 | **Back up** disabled with no inputs and no output folder | Pass, at rest — a second launch against an input-less profile shows it greyed out while Restore… and Verify… stay enabled |
+
+**What was *not* exercised.** Everything requiring a button press, on both platforms — all of §4
+(backup), §5 (restore), §6 (verify) and §7 (errors and cancellation), the interactive half of §2 and
+§3, plus §1.3 (no .NET runtime installed) and §1.5 (closing the window exits the process). The gap is
+unchanged from 1.0.0 and has the same cause: no input-automation tool (`xdotool`, `ydotool`,
+`wmctrl`, `kdotool`) is installed on the build machine and the session is Wayland, so the release QA
+cannot click anything. What sits behind those buttons is covered by the 354-test suite — in
+particular `tests/Enigma.Backup.Desktop.Tests/Integration/WindowEndToEndTests.cs`, which drives the
+real container, profile store and streaming pipeline through the same view models the window binds
+to.
+
+**Windows x64 — not exercised.** The build machine is Linux only. The `win-x64` zip was
+cross-published and its staging directory inspected (§1.1: one file, `Enigma.Backup.Desktop.exe`),
+but nothing in it has been run.
+
+**Specific to this release.** 1.0.1 changes no application code — only the cryptography dependency
+underneath it. The risk it carries is not in the buttons but in whether existing encrypted archives
+still open, and that is covered by an automated test rather than by this checklist: a real 1.0.0
+archive is checked into `tests/Enigma.Backup.Core.Tests/Fixtures/` and is verified and restored
+byte-for-byte on every test run.
+
+---
+
 ## What was verified for 1.0.0
 
 **Linux x64 — automated, against the extracted release zip** (`Enigma.Backup-1.0.0-linux-x64.zip`):
