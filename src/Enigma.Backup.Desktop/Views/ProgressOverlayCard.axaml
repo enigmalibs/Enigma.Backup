@@ -1,0 +1,81 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ei="https://github.com/josueclement/Enigma.Icons"
+                    xmlns:views="using:Enigma.Backup.Desktop.Views">
+
+  <!--
+    Our own control theme, merged from App.axaml *after* the library's dictionary so every brush below
+    resolves. Everything is a DynamicResource: the card is built while a run starts and may still be on
+    screen when the theme variant changes under it.
+  -->
+  <ControlTheme x:Key="{x:Type views:ProgressOverlayCard}" TargetType="views:ProgressOverlayCard">
+
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <!-- The shadow is drawn outside the border's bounds. -->
+    <Setter Property="ClipToBounds" Value="False" />
+
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{DynamicResource EnigmaSurfaceHighBrush}"
+                BorderBrush="{DynamicResource EnigmaBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                MinWidth="440"
+                MaxWidth="640"
+                BoxShadow="0 8 32 #40000000">
+
+          <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="10">
+
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+              <TextBlock Grid.Column="0"
+                         Text="{TemplateBinding Title}"
+                         FontSize="18"
+                         FontWeight="SemiBold" />
+
+              <!-- A figure only once there is one to give: a scan does not know what it is a fraction of. -->
+              <TextBlock Grid.Column="1"
+                         Text="{Binding Progress, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:N0} %'}"
+                         FontSize="18"
+                         Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}"
+                         IsVisible="{Binding !IsIndeterminate, RelativeSource={RelativeSource TemplatedParent}}" />
+            </Grid>
+
+            <ProgressBar Grid.Row="1"
+                         Minimum="0"
+                         Maximum="100"
+                         Value="{Binding Progress, RelativeSource={RelativeSource TemplatedParent}}"
+                         IsIndeterminate="{Binding IsIndeterminate, RelativeSource={RelativeSource TemplatedParent}}" />
+
+            <TextBlock Grid.Row="2"
+                       Text="{TemplateBinding Message}"
+                       TextWrapping="Wrap"
+                       IsVisible="{TemplateBinding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <TextBlock Grid.Row="3"
+                       Text="{TemplateBinding CurrentItem}"
+                       FontSize="12"
+                       Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}"
+                       TextTrimming="CharacterEllipsis"
+                       IsVisible="{TemplateBinding CurrentItem, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <!-- Cancel lives here and nowhere else: the scrim below swallows every click on the window. -->
+            <Button Grid.Row="4"
+                    Command="{TemplateBinding CancelCommand}"
+                    HorizontalAlignment="Right"
+                    MinWidth="110"
+                    Height="34">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Data="{ei:IconGeometry XCircle}" Width="15" Height="15" VerticalAlignment="Center" />
+                <TextBlock Text="Cancel" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+
+          </Grid>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+
+  </ControlTheme>
+
+</ResourceDictionary>

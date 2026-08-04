@@ -41,6 +41,21 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.IsType<AvaloniaUiDispatcher>(provider.GetRequiredService<IUiDispatcher>());
         Assert.IsType<FilePicker>(provider.GetRequiredService<IFilePicker>());
         Assert.IsType<DialogService>(provider.GetRequiredService<IDialogService>());
+        Assert.IsType<ProgressOverlay>(provider.GetRequiredService<IProgressOverlay>());
+        Assert.IsType<NotificationService>(provider.GetRequiredService<INotificationService>());
+    }
+
+    /// <remarks>
+    /// The overlay holds the card it is currently showing, so a second instance would be one whose
+    /// progress reports draw on nothing at all.
+    /// </remarks>
+    [Fact]
+    public void TheRunOverlayIsOneInstance()
+    {
+        using ServiceProvider provider = Build();
+
+        Assert.Same(provider.GetRequiredService<IProgressOverlay>(), provider.GetRequiredService<IProgressOverlay>());
+        Assert.Same(provider.GetRequiredService<INotificationService>(), provider.GetRequiredService<INotificationService>());
     }
 
     /// <remarks>

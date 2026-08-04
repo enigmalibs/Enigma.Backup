@@ -3,7 +3,9 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Enigma.Avalonia.Desktop.Controls.ContentDialog;
 using Enigma.Avalonia.Desktop.Services;
@@ -11,6 +13,8 @@ using Enigma.Backup.Core.Errors;
 using Enigma.Backup.Core.Restoring;
 using Enigma.Backup.Desktop.ViewModels;
 using Enigma.Backup.Desktop.Views;
+using Enigma.Icons.Avalonia;
+using Enigma.Icons.Phosphor;
 
 namespace Enigma.Backup.Desktop.Services;
 
@@ -58,6 +62,7 @@ public sealed class DialogService : IDialogService
             static (viewModel, dialog, button) =>
             {
                 dialog.Title = viewModel.Title;
+                dialog.IconData = Glyph(PhosphorIcon.LockKey);
                 dialog.PrimaryButtonText = "OK";
                 dialog.PrimaryButtonCommand = button(viewModel.AcceptCommand);
                 dialog.CloseButtonText = "Cancel";
@@ -90,6 +95,7 @@ public sealed class DialogService : IDialogService
             static (viewModel, dialog, button) =>
             {
                 dialog.Title = viewModel.Title;
+                dialog.IconData = Glyph(PhosphorIcon.PencilSimple);
                 dialog.PrimaryButtonText = "OK";
                 dialog.PrimaryButtonCommand = button(viewModel.AcceptCommand);
                 dialog.CloseButtonText = "Cancel";
@@ -112,6 +118,8 @@ public sealed class DialogService : IDialogService
             static (viewModel, dialog, button) =>
             {
                 dialog.Title = viewModel.Title;
+                dialog.IconData = Glyph(PhosphorIcon.Warning);
+                dialog.IconBrush = Brush("EnigmaWarningBrush");
                 dialog.PrimaryButtonText = "Skip";
                 dialog.PrimaryButtonCommand = button(viewModel.SkipCommand);
                 dialog.SecondaryButtonText = "Retry";
@@ -135,6 +143,8 @@ public sealed class DialogService : IDialogService
             static (viewModel, dialog, button) =>
             {
                 dialog.Title = "The file already exists";
+                dialog.IconData = Glyph(PhosphorIcon.Warning);
+                dialog.IconBrush = Brush("EnigmaWarningBrush");
                 dialog.PrimaryButtonText = "Keep the file";
                 dialog.PrimaryButtonCommand = button(viewModel.SkipCommand);
                 dialog.SecondaryButtonText = "Overwrite";
@@ -166,6 +176,24 @@ public sealed class DialogService : IDialogService
                 dialog.PrimaryButtonCommand = button(viewModel.ConfirmCommand);
                 dialog.DefaultButton = DefaultButton.Primary;
 
+                // The severity is the whole difference between "here is what happened" and "this went
+                // wrong", so it is what the header shows. ConfirmAsync builds its question as a
+                // Warning, which is why "delete this profile?" carries the warning icon rather than
+                // the information one.
+                (PhosphorIcon icon, string? brushKey) = viewModel switch
+                {
+                    { IsError: true } => (PhosphorIcon.WarningCircle, "EnigmaErrorBrush"),
+                    { IsWarning: true } => (PhosphorIcon.Warning, "EnigmaWarningBrush"),
+                    _ => (PhosphorIcon.Info, null),
+                };
+
+                dialog.IconData = Glyph(icon);
+
+                if (brushKey is not null)
+                {
+                    dialog.IconBrush = Brush(brushKey);
+                }
+
                 // A plain message has nothing to decline, so it gets no second button. Escape and the
                 // scrim still dismiss it, which leaves Confirmed false — the cautious answer.
                 if (viewModel.IsConfirmation)
@@ -176,6 +204,22 @@ public sealed class DialogService : IDialogService
             },
             static viewModel => viewModel.Confirmed,
             cancellationToken);
+
+    /// <summary>One Phosphor glyph, as the geometry a dialog header draws.</summary>
+    /// <param name="icon">Which glyph.</param>
+    private static Geometry Glyph(PhosphorIcon icon) =>
+        PhosphorIconSet.Instance.GetGlyph(icon, PhosphorWeight.Regular).ToGeometry();
+
+    /// <summary>One of the theme's brushes, by key.</summary>
+    /// <param name="key">The <c>Enigma*</c> brush key.</param>
+    /// <returns>The brush, or <see langword="null"/> — which leaves the dialog its own default.</returns>
+    /// <remarks>
+    /// A dynamic resource cannot be assigned from here, but it does not need to be: the theme's brushes
+    /// are not theme-scoped, only their colours are, so this one instance keeps following a variant
+    /// switch. There is no <c>Application</c> at all in a headless test, hence the null.
+    /// </remarks>
+    private static IBrush? Brush(string key) =>
+        Application.Current?.TryFindResource(key, out object? value) == true ? value as IBrush : null;
 
     /// <summary>Raises one dialog in the window and reads its answer back.</summary>
     /// <typeparam name="TViewModel">The dialog's view model.</typeparam>

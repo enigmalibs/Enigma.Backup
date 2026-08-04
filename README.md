@@ -56,14 +56,15 @@ The app is a single window, top to bottom:
    `*.log`, `**/node_modules/**`.
 4. **Save backups in** — the output folder. It is always excluded from the backup itself, so
    pointing it inside an input folder is safe.
-5. **Compression** — Zstandard (`.tar.zst`, the default: faster and smaller) or gzip (`.tar.gz`,
-   readable by anything).
-6. **Encrypt with a password** — tick it to get AES-256-GCM encryption. You are prompted for the
-   password each run, with a confirmation field; it is never saved anywhere.
-7. **Back up** — runs the backup, showing the current file and overall progress, with `Cancel`
-   available throughout. **Restore…** asks for an archive and a destination; **Verify…** re-reads an
-   archive and checks it against its sidecar. Every run ends in the **Last run** panel with the
-   counts, the duration, the output path, and a prominent list of anything skipped.
+5. **Archive options → Compression** — Zstandard (`.tar.zst`, the default: faster and smaller) or gzip
+   (`.tar.gz`, readable by anything).
+6. **Archive options → Encrypt with a password** — switch it on to get AES-256-GCM encryption. You are
+   prompted for the password each run, with a confirmation field; it is never saved anywhere.
+7. **Back up** — runs the backup behind a card that shows the phase, the current file, the percentage
+   and `Cancel`. **Restore…** asks for an archive and a destination; **Verify…** re-reads an archive and
+   checks it against its sidecar. When a run ends, the outcome appears as a banner at the top of the
+   window, and the **Last run** panel fills with the counts, the duration, the output path, and a
+   prominent list of anything skipped.
 
 If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort**, with an
 *apply to all further errors* option. Aborting — like cancelling — deletes the partial archive, so a

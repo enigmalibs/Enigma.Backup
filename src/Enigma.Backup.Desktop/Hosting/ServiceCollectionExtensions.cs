@@ -29,6 +29,11 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();
             services.TryAddSingleton<IFilePicker, FilePicker>();
             services.TryAddSingleton<IDialogService, DialogService>();
+            services.TryAddSingleton<INotificationService, NotificationService>();
+
+            // Singleton because it holds the card it is currently showing: a second instance would be
+            // one whose Update calls draw on nothing.
+            services.TryAddSingleton<IProgressOverlay, ProgressOverlay>();
 
             // Transient: views and view models are cheap and per-consumer (see dotnet-di-design).
             services.AddTransient<ProfileEditorViewModel>();

@@ -13,6 +13,6 @@
 | FEATURE-17FE | Enigma.Avalonia.Desktop adoption & 1.1.0       | IN PROGRESS | docs/plan/FEATURE-17FE.md |
 | - PHASE01    | Package, theme & icon foundation                | DONE        | (in FEATURE-17FE.md)      |
 | - PHASE02    | Dialogs & pickers on the library services      | DONE        | (in FEATURE-17FE.md)      |
-| - PHASE03    | Main-window restyle                            | TODO        | (in FEATURE-17FE.md)      |
+| - PHASE03    | Main-window restyle                            | DONE        | (in FEATURE-17FE.md)      |
 | - PHASE04    | Theme preference & Settings dialog             | TODO        | (in FEATURE-17FE.md)      |
 | - PHASE05    | Release readiness: 1.1.0                       | TODO        | (in FEATURE-17FE.md)      |

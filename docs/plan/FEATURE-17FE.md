@@ -270,7 +270,7 @@ Escape behave as before, a scrim click cancels, cancelling a run while a decisio
 closes it and aborts, and all five pickers (files, folder, archive, import, export) still return
 usable paths.
 
-### PHASE03 — Main-window restyle (TODO)
+### PHASE03 — Main-window restyle (DONE)
 
 Branch: `feature/feature-17fe-phase03-window-restyle`
 

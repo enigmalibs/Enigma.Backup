@@ -44,7 +44,9 @@ Two production projects (`src/`), both `net10.0` on purpose:
   `TextBox`/`ComboBox` via FluentTheme's key overrides — drop it and everything else goes
   untemplated) and merges `avares://Enigma.Avalonia.Desktop/Themes/Fluent.axaml` into
   `Application.Resources` as a **`ResourceInclude`**; a `StyleInclude` fails the build with
-  `AVLN2000`. Colours are the library's `Enigma*` brush keys, **always `DynamicResource`** —
+  `AVLN2000`. Our own `Views/ProgressOverlayCard.axaml` is merged **after** it — a control theme of ours
+  reads the library's brushes, and on a duplicate key the last dictionary wins, so anything of ours
+  merged *before* it is silently ignored. Colours are the library's `Enigma*` brush keys, **always `DynamicResource`** —
   `StaticResource` freezes the colour and the control stops following a theme switch. The window's own
   `Background` is ours to set (`EnigmaBackgroundBrush`): the theme paints controls, not windows.
   Icons come from `Enigma.Icons.Phosphor` through `xmlns:ei="https://github.com/josueclement/Enigma.Icons"`.
@@ -56,11 +58,13 @@ Invariants that are easy to violate and must be preserved:
   conflict handler, progress via `IProgress<T>`. Never reference Avalonia, show a dialog, or read the
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
-- **The Desktop's view models never name Avalonia either.** File pickers, dialogs and UI-thread
-  marshaling enter through `IFilePicker` / `IDialogService` / `IUiDispatcher` (`Desktop/Services/`,
-  with the Avalonia implementations beside them); only the Views, `App` and those implementations
-  touch Avalonia types. This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the
-  end-to-end test that drives the real pipeline through the real container.
+- **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run card, the
+  outcome banner and UI-thread marshaling enter through `IFilePicker` / `IDialogService` /
+  `IProgressOverlay` / `INotificationService` / `IUiDispatcher` (`Desktop/Services/`, with the Avalonia
+  implementations beside them); only the Views, `App` and those implementations touch Avalonia types.
+  This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the end-to-end test that drives
+  the real pipeline through the real container, which therefore has to register fakes for the two seams
+  whose real implementations reach for a host control.
 - **The control library's own services are consumed only inside `Desktop/Services/`, behind those
   interfaces — no view model ever injects one.** `IContentDialogService` hands the caller an Avalonia
   control and the picker services deal in `IStorageFile`, so injecting one anywhere else breaks the
@@ -73,6 +77,17 @@ Invariants that are easy to violate and must be preserved:
   order.** It is deliberately *not* the order in the library's `setup.md`: a `Panel` z-stacks its
   children, and a mid-run decision (unreadable file, restore conflict) is raised *while* the run
   overlay is open — behind the scrim it cannot be clicked and the app looks hung.
+- **A run's progress lives on the overlay, and the scrim must always come down.** There is one card
+  (`Views/ProgressOverlayCard`, ours — the library ships none), raised and taken away by
+  `MainWindowViewModel.RunAsync`, whose `finally` is what guarantees the second half: an exception
+  between show and hide leaves a scrim over an app nobody can click. Progress reaches both the view
+  model's own properties and the card through the single `ReportProgress` method, so the two cannot
+  drift; Cancel is *on* the card, because behind the scrim a button in the window cannot be pressed.
+- **Never `await IInfoBarService.ShowAsync`.** Its task completes when the banner is **dismissed**, not
+  when it appears (`InfoBar.ShowAsync` resolves a `TaskCompletionSource` from its `Closed` event), so
+  awaiting it holds the finishing run open until the user clicks the ✕. `NotificationService` starts it
+  and hands the task back only if it has already completed — which is how a host that was never
+  registered still surfaces as an exception.
 - **An in-window dialog has to be given the keyboard focus.** `ContentDialog` handles Escape itself and
   each dialog's content binds Enter, but both need the focus to be inside the dialog; a window used to
   grant that for free. Every dialog content takes it on attach (posted at `DispatcherPriority.Loaded`,

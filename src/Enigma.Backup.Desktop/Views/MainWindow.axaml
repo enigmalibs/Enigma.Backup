@@ -5,13 +5,14 @@
         xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
         xmlns:controls="using:Enigma.Avalonia.Desktop.Controls"
         xmlns:contentDialog="using:Enigma.Avalonia.Desktop.Controls.ContentDialog"
+        xmlns:editors="using:Enigma.Avalonia.Desktop.Controls.Editors"
         xmlns:infoBar="using:Enigma.Avalonia.Desktop.Controls.InfoBar"
         x:Class="Enigma.Backup.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
         Icon="/Assets/enigma-backup.ico"
-        Width="1080" Height="780"
-        MinWidth="900" MinHeight="660"
+        Width="1120" Height="860"
+        MinWidth="960" MinHeight="780"
         Background="{DynamicResource EnigmaBackgroundBrush}"
         DragDrop.AllowDrop="True"
         WindowStartupLocation="CenterScreen">
@@ -39,6 +40,36 @@
     <Style Selector="TextBlock.headline.failure">
       <Setter Property="Foreground" Value="{DynamicResource EnigmaErrorBrush}" />
     </Style>
+
+    <!-- A glyph beside a label, in a button or above a section. PathIcon, not a bare Path, so the glyph
+         takes the Foreground it inherits — the accent button's white, a hover state's, the theme's —
+         because the markup extension supplies the geometry and never the brush. -->
+    <Style Selector="StackPanel.glyphrow">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="StackPanel.glyphrow > PathIcon">
+      <Setter Property="Width" Value="15" />
+      <Setter Property="Height" Value="15" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="StackPanel.glyphrow > TextBlock">
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The lists sit on their own surface inside the panel, so a long path reads as being *in* a box. -->
+    <Style Selector="ListBox.framed">
+      <Setter Property="Background" Value="{DynamicResource EnigmaSurfaceLowBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource EnigmaBorderSubtleBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+
+    <!-- The button inside an editor's action slot: small enough to sit within the border. -->
+    <Style Selector=":is(editors|BaseEditor) Button.inline">
+      <Setter Property="Padding" Value="8,3" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
   </Window.Styles>
 
   <!--
@@ -57,7 +88,10 @@
       <Border Grid.Row="0" Classes="panel" IsEnabled="{Binding IsIdle}">
         <StackPanel Spacing="10">
           <Grid ColumnDefinitions="Auto,280,*">
-            <TextBlock Grid.Column="0" Text="Profile" Classes="section" VerticalAlignment="Center" Margin="0,0,10,0" />
+            <StackPanel Grid.Column="0" Classes="glyphrow" Margin="0,0,10,0">
+              <PathIcon Data="{ei:IconGeometry FileText}" />
+              <TextBlock Text="Profile" Classes="section" />
+            </StackPanel>
             <ComboBox Grid.Column="1"
                       ItemsSource="{Binding ProfileNames}"
                       SelectedItem="{Binding SelectedProfileName}"
@@ -70,13 +104,48 @@
                        Margin="12,0,0,0" />
           </Grid>
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button Content="New" Command="{Binding NewProfileCommand}" />
-            <Button Content="Save" Command="{Binding SaveProfileCommand}" />
-            <Button Content="Save as…" Command="{Binding SaveProfileAsCommand}" />
-            <Button Content="Rename…" Command="{Binding RenameProfileCommand}" />
-            <Button Content="Delete…" Command="{Binding DeleteProfileCommand}" />
-            <Button Content="Import…" Command="{Binding ImportProfileCommand}" />
-            <Button Content="Export…" Command="{Binding ExportProfileCommand}" />
+            <Button Command="{Binding NewProfileCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry NoteBlank}" />
+                <TextBlock Text="New" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding SaveProfileCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry FloppyDisk}" />
+                <TextBlock Text="Save" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding SaveProfileAsCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry FloppyDiskBack}" />
+                <TextBlock Text="Save as…" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding RenameProfileCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry PencilSimple}" />
+                <TextBlock Text="Rename…" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding DeleteProfileCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry Trash}" />
+                <TextBlock Text="Delete…" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding ImportProfileCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry DownloadSimple}" />
+                <TextBlock Text="Import…" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding ExportProfileCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry UploadSimple}" />
+                <TextBlock Text="Export…" />
+              </StackPanel>
+            </Button>
           </StackPanel>
         </StackPanel>
       </Border>
@@ -85,14 +154,19 @@
 
         <!-- What to back up. -->
         <Border Grid.Column="0" Classes="panel" IsEnabled="{Binding IsIdle}">
-          <Grid RowDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+          <Grid RowDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
 
-            <TextBlock Grid.Row="0" Text="Files and folders to back up" Classes="section" />
+            <StackPanel Grid.Row="0" Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry Files}" />
+              <TextBlock Text="Files and folders to back up" Classes="section" />
+            </StackPanel>
 
+            <!-- No MinHeight: this row is the one that gives when the window is made small, and a list
+                 that refuses to shrink pushes the heading above it out from under itself. -->
             <ListBox Grid.Row="1"
+                     Classes="framed"
                      ItemsSource="{Binding Editor.Inputs}"
-                     SelectedItem="{Binding Editor.SelectedInput}"
-                     MinHeight="150">
+                     SelectedItem="{Binding Editor.SelectedInput}">
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="sys:String">
                   <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding}" />
@@ -101,45 +175,84 @@
             </ListBox>
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
-              <Button Content="Add files…" Command="{Binding Editor.AddFilesCommand}" />
-              <Button Content="Add folder…" Command="{Binding Editor.AddFolderCommand}" />
-              <Button Content="Remove" Command="{Binding Editor.RemoveInputCommand}" />
-              <Button Content="Remove all" Command="{Binding Editor.ClearInputsCommand}" />
+              <Button Command="{Binding Editor.AddFilesCommand}">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry FilePlus}" />
+                  <TextBlock Text="Add files…" />
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding Editor.AddFolderCommand}">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry FolderPlus}" />
+                  <TextBlock Text="Add folder…" />
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding Editor.RemoveInputCommand}">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry Minus}" />
+                  <TextBlock Text="Remove" />
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding Editor.ClearInputsCommand}">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry Broom}" />
+                  <TextBlock Text="Remove all" />
+                </StackPanel>
+              </Button>
             </StackPanel>
 
             <TextBlock Grid.Row="3"
-                       Text="Files and folders dropped anywhere on this window are added here too."
+                       Text="Anything dropped on this window is added here too."
                        Classes="muted"
                        FontSize="12"
-                       TextWrapping="Wrap" />
+                       TextTrimming="CharacterEllipsis" />
 
-            <TextBlock Grid.Row="4" Text="Exclude patterns" Classes="section" Margin="0,6,0,0" />
+            <StackPanel Grid.Row="4" Classes="glyphrow" Margin="0,4,0,0">
+              <PathIcon Data="{ei:IconGeometry Funnel}" />
+              <TextBlock Text="Exclude patterns" Classes="section" />
+            </StackPanel>
 
-            <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-              <TextBox Grid.Column="0"
-                       Text="{Binding Editor.NewExcludeGlob}"
-                       PlaceholderText="e.g. **/bin/** or *.log">
-                <TextBox.KeyBindings>
+            <Grid Grid.Row="5" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+              <editors:TextEditor Grid.Column="0"
+                                  Text="{Binding Editor.NewExcludeGlob}"
+                                  PlaceholderText="e.g. **/bin/** or *.log">
+                <editors:TextEditor.KeyBindings>
                   <KeyBinding Gesture="Enter" Command="{Binding Editor.AddExcludeCommand}" />
-                </TextBox.KeyBindings>
-              </TextBox>
-              <Button Grid.Column="1" Content="Add" Command="{Binding Editor.AddExcludeCommand}" />
-              <Button Grid.Column="2" Content="Remove" Command="{Binding Editor.RemoveExcludeCommand}" />
+                </editors:TextEditor.KeyBindings>
+                <editors:TextEditor.ActionContent>
+                  <Button Classes="inline" Command="{Binding Editor.AddExcludeCommand}">
+                    <StackPanel Classes="glyphrow">
+                      <PathIcon Data="{ei:IconGeometry Plus}" />
+                      <TextBlock Text="Add" />
+                    </StackPanel>
+                  </Button>
+                </editors:TextEditor.ActionContent>
+              </editors:TextEditor>
+              <Button Grid.Column="1" Command="{Binding Editor.RemoveExcludeCommand}" VerticalAlignment="Center">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry Minus}" />
+                  <TextBlock Text="Remove" />
+                </StackPanel>
+              </Button>
             </Grid>
 
             <ListBox Grid.Row="6"
+                     Classes="framed"
                      ItemsSource="{Binding Editor.ExcludeGlobs}"
                      SelectedItem="{Binding Editor.SelectedExcludeGlob}"
-                     Height="98" />
+                     Height="76" />
 
           </Grid>
         </Border>
 
-        <!-- What the last run produced. -->
+        <!-- What the last run produced. The banner says how it ended; this says what it did. -->
         <Border Grid.Column="1" Classes="panel">
           <Grid RowDefinitions="Auto,*" RowSpacing="8">
 
-            <TextBlock Grid.Row="0" Text="Last run" Classes="section" />
+            <StackPanel Grid.Row="0" Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry ClockCounterClockwise}" />
+              <TextBlock Text="Last run" Classes="section" />
+            </StackPanel>
 
             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
               <StackPanel Spacing="12">
@@ -202,83 +315,93 @@
         </Border>
       </Grid>
 
-      <!-- Where it goes, and how. -->
-      <Border Grid.Row="2" Classes="panel" IsEnabled="{Binding IsIdle}">
-        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="10" ColumnSpacing="10">
+      <!-- Where it goes, and how. Neither of these needs a panel of its own: the editor and the card
+           draw their own surface and border out of the same theme keys Border.panel uses. -->
+      <StackPanel Grid.Row="2" Spacing="10" IsEnabled="{Binding IsIdle}">
 
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Save backups in" Classes="section" VerticalAlignment="Center" />
-          <TextBox Grid.Row="0" Grid.Column="1"
-                   Text="{Binding Editor.OutputDirectory}"
-                   PlaceholderText="Choose the folder the archives are written to" />
-          <Button Grid.Row="0" Grid.Column="2" Content="Browse…" Command="{Binding Editor.BrowseOutputCommand}" />
-
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Compression" Classes="section" VerticalAlignment="Center" />
-          <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="12">
-            <ComboBox ItemsSource="{Binding Editor.CompressionOptions}"
-                      SelectedItem="{Binding Editor.SelectedCompression}"
-                      Width="210">
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="vm:CompressionOption">
-                  <TextBlock Text="{Binding Label}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-            <TextBlock Text="{Binding Editor.SelectedCompression.Description}"
-                       Classes="muted"
-                       VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis" />
-          </StackPanel>
-          <CheckBox Grid.Row="1" Grid.Column="2"
-                    Content="Encrypt with a password"
-                    IsChecked="{Binding Editor.Encrypt}"
-                    ToolTip.Tip="The password is asked for at the start of every run and is never stored." />
-
-        </Grid>
-      </Border>
-
-      <!-- What to do, and how far it has got. -->
-      <Border Grid.Row="3" Classes="panel">
-        <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-
-          <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
-            <!-- The one icon PHASE01 places: it proves the ei: namespace and the Phosphor pack resolve
-                 before PHASE03 spreads icons across the window. PathIcon, not a bare Path, so the glyph
-                 follows the button's Foreground through the accent template and its hover states — the
-                 markup extension supplies the geometry, never the brush. -->
-            <Button Grid.Column="0" Command="{Binding BackupCommand}" Classes="accent" MinWidth="130" Height="34">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <PathIcon Data="{ei:IconGeometry Archive}" Width="16" Height="16" />
-                <TextBlock Text="Back up" VerticalAlignment="Center" />
+        <editors:TextEditor Title="Save backups in"
+                            Text="{Binding Editor.OutputDirectory}"
+                            PlaceholderText="Choose the folder the archives are written to">
+          <editors:TextEditor.LeadingContent>
+            <PathIcon Data="{ei:IconGeometry HardDrives}" Width="15" Height="15" VerticalAlignment="Center" />
+          </editors:TextEditor.LeadingContent>
+          <editors:TextEditor.ActionContent>
+            <Button Classes="inline" Command="{Binding Editor.BrowseOutputCommand}">
+              <StackPanel Classes="glyphrow">
+                <PathIcon Data="{ei:IconGeometry FolderOpen}" />
+                <TextBlock Text="Browse…" />
               </StackPanel>
             </Button>
-            <Button Grid.Column="1" Content="Restore…" Command="{Binding RestoreCommand}" MinWidth="110" Height="34" />
-            <Button Grid.Column="2" Content="Verify…" Command="{Binding VerifyCommand}" MinWidth="110" Height="34" />
-            <Button Grid.Column="4" Content="Cancel" Command="{Binding CancelCommand}" MinWidth="100" Height="34" />
+          </editors:TextEditor.ActionContent>
+        </editors:TextEditor>
+
+        <!-- Expanded on purpose: both rows decide what the next run produces, so neither should be a
+             click away. The expander is here for the grouping and the frame. -->
+        <controls:SettingsCardExpander Header="Archive options"
+                                       Description="How the archive is compressed, and whether it is encrypted"
+                                       IconData="{ei:IconGeometry SlidersHorizontal}"
+                                       IsExpanded="True">
+          <!-- Side by side, because stacked they cost more height than the file lists can spare. -->
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+
+            <controls:SettingsCard Grid.Column="0"
+                                   Header="Compression"
+                                   Description="{Binding Editor.SelectedCompression.Description}"
+                                   IconData="{ei:IconGeometry FileZip}">
+              <ComboBox ItemsSource="{Binding Editor.CompressionOptions}"
+                        SelectedItem="{Binding Editor.SelectedCompression}"
+                        MinWidth="170">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:CompressionOption">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </controls:SettingsCard>
+
+            <controls:SettingsCard Grid.Column="1"
+                                   Header="Encrypt with a password"
+                                   Description="Asked for at the start of every run, and never stored."
+                                   IconData="{ei:IconGeometry LockKey}">
+              <ToggleSwitch IsChecked="{Binding Editor.Encrypt}" OnContent="On" OffContent="Off" />
+            </controls:SettingsCard>
+
           </Grid>
+        </controls:SettingsCardExpander>
 
-          <ProgressBar Grid.Row="1"
-                       Minimum="0" Maximum="100"
-                       Value="{Binding ProgressPercent}"
-                       IsIndeterminate="{Binding IsProgressIndeterminate}"
-                       Height="6" />
+      </StackPanel>
 
-          <StackPanel Grid.Row="2" Spacing="2">
-            <TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
-            <TextBlock Text="{Binding CurrentItem}"
-                       Classes="muted"
-                       FontSize="12"
-                       TextTrimming="CharacterEllipsis"
-                       IsVisible="{Binding CurrentItem, Converter={x:Static ObjectConverters.IsNotNull}}" />
-          </StackPanel>
-
-        </Grid>
+      <!-- What to do. How far it has got is on the run card, and so is Cancel: behind the scrim a
+           button in the window cannot be clicked. -->
+      <Border Grid.Row="3" Classes="panel">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Command="{Binding BackupCommand}" Classes="accent" MinWidth="140" Height="34">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry Archive}" />
+              <TextBlock Text="Back up" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding RestoreCommand}" MinWidth="130" Height="34">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry ArrowCounterClockwise}" />
+              <TextBlock Text="Restore…" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding VerifyCommand}" MinWidth="130" Height="34">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry SealCheck}" />
+              <TextBlock Text="Verify…" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
       </Border>
 
     </Grid>
 
-    <!-- The run scrim. Registered in PHASE03; until then it is closed, and a closed Overlay is
-         IsVisible="False", so it neither draws nor takes a click. -->
-    <controls:Overlay x:Name="HostOverlay" />
+    <!-- The run scrim, holding the card built by ProgressOverlay. Closed, an Overlay is
+         IsVisible="False", so it neither draws nor takes a click. Its own default scrim is a fixed
+         translucent black; the theme has a key for exactly this, and it differs per variant. -->
+    <controls:Overlay x:Name="HostOverlay" OverlayBrush="{DynamicResource EnigmaOverlayBrush}" />
 
     <!-- Every dialog the app shows, one at a time. The six size properties are set here because the
          service does not reset them between dialogs: the bounds have to suit the widest question
@@ -288,7 +411,8 @@
                                  DialogMaxWidth="680"
                                  DialogMaxHeight="560" />
 
-    <!-- Run outcomes. Registered in PHASE03; closed, it is IsVisible="False". -->
+    <!-- How the last run ended. It draws itself at the top of the window and stays until the user
+         closes it or the next run starts. -->
     <infoBar:InfoBar x:Name="HostInfoBar" />
 
   </Panel>
