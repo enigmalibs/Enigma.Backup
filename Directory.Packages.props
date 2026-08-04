@@ -36,6 +36,19 @@
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+    <!-- The house control library: its Fluent theme, ContentDialog / Overlay / InfoBar hosts, the
+         picker services, the SettingsCard family and the typed editors (FEATURE-17FE). It pins
+         Avalonia 12.1.1 itself, so it belongs to the coupled set above and moves with it. It also
+         brings Avalonia.Themes.Fluent, CommunityToolkit.Mvvm and Enigma.Core transitively; those
+         stay pinned above so the versions are documented here rather than inherited. Its own
+         Enigma.Core dependency is 1.0.0 and loses to the 1.1.0 pinned in the Core group. -->
+    <PackageVersion Include="Enigma.Avalonia.Desktop" Version="1.0.0" />
+    <!-- Icons: every IconData slot in the library above is a Geometry? that draws nothing when left
+         null, so the restyle needs a glyph set. Enigma.Icons.Avalonia would pull the other two
+         transitively; all three are pinned so a bump is a visible, deliberate edit. -->
+    <PackageVersion Include="Enigma.Icons" Version="1.0.0" />
+    <PackageVersion Include="Enigma.Icons.Phosphor" Version="1.0.0" />
+    <PackageVersion Include="Enigma.Icons.Avalonia" Version="1.0.0" />
   </ItemGroup>
 
   <!-- Tests (MTP-native: xunit.v3 only). No Microsoft.NET.Test.Sdk. -->

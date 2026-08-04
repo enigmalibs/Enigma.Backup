@@ -39,7 +39,15 @@ Two production projects (`src/`), both `net10.0` on purpose:
 - **`Enigma.Backup.Desktop`** — Avalonia 12 MVVM app, bootstrapped through
   `Microsoft.Extensions.Hosting` (`App.OnFrameworkInitializationCompleted` builds and starts the
   `IHost`, resolves `MainWindow` from DI, and stops the host on exit). The only project that touches
-  Avalonia.
+  Avalonia. Its look comes from the house control library **`Enigma.Avalonia.Desktop`**: `App.axaml`
+  keeps `<FluentTheme />` in `Application.Styles` (the library themes only its own controls, plus
+  `TextBox`/`ComboBox` via FluentTheme's key overrides — drop it and everything else goes
+  untemplated) and merges `avares://Enigma.Avalonia.Desktop/Themes/Fluent.axaml` into
+  `Application.Resources` as a **`ResourceInclude`**; a `StyleInclude` fails the build with
+  `AVLN2000`. Colours are the library's `Enigma*` brush keys, **always `DynamicResource`** —
+  `StaticResource` freezes the colour and the control stops following a theme switch. The window's own
+  `Background` is ours to set (`EnigmaBackgroundBrush`): the theme paints controls, not windows.
+  Icons come from `Enigma.Icons.Phosphor` through `xmlns:ei="https://github.com/josueclement/Enigma.Icons"`.
 
 Invariants that are easy to violate and must be preserved:
 
@@ -90,7 +98,11 @@ Invariants that are easy to violate and must be preserved:
 - **Compiled bindings**: every view root and `DataTemplate` needs `x:DataType`.
 - **UI strings are hardcoded English** — an explicit decision for this app; no `.resx`.
 - **Central Package Management**: versions live only in `Directory.Packages.props`; `.csproj` files
-  reference packages without a `Version`. The Avalonia set is version-coupled — bump it as a unit.
+  reference packages without a `Version`. The Avalonia set is version-coupled — bump it as a unit, and
+  `Enigma.Avalonia.Desktop` belongs to it (it pins Avalonia 12.1.1 itself, so it moves with the set or
+  not at all). `Enigma.Core` arrives both from Core's own 1.1.0 pin and transitively from
+  `Enigma.Avalonia.Desktop` at 1.0.0; the higher version wins, and
+  `GoldenArchiveCompatibilityTests` is what guards that resolution.
 - **New extension methods use C# 14 `extension(...)` blocks**, not the legacy `this`-parameter form
   (the sibling repos Draw/HardCopy still use the old form — don't copy it across).
 - Tests are `tests/<Project>.Tests` (xUnit v3, `xunit.v3` package, MTP via `global.json`). Desktop

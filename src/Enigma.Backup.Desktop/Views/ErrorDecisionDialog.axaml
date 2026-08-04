@@ -9,6 +9,7 @@
         SizeToContent="Height"
         CanResize="False"
         ShowInTaskbar="False"
+        Background="{DynamicResource EnigmaBackgroundBrush}"
         WindowStartupLocation="CenterOwner">
 
   <StackPanel Margin="20" Spacing="14">
@@ -16,14 +17,14 @@
     <TextBlock Text="{Binding Title}"
                FontSize="16"
                FontWeight="SemiBold"
-               Foreground="{DynamicResource AppDangerBrush}"
+               Foreground="{DynamicResource EnigmaErrorBrush}"
                TextWrapping="Wrap" />
 
     <SelectableTextBlock Text="{Binding Path}" TextWrapping="Wrap" FontFamily="monospace" />
 
     <TextBlock Text="{Binding Message}"
                TextWrapping="Wrap"
-               Foreground="{DynamicResource AppMutedBrush}" />
+               Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" />
 
     <CheckBox Content="Use this answer for every further error in this run"
               IsChecked="{Binding ApplyToAll}" />
@@ -31,7 +32,7 @@
     <TextBlock Text="Retry always asks again, even with the box ticked — a failure that never clears would otherwise loop forever."
                TextWrapping="Wrap"
                FontSize="12"
-               Foreground="{DynamicResource AppMutedBrush}" />
+               Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" />
 
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
       <Button Content="Abort the backup" Command="{Binding AbortCommand}" IsCancel="True" />

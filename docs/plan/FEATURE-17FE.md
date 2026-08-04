@@ -1,6 +1,6 @@
 # FEATURE-17FE — Enigma.Avalonia.Desktop adoption & 1.1.0 release
 
-**Status:** TODO
+**Status:** IN PROGRESS
 **Type:** multi-phase feature (5 phases)
 **Branches (created by `/build`, each from `HEAD`):** one per phase, see *Phases*
 
@@ -220,7 +220,7 @@ Nothing else moves; the Avalonia set is *not* bumped as part of this item.
 
 ## Phases
 
-### PHASE01 — Package, theme & icon foundation (TODO)
+### PHASE01 — Package, theme & icon foundation (DONE)
 
 Branch: `feature/feature-17fe-phase01-theme-foundation`
 

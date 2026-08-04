@@ -9,6 +9,7 @@
         SizeToContent="Height"
         CanResize="False"
         ShowInTaskbar="False"
+        Background="{DynamicResource EnigmaBackgroundBrush}"
         WindowStartupLocation="CenterOwner">
 
   <StackPanel Margin="20" Spacing="14">
@@ -16,18 +17,18 @@
     <TextBlock Text="This file is already on disk"
                FontSize="16"
                FontWeight="SemiBold"
-               Foreground="{DynamicResource AppWarningBrush}" />
+               Foreground="{DynamicResource EnigmaWarningBrush}" />
 
     <SelectableTextBlock Text="{Binding DestinationPath}" TextWrapping="Wrap" FontFamily="monospace" />
 
     <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto">
-      <TextBlock Grid.Row="0" Grid.Column="0" Text="In the archive" Foreground="{DynamicResource AppMutedBrush}" />
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="In the archive" Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" />
       <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ArchiveDescription}" />
 
-      <TextBlock Grid.Row="1" Grid.Column="0" Text="On disk now" Foreground="{DynamicResource AppMutedBrush}" Margin="0,4,0,0" />
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="On disk now" Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" Margin="0,4,0,0" />
       <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExistingDescription}" Margin="0,4,0,0" />
 
-      <TextBlock Grid.Row="2" Grid.Column="0" Text="Entry" Foreground="{DynamicResource AppMutedBrush}" Margin="0,4,0,0" />
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Entry" Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" Margin="0,4,0,0" />
       <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ArchivePath}" TextWrapping="Wrap" Margin="0,4,0,0" />
     </Grid>
 

@@ -9,6 +9,7 @@
         SizeToContent="Height"
         CanResize="False"
         ShowInTaskbar="False"
+        Background="{DynamicResource EnigmaBackgroundBrush}"
         WindowStartupLocation="CenterOwner">
 
   <Window.Styles>
@@ -17,10 +18,10 @@
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.heading.error">
-      <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaErrorBrush}" />
     </Style>
     <Style Selector="TextBlock.heading.warning">
-      <Setter Property="Foreground" Value="{DynamicResource AppWarningBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaWarningBrush}" />
     </Style>
   </Window.Styles>
 

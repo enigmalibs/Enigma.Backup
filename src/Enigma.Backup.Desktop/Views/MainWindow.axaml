@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="using:System"
+        xmlns:ei="https://github.com/josueclement/Enigma.Icons"
         xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
         x:Class="Enigma.Backup.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -8,13 +9,14 @@
         Icon="/Assets/enigma-backup.ico"
         Width="1080" Height="780"
         MinWidth="900" MinHeight="660"
+        Background="{DynamicResource EnigmaBackgroundBrush}"
         DragDrop.AllowDrop="True"
         WindowStartupLocation="CenterScreen">
 
   <Window.Styles>
     <Style Selector="Border.panel">
-      <Setter Property="Background" Value="{DynamicResource AppPanelBrush}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource AppPanelBorderBrush}" />
+      <Setter Property="Background" Value="{DynamicResource EnigmaSurfaceBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource EnigmaBorderSubtleBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Padding" Value="12" />
@@ -23,16 +25,16 @@
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.muted">
-      <Setter Property="Foreground" Value="{DynamicResource AppMutedBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaForegroundSecondaryBrush}" />
     </Style>
     <Style Selector="TextBlock.headline.success">
-      <Setter Property="Foreground" Value="{DynamicResource AppSuccessBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaSuccessBrush}" />
     </Style>
     <Style Selector="TextBlock.headline.warning">
-      <Setter Property="Foreground" Value="{DynamicResource AppWarningBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaWarningBrush}" />
     </Style>
     <Style Selector="TextBlock.headline.failure">
-      <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaErrorBrush}" />
     </Style>
   </Window.Styles>
 
@@ -158,7 +160,7 @@
                 <StackPanel Spacing="4" IsVisible="{Binding Summary.HasSkipped}">
                   <TextBlock Text="{Binding Summary.SkippedHeader}"
                              FontWeight="SemiBold"
-                             Foreground="{DynamicResource AppWarningBrush}" />
+                             Foreground="{DynamicResource EnigmaWarningBrush}" />
                   <ItemsControl ItemsSource="{Binding Summary.Skipped}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="sys:String">
@@ -226,7 +228,16 @@
       <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
 
         <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
-          <Button Grid.Column="0" Content="Back up" Command="{Binding BackupCommand}" Classes="accent" MinWidth="130" Height="34" />
+          <!-- The one icon PHASE01 places: it proves the ei: namespace and the Phosphor pack resolve
+               before PHASE03 spreads icons across the window. PathIcon, not a bare Path, so the glyph
+               follows the button's Foreground through the accent template and its hover states — the
+               markup extension supplies the geometry, never the brush. -->
+          <Button Grid.Column="0" Command="{Binding BackupCommand}" Classes="accent" MinWidth="130" Height="34">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <PathIcon Data="{ei:IconGeometry Archive}" Width="16" Height="16" />
+              <TextBlock Text="Back up" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
           <Button Grid.Column="1" Content="Restore…" Command="{Binding RestoreCommand}" MinWidth="110" Height="34" />
           <Button Grid.Column="2" Content="Verify…" Command="{Binding VerifyCommand}" MinWidth="110" Height="34" />
           <Button Grid.Column="4" Content="Cancel" Command="{Binding CancelCommand}" MinWidth="100" Height="34" />
