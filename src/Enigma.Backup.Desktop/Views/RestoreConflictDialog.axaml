@@ -1,19 +1,18 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
-        x:Class="Enigma.Backup.Desktop.Views.RestoreConflictDialog"
-        x:DataType="vm:RestoreConflictDialogViewModel"
-        Title="The file already exists"
-        Icon="/Assets/enigma-backup.ico"
-        Width="640"
-        SizeToContent="Height"
-        CanResize="False"
-        ShowInTaskbar="False"
-        Background="{DynamicResource EnigmaBackgroundBrush}"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             x:Class="Enigma.Backup.Desktop.Views.RestoreConflictDialog"
+             x:DataType="vm:RestoreConflictDialogViewModel"
+             Focusable="True">
 
-  <StackPanel Margin="20" Spacing="14">
+  <!-- Enter keeps the file on disk, as the window's default button used to. -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding SkipCommand}" />
+  </UserControl.KeyBindings>
 
+  <StackPanel Spacing="14">
+
+    <!-- Kept as content: unlike the other dialogs, this heading says something the title does not. -->
     <TextBlock Text="This file is already on disk"
                FontSize="16"
                FontWeight="SemiBold"
@@ -35,12 +34,6 @@
     <CheckBox Content="Use this answer for every further file in this restore"
               IsChecked="{Binding ApplyToAll}" />
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Stop the restore" Command="{Binding AbortCommand}" IsCancel="True" />
-      <Button Content="Overwrite" Command="{Binding OverwriteCommand}" MinWidth="90" />
-      <Button Content="Keep the file" Command="{Binding SkipCommand}" IsDefault="True" Classes="accent" MinWidth="90" />
-    </StackPanel>
-
   </StackPanel>
 
-</Window>
+</UserControl>

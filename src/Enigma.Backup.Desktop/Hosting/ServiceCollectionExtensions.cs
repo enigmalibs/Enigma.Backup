@@ -16,11 +16,10 @@ public static class ServiceCollectionExtensions
         /// <returns>The same collection, so registrations can be chained.</returns>
         public IServiceCollection AddEnigmaBackupDesktop()
         {
-            // The main window is handed to the provider once it has been resolved (see App): the
-            // services that open dialogs over it cannot take it as a dependency without closing a
-            // cycle, since the window is built from the view model that depends on them.
-            services.TryAddSingleton<MainWindowProvider>();
-            services.TryAddSingleton<IMainWindowProvider>(static provider => provider.GetRequiredService<MainWindowProvider>());
+            // The control library's dialogs, overlay, notifications and pickers. Nothing here has a
+            // window to be shown over: App hands each of them its host control, or the window's
+            // storage provider, once the window exists.
+            services.AddEnigmaAvaloniaDesktop();
 
             // Replace, not TryAdd: the host builder has already registered its ConsoleLifetime by
             // the time this runs, and that one swallows SIGTERM (see AvaloniaHostLifetime).

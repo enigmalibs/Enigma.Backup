@@ -240,7 +240,7 @@ suite green with no test changes; the app launches and every panel, dialog and s
 reads correctly in both variants (screenshots in the completion doc); no `App*` brush key remains in
 the solution.
 
-### PHASE02 — Dialogs & pickers on the library services (TODO)
+### PHASE02 — Dialogs & pickers on the library services (DONE)
 
 Branch: `feature/feature-17fe-phase02-dialogs-pickers`
 

@@ -56,11 +56,29 @@ Invariants that are easy to violate and must be preserved:
   conflict handler, progress via `IProgress<T>`. Never reference Avalonia, show a dialog, or read the
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
-- **The Desktop's view models never name Avalonia either.** File pickers, modal dialogs and UI-thread
+- **The Desktop's view models never name Avalonia either.** File pickers, dialogs and UI-thread
   marshaling enter through `IFilePicker` / `IDialogService` / `IUiDispatcher` (`Desktop/Services/`,
   with the Avalonia implementations beside them); only the Views, `App` and those implementations
   touch Avalonia types. This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the
   end-to-end test that drives the real pipeline through the real container.
+- **The control library's own services are consumed only inside `Desktop/Services/`, behind those
+  interfaces — no view model ever injects one.** `IContentDialogService` hands the caller an Avalonia
+  control and the picker services deal in `IStorageFile`, so injecting one anywhere else breaks the
+  invariant above. They are registered by `AddEnigmaAvaloniaDesktop()` (the package ships no such
+  extension) and each is handed its host control — or the window's storage provider — once in
+  `App.OnFrameworkInitializationCompleted`, before the window is shown; skip that and the first call
+  throws. Since dialogs and pickers no longer need an owner `Window`, nothing supplies one: don't
+  reintroduce a service that holds the main window.
+- **`MainWindow.axaml`'s root `Panel` ends with `Overlay` → `ContentDialog` → `InfoBar`, in that
+  order.** It is deliberately *not* the order in the library's `setup.md`: a `Panel` z-stacks its
+  children, and a mid-run decision (unreadable file, restore conflict) is raised *while* the run
+  overlay is open — behind the scrim it cannot be clicked and the app looks hung.
+- **An in-window dialog has to be given the keyboard focus.** `ContentDialog` handles Escape itself and
+  each dialog's content binds Enter, but both need the focus to be inside the dialog; a window used to
+  grant that for free. Every dialog content takes it on attach (posted at `DispatcherPriority.Loaded`,
+  because the content is attached while the host is still collapsed). Without it the keys reach the
+  window *behind* the scrim. Note also that the dialog's own buttons ignore a command's `CanExecute`,
+  so a question that validates input drives `IsPrimaryButtonEnabled` from its view model.
 - **Passwords are parameters, never state.** They cross the API as a parameter, are prompted per run,
   and are never persisted, logged, or cached.
 - **The pipeline is single-pass and streaming.** No temp files, constant memory regardless of archive

@@ -1,24 +1,16 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
-        x:Class="Enigma.Backup.Desktop.Views.ErrorDecisionDialog"
-        x:DataType="vm:ErrorDecisionDialogViewModel"
-        Title="{Binding Title}"
-        Icon="/Assets/enigma-backup.ico"
-        Width="620"
-        SizeToContent="Height"
-        CanResize="False"
-        ShowInTaskbar="False"
-        Background="{DynamicResource EnigmaBackgroundBrush}"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             x:Class="Enigma.Backup.Desktop.Views.ErrorDecisionDialog"
+             x:DataType="vm:ErrorDecisionDialogViewModel"
+             Focusable="True">
 
-  <StackPanel Margin="20" Spacing="14">
+  <!-- Enter skips, as the window's default button used to. -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding SkipCommand}" />
+  </UserControl.KeyBindings>
 
-    <TextBlock Text="{Binding Title}"
-               FontSize="16"
-               FontWeight="SemiBold"
-               Foreground="{DynamicResource EnigmaErrorBrush}"
-               TextWrapping="Wrap" />
+  <StackPanel Spacing="14">
 
     <SelectableTextBlock Text="{Binding Path}" TextWrapping="Wrap" FontFamily="monospace" />
 
@@ -34,12 +26,6 @@
                FontSize="12"
                Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" />
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Abort the backup" Command="{Binding AbortCommand}" IsCancel="True" />
-      <Button Content="Retry" Command="{Binding RetryCommand}" MinWidth="90" />
-      <Button Content="Skip" Command="{Binding SkipCommand}" IsDefault="True" Classes="accent" MinWidth="90" />
-    </StackPanel>
-
   </StackPanel>
 
-</Window>
+</UserControl>
