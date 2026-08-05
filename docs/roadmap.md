@@ -10,9 +10,9 @@
 | - PHASE05    | Avalonia desktop app                           | DONE        | (in FEATURE-3E11.md)      |
 | - PHASE06    | Release readiness                              | DONE        | (in FEATURE-3E11.md)      |
 | FEATURE-3A2D | Enigma.Core 1.1.0 upgrade & 1.0.1 release      | DONE        | docs/plan/FEATURE-3A2D.md |
-| FEATURE-17FE | Enigma.Avalonia.Desktop adoption & 1.1.0       | IN PROGRESS | docs/plan/FEATURE-17FE.md |
+| FEATURE-17FE | Enigma.Avalonia.Desktop adoption & 1.1.0       | DONE        | docs/plan/FEATURE-17FE.md |
 | - PHASE01    | Package, theme & icon foundation                | DONE        | (in FEATURE-17FE.md)      |
 | - PHASE02    | Dialogs & pickers on the library services      | DONE        | (in FEATURE-17FE.md)      |
 | - PHASE03    | Main-window restyle                            | DONE        | (in FEATURE-17FE.md)      |
 | - PHASE04    | Theme preference & Settings dialog             | DONE        | (in FEATURE-17FE.md)      |
-| - PHASE05    | Release readiness: 1.1.0                       | TODO        | (in FEATURE-17FE.md)      |
+| - PHASE05    | Release readiness: 1.1.0                       | DONE        | (in FEATURE-17FE.md)      |

@@ -28,10 +28,14 @@ Run from the repository root, on the branch that will be merged:
       dotnet test --solution Enigma.Backup.slnx
       ```
 - [ ] Dependency check — apply non-coupled bumps, and bump the **Avalonia set as a unit** or hold
-      the whole set back. Log every `old → new` in `RELEASENOTES.md` under *Dependencies*:
+      the whole set back (`Enigma.Avalonia.Desktop` belongs to that set). Log every `old → new` in
+      `RELEASENOTES.md` under *Dependencies*, and record a clean vulnerability scan there too:
       ```bash
       dotnet list package --outdated
+      dotnet list package --vulnerable --include-transitive
       ```
+- [ ] `docs/QA-CHECKLIST.md` still describes the UI as it now is — a release that moved a control,
+      a dialog or a button has to move the check that presses it.
 - [ ] The `EBK1` container version byte is unchanged, or the change is called out as breaking in
       `RELEASENOTES.md` — archives written by earlier releases must stay readable.
 
@@ -86,9 +90,8 @@ git pull
 
 ## 5. Tag the release
 
-The convention is a **bare** `X.Y.Z` — the repository had no tags before 1.0.1, because 1.0.0 was
-built but never published. Run `git tag` to confirm before adding a new one. Tag the merge commit on
-`main` and push the tag:
+The convention is a **bare** `X.Y.Z` — `1.0.0` and `1.0.1` are the tags that exist. Run `git tag` to
+confirm before adding a new one. Tag the merge commit on `main` and push the tag:
 
 ```bash
 git tag X.Y.Z

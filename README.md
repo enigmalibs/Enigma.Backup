@@ -6,10 +6,11 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.0.1** — a maintenance release: the cryptography dependency moves to
-> Enigma.Core 1.1.0, and a checked-in archive from the previous release is now part of the test suite,
-> so "your old backups still open" is something the build proves rather than promises. Nothing about
-> the archive format changed. See [RELEASENOTES.md](RELEASENOTES.md).
+> **What's new in 1.1.0** — the app is redrawn on the house control library: dialogs now open inside
+> the window, a run reports itself on a card with `Cancel`, the outcome arrives as a banner, and there
+> is a theme preference (`System` / `Light` / `Dark`) under the gear in the profile bar. Nothing about
+> a backup changed — the archive format, the profile format and the file names are the same, so every
+> 1.0.x archive still opens. See [RELEASENOTES.md](RELEASENOTES.md).
 
 ## Capabilities
 
@@ -35,8 +36,8 @@ executable inside. It is self-contained — **no .NET runtime needs to be instal
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.0.1-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.0.1-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.1.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.1.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 There is no installer and nothing is written outside your home directory. To uninstall, delete the
 executable and — if you want your profiles gone too — the config folder listed below.
@@ -132,6 +133,21 @@ tests/Enigma.Backup.Core.Tests
 tests/Enigma.Backup.Desktop.Tests
 docs/                        roadmap, per-item plans, completion records, release runbook
 ```
+
+## Built on
+
+| Dependency | What it provides |
+|---|---|
+| [.NET 10](https://dotnet.microsoft.com/) | the runtime; the core targets `net10.0` because the archive pipeline is built on `System.Formats.Tar` |
+| [Avalonia 12](https://avaloniaui.net/) | the cross-platform UI framework (with its Fluent theme and the Inter font) |
+| [Enigma.Avalonia.Desktop](https://www.nuget.org/packages/Enigma.Avalonia.Desktop) | the house control library — the theme, the in-window dialog / overlay / notification hosts, the file and folder pickers, the setting cards and typed editors |
+| [Enigma.Icons](https://www.nuget.org/packages/Enigma.Icons) · [.Phosphor](https://www.nuget.org/packages/Enigma.Icons.Phosphor) · [.Avalonia](https://www.nuget.org/packages/Enigma.Icons.Avalonia) | the icons across the window and the dialog headers. The glyphs are [Phosphor Icons](https://phosphoricons.com/), MIT-licensed upstream |
+| [Enigma.Core](https://www.nuget.org/packages/Enigma.Core) | AES-256-GCM and Argon2id, over BouncyCastle |
+| [ZstdSharp.Port](https://www.nuget.org/packages/ZstdSharp.Port) | Zstandard compression (gzip comes from the BCL) |
+| [CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm) · [Microsoft.Extensions](https://www.nuget.org/packages/Microsoft.Extensions.Hosting) | the MVVM layer, and hosting, DI, logging and glob matching |
+
+Versions are pinned centrally in `Directory.Packages.props`; the Avalonia set — the control library
+included — is version-coupled and moves as a unit.
 
 ## Building
 

@@ -1,6 +1,6 @@
 # FEATURE-17FE — Enigma.Avalonia.Desktop adoption & 1.1.0 release
 
-**Status:** IN PROGRESS
+**Status:** DONE
 **Type:** multi-phase feature (5 phases)
 **Branches (created by `/build`, each from `HEAD`):** one per phase, see *Phases*
 
@@ -323,7 +323,7 @@ manually — the gear opens the dialog, each of the three choices repaints the a
 choice survives a restart, deleting `settings.json` returns the app to following the OS, and a
 hand-corrupted `settings.json` still starts the app.
 
-### PHASE05 — Release readiness: 1.1.0 (TODO)
+### PHASE05 — Release readiness: 1.1.0 (DONE)
 
 Branch: `feature/feature-17fe-phase05-release`
 

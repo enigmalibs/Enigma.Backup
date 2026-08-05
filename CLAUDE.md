@@ -117,8 +117,12 @@ Invariants that are easy to violate and must be preserved:
   cancels the signal and then waits for a `StopAsync` that never comes, because Avalonia owns the
   foreground loop and `App` calls `_host.Start()`, not `Run()`. A session logout hangs. Keep the
   `Replace` too: the host builder registers its own lifetime first, so `TryAdd` would do nothing.
-- **The `EBK1` container format is specified in the plan.** Field details may be refined *within*
-  version 1 before the first release; any post-release change bumps the version byte.
+- **The `EBK1` container format is specified in the plan, and version 1 is now frozen.** The window
+  for refining field details *within* version 1 closed at 1.0.0: archives written by every released
+  build are in people's hands, so **any** change to the layout bumps the version byte and is called
+  out as breaking in `RELEASENOTES.md`. Every release since has carried the opposite claim — that the
+  byte is unchanged and old archives still open — and `GoldenArchiveCompatibilityTests` is what backs
+  it.
 - **`tests/Enigma.Backup.Core.Tests/Fixtures/` is evidence, not test input — never regenerate it.**
   It holds a real encrypted archive written by the 1.0.0 build, and `GoldenArchiveCompatibilityTests`
   verifies and restores it on every run. That is the only check that can catch a behavioural change
