@@ -4,6 +4,7 @@ using Enigma.Avalonia.Desktop.Services;
 using Enigma.Backup.Core.Hosting;
 using Enigma.Backup.Desktop.Hosting;
 using Enigma.Backup.Desktop.Services;
+using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.ViewModels;
 using Enigma.Backup.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,24 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.IsType<DialogService>(provider.GetRequiredService<IDialogService>());
         Assert.IsType<ProgressOverlay>(provider.GetRequiredService<IProgressOverlay>());
         Assert.IsType<NotificationService>(provider.GetRequiredService<INotificationService>());
+        Assert.IsType<ThemeSwitcher>(provider.GetRequiredService<IThemeSwitcher>());
+    }
+
+    /// <remarks>
+    /// The store has a second constructor taking an explicit file, which the container cannot resolve
+    /// and which a test would silently get instead — so it is registered through a factory, and this is
+    /// what proves the app's one is pointed at the per-user configuration folder.
+    /// </remarks>
+    [Fact]
+    public void TheSettingsStoreResolvesOntoThePerUserConfigurationFile()
+    {
+        using ServiceProvider provider = Build();
+
+        IAppSettingsStore store = provider.GetRequiredService<IAppSettingsStore>();
+
+        Assert.IsType<AppSettingsStore>(store);
+        Assert.Equal(AppSettingsStore.DefaultPath, store.FilePath);
+        Assert.Same(store, provider.GetRequiredService<IAppSettingsStore>());
     }
 
     /// <remarks>

@@ -116,6 +116,7 @@ public sealed class MainWindowViewModel : ObservableObject
         DeleteProfileCommand = new AsyncRelayCommand(OnDeleteProfileAsync, () => !IsBusy && HasSelectedProfile);
         ImportProfileCommand = new AsyncRelayCommand(OnImportProfileAsync, () => !IsBusy);
         ExportProfileCommand = new AsyncRelayCommand(OnExportProfileAsync, () => !IsBusy && HasSelectedProfile);
+        OpenSettingsCommand = new AsyncRelayCommand(OnOpenSettingsAsync, () => !IsBusy);
 
         BackupCommand = new AsyncRelayCommand(OnBackupAsync, () => !IsBusy && Editor.CanRun);
         RestoreCommand = new AsyncRelayCommand(OnRestoreAsync, () => !IsBusy);
@@ -265,6 +266,12 @@ public sealed class MainWindowViewModel : ObservableObject
 
     /// <summary>Writes the selected profile out to a file anywhere on disk.</summary>
     public AsyncRelayCommand ExportProfileCommand { get; }
+
+    /// <summary>
+    /// Opens the app's preferences — the gear in the profile bar. It belongs to no profile; it is
+    /// simply the only bar the window has.
+    /// </summary>
+    public AsyncRelayCommand OpenSettingsCommand { get; }
 
     /// <summary>Runs a backup of what the editor holds.</summary>
     public AsyncRelayCommand BackupCommand { get; }
@@ -569,6 +576,10 @@ public sealed class MainWindowViewModel : ObservableObject
         _logger.LogInformation("Exported the profile {Profile} to {Path}.", name, path);
     }
 
+    // The dialog owns everything about a preference — applying it, writing it out — so there is
+    // nothing for the window to do afterwards.
+    private Task OnOpenSettingsAsync() => _dialogs.ShowSettingsAsync();
+
     private async Task<string?> AskForProfileNameAsync(string title, string prompt, string initialName, string? keepAvailable)
     {
         IReadOnlyCollection<string> taken = keepAvailable is null
@@ -864,6 +875,7 @@ public sealed class MainWindowViewModel : ObservableObject
         DeleteProfileCommand.NotifyCanExecuteChanged();
         ImportProfileCommand.NotifyCanExecuteChanged();
         ExportProfileCommand.NotifyCanExecuteChanged();
+        OpenSettingsCommand.NotifyCanExecuteChanged();
         BackupCommand.NotifyCanExecuteChanged();
         RestoreCommand.NotifyCanExecuteChanged();
         VerifyCommand.NotifyCanExecuteChanged();

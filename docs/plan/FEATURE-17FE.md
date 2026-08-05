@@ -300,7 +300,7 @@ manually — a backup, a restore and a verify each show the card with live progr
 Cancel, a mid-run unreadable-file dialog appears **above** the scrim and is clickable, the InfoBar
 reports each outcome, and the whole window still reads correctly in Light and Dark (screenshots).
 
-### PHASE04 — Theme preference & Settings dialog (TODO)
+### PHASE04 — Theme preference & Settings dialog (DONE)
 
 Branch: `feature/feature-17fe-phase04-settings`
 

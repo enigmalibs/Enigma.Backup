@@ -25,6 +25,8 @@ and verifies what it wrote.
   against its sidecar (and every GCM tag, when encrypted).
 - **Glob excludes**, live progress with cancel, and a per-error Skip / Retry / Abort policy with an
   end-of-run summary of everything skipped.
+- **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
+  bar), applied the moment you pick it and remembered afterwards.
 
 ## Installing
 
@@ -49,7 +51,8 @@ The app is a single window, top to bottom:
 1. **Profile** — pick a saved profile from the drop-down, or start from `New`. A profile is just the
    settings below, under a name; `Save`, `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…`
    are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
-   discards them.
+   discards them. The gear at the right-hand end of the bar opens **Settings**, which is where the
+   theme lives.
 2. **Files and folders to back up** — `Add files…`, `Add folder…`, or drop them anywhere on the
    window. Overlapping entries are merged automatically when the backup runs.
 3. **Exclude patterns** — optional globs applied during the scan, one per line: `**/bin/**`,
@@ -71,7 +74,9 @@ If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort
 half-written backup is never left behind.
 
 Profiles live in `%APPDATA%\Enigma.Backup\profiles` on Windows and
-`~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile.
+`~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile. The app's own preferences —
+currently just the theme — sit in `settings.json` beside that folder. It appears the first time you
+change one, and deleting it simply returns the app to following the system.
 
 ## What a backup run writes
 

@@ -1,9 +1,11 @@
 using Enigma.Backup.Desktop.Services;
+using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.ViewModels;
 using Enigma.Backup.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Enigma.Backup.Desktop.Hosting;
 
@@ -30,6 +32,14 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton<IFilePicker, FilePicker>();
             services.TryAddSingleton<IDialogService, DialogService>();
             services.TryAddSingleton<INotificationService, NotificationService>();
+            services.TryAddSingleton<IThemeSwitcher, ThemeSwitcher>();
+
+            // The app's own preferences — Desktop-owned, because a theme variant means nothing to a
+            // command line. Registered through a factory because the store's second constructor (an
+            // explicit file) exists for tests and cannot be resolved from the container. Its state is
+            // the file, so one instance is enough.
+            services.TryAddSingleton<IAppSettingsStore>(static provider =>
+                new AppSettingsStore(provider.GetRequiredService<ILogger<AppSettingsStore>>()));
 
             // Singleton because it holds the card it is currently showing: a second instance would be
             // one whose Update calls draw on nothing.

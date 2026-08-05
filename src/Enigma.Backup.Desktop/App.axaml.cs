@@ -5,6 +5,8 @@ using Avalonia.Markup.Xaml;
 using Enigma.Avalonia.Desktop.Services;
 using Enigma.Backup.Core.Hosting;
 using Enigma.Backup.Desktop.Hosting;
+using Enigma.Backup.Desktop.Services;
+using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -48,6 +50,12 @@ public partial class App : Application
             services.GetRequiredService<IInfoBarService>().RegisterHost(window.HostInfoBar);
             services.GetRequiredService<IFileDialogService>().SetStorageProvider(window.StorageProvider);
             services.GetRequiredService<IFolderDialogService>().SetStorageProvider(window.StorageProvider);
+
+            // The stored theme, applied before the window is shown so the app never opens in one
+            // variant and repaints into the other. A missing or unreadable settings file leaves the
+            // ThemeVariant.Default that App.axaml starts on — which is "follow the OS".
+            AppSettings settings = services.GetRequiredService<IAppSettingsStore>().Load();
+            services.GetRequiredService<IThemeSwitcher>().Apply(settings.Theme);
 
             desktop.MainWindow = window;
             desktop.Exit += (_, _) => _host?.StopAsync().GetAwaiter().GetResult();

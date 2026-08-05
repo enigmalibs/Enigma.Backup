@@ -59,8 +59,9 @@ Invariants that are easy to violate and must be preserved:
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
 - **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run card, the
-  outcome banner and UI-thread marshaling enter through `IFilePicker` / `IDialogService` /
-  `IProgressOverlay` / `INotificationService` / `IUiDispatcher` (`Desktop/Services/`, with the Avalonia
+  outcome banner, the theme variant and UI-thread marshaling enter through `IFilePicker` /
+  `IDialogService` / `IProgressOverlay` / `INotificationService` / `IThemeSwitcher` / `IUiDispatcher`
+  (`Desktop/Services/`, with the Avalonia
   implementations beside them); only the Views, `App` and those implementations touch Avalonia types.
   This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the end-to-end test that drives
   the real pipeline through the real container, which therefore has to register fakes for the two seams
@@ -94,6 +95,15 @@ Invariants that are easy to violate and must be preserved:
   because the content is attached while the host is still collapsed). Without it the keys reach the
   window *behind* the scrim. Note also that the dialog's own buttons ignore a command's `CanExecute`,
   so a question that validates input drives `IsPrimaryButtonEnabled` from its view model.
+- **The app's own preferences are Desktop-owned, and losing them is never fatal.** The theme variant
+  (`System` / `Light` / `Dark`, default `System`) lives in `Desktop/Settings/` and is written to
+  `<config>/Enigma.Backup/settings.json`, beside the `profiles/` folder — deliberately *not* in Core: a
+  theme variant means nothing to a CLI, so a settings concept there would be UI leaking inward past the
+  first invariant above. `IAppSettingsStore` is synchronous because the stored variant has to be applied
+  before the window is shown, and neither of its calls throws — a missing, unreadable or malformed file
+  reads as the defaults with a log line, so a hand-edited preference can never stop the app from
+  opening. `System` is a value of its own (`ThemeVariant.Default`), not the absence of one: collapse it
+  into "whatever we last saw" and "follow the OS" becomes unreachable after the first click.
 - **Passwords are parameters, never state.** They cross the API as a parameter, are prompted per run,
   and are never persisted, logged, or cached.
 - **The pipeline is single-pass and streaming.** No temp files, constant memory regardless of archive
