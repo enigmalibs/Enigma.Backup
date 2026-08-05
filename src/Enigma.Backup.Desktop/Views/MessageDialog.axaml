@@ -1,52 +1,17 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
-        x:Class="Enigma.Backup.Desktop.Views.MessageDialog"
-        x:DataType="vm:MessageDialogViewModel"
-        Title="{Binding Title}"
-        Icon="/Assets/enigma-backup.ico"
-        Width="560"
-        SizeToContent="Height"
-        CanResize="False"
-        ShowInTaskbar="False"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             x:Class="Enigma.Backup.Desktop.Views.MessageDialog"
+             x:DataType="vm:MessageDialogViewModel"
+             Focusable="True">
 
-  <Window.Styles>
-    <Style Selector="TextBlock.heading">
-      <Setter Property="FontSize" Value="16" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-    </Style>
-    <Style Selector="TextBlock.heading.error">
-      <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}" />
-    </Style>
-    <Style Selector="TextBlock.heading.warning">
-      <Setter Property="Foreground" Value="{DynamicResource AppWarningBrush}" />
-    </Style>
-  </Window.Styles>
+  <!-- Enter acknowledges, or agrees to what was asked, as the default button used to. -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding ConfirmCommand}" />
+  </UserControl.KeyBindings>
 
-  <StackPanel Margin="20" Spacing="14">
+  <!-- The title is the dialog's own; only the message is content here. MaxHeight is gone with the
+       window: the dialog host bounds its own card and scrolls what does not fit. -->
+  <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" />
 
-    <TextBlock Text="{Binding Title}"
-               Classes="heading"
-               Classes.error="{Binding IsError}"
-               Classes.warning="{Binding IsWarning}"
-               TextWrapping="Wrap" />
-
-    <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" MaxHeight="320" />
-
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Cancel"
-              Command="{Binding CancelCommand}"
-              IsCancel="True"
-              IsVisible="{Binding IsConfirmation}"
-              MinWidth="90" />
-      <Button Content="{Binding ConfirmLabel}"
-              Command="{Binding ConfirmCommand}"
-              IsDefault="True"
-              Classes="accent"
-              MinWidth="90" />
-    </StackPanel>
-
-  </StackPanel>
-
-</Window>
+</UserControl>

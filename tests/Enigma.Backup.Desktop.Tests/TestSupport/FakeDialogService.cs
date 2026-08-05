@@ -50,6 +50,9 @@ internal sealed class FakeDialogService : IDialogService
     /// <summary>Every confirmation that was asked for.</summary>
     public List<(string Title, string Message, string ConfirmLabel)> ConfirmationRequests { get; } = [];
 
+    /// <summary>How many times the preferences were opened. There is nothing to answer.</summary>
+    public int SettingsRequests { get; private set; }
+
     /// <inheritdoc />
     public Task<string?> RequestPasswordAsync(PasswordPurpose purpose, string subject, CancellationToken cancellationToken = default)
     {
@@ -86,6 +89,14 @@ internal sealed class FakeDialogService : IDialogService
     public Task ShowMessageAsync(string title, string message, MessageSeverity severity, CancellationToken cancellationToken = default)
     {
         Messages.Add((title, message, severity));
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task ShowSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        SettingsRequests++;
 
         return Task.CompletedTask;
     }

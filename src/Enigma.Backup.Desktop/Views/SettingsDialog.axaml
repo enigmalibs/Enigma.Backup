@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ei="https://github.com/josueclement/Enigma.Icons"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             xmlns:controls="using:Enigma.Avalonia.Desktop.Controls"
+             x:Class="Enigma.Backup.Desktop.Views.SettingsDialog"
+             x:DataType="vm:SettingsDialogViewModel"
+             Focusable="True">
+
+  <!-- Enter closes it, as Escape does: every choice applied the moment it was made, so there is
+       nothing else either key could mean here. -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding CloseCommand}" />
+  </UserControl.KeyBindings>
+
+  <StackPanel Spacing="12">
+
+    <!-- One card, and room for the preferences that come after it. The description is the selected
+         theme's own sentence, so the card says what the choice means without a second label. -->
+    <controls:SettingsCard Header="Theme"
+                           Description="{Binding SelectedTheme.Description}"
+                           IconData="{ei:IconGeometry Palette}">
+      <ComboBox ItemsSource="{Binding ThemeOptions}"
+                SelectedItem="{Binding SelectedTheme}"
+                MinWidth="170">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:ThemeOption">
+            <TextBlock Text="{Binding Label}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </controls:SettingsCard>
+
+    <!-- Selectable: the point of naming the file is that it can be found, and on Linux that means
+         copying the path out. -->
+    <SelectableTextBlock Text="{Binding StorageNote}"
+                         Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}"
+                         FontSize="12"
+                         TextWrapping="Wrap" />
+
+  </StackPanel>
+
+</UserControl>

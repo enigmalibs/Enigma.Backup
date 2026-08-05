@@ -1,6 +1,6 @@
 # FEATURE-17FE — Enigma.Avalonia.Desktop adoption & 1.1.0 release
 
-**Status:** TODO
+**Status:** DONE
 **Type:** multi-phase feature (5 phases)
 **Branches (created by `/build`, each from `HEAD`):** one per phase, see *Phases*
 
@@ -220,7 +220,7 @@ Nothing else moves; the Avalonia set is *not* bumped as part of this item.
 
 ## Phases
 
-### PHASE01 — Package, theme & icon foundation (TODO)
+### PHASE01 — Package, theme & icon foundation (DONE)
 
 Branch: `feature/feature-17fe-phase01-theme-foundation`
 
@@ -240,7 +240,7 @@ suite green with no test changes; the app launches and every panel, dialog and s
 reads correctly in both variants (screenshots in the completion doc); no `App*` brush key remains in
 the solution.
 
-### PHASE02 — Dialogs & pickers on the library services (TODO)
+### PHASE02 — Dialogs & pickers on the library services (DONE)
 
 Branch: `feature/feature-17fe-phase02-dialogs-pickers`
 
@@ -270,7 +270,7 @@ Escape behave as before, a scrim click cancels, cancelling a run while a decisio
 closes it and aborts, and all five pickers (files, folder, archive, import, export) still return
 usable paths.
 
-### PHASE03 — Main-window restyle (TODO)
+### PHASE03 — Main-window restyle (DONE)
 
 Branch: `feature/feature-17fe-phase03-window-restyle`
 
@@ -300,7 +300,7 @@ manually — a backup, a restore and a verify each show the card with live progr
 Cancel, a mid-run unreadable-file dialog appears **above** the scrim and is clickable, the InfoBar
 reports each outcome, and the whole window still reads correctly in Light and Dark (screenshots).
 
-### PHASE04 — Theme preference & Settings dialog (TODO)
+### PHASE04 — Theme preference & Settings dialog (DONE)
 
 Branch: `feature/feature-17fe-phase04-settings`
 
@@ -323,7 +323,7 @@ manually — the gear opens the dialog, each of the three choices repaints the a
 choice survives a restart, deleting `settings.json` returns the app to following the OS, and a
 hand-corrupted `settings.json` still starts the app.
 
-### PHASE05 — Release readiness: 1.1.0 (TODO)
+### PHASE05 — Release readiness: 1.1.0 (DONE)
 
 Branch: `feature/feature-17fe-phase05-release`
 

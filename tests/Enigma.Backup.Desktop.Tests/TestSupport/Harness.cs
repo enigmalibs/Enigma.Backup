@@ -26,6 +26,8 @@ internal sealed class Harness
             Editor,
             FilePicker,
             Dialogs,
+            Overlay,
+            Notifications,
             Dispatcher,
             NullLogger<MainWindowViewModel>.Instance);
     }
@@ -47,6 +49,12 @@ internal sealed class Harness
 
     /// <summary>The scripted dialogs.</summary>
     public FakeDialogService Dialogs { get; } = new();
+
+    /// <summary>The run card, recording what it was shown and told.</summary>
+    public FakeProgressOverlay Overlay { get; } = new();
+
+    /// <summary>The outcome banners.</summary>
+    public FakeNotificationService Notifications { get; } = new();
 
     /// <summary>The dispatcher that runs everything inline.</summary>
     public ImmediateUiDispatcher Dispatcher { get; } = new();

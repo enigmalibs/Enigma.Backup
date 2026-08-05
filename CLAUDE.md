@@ -39,7 +39,17 @@ Two production projects (`src/`), both `net10.0` on purpose:
 - **`Enigma.Backup.Desktop`** — Avalonia 12 MVVM app, bootstrapped through
   `Microsoft.Extensions.Hosting` (`App.OnFrameworkInitializationCompleted` builds and starts the
   `IHost`, resolves `MainWindow` from DI, and stops the host on exit). The only project that touches
-  Avalonia.
+  Avalonia. Its look comes from the house control library **`Enigma.Avalonia.Desktop`**: `App.axaml`
+  keeps `<FluentTheme />` in `Application.Styles` (the library themes only its own controls, plus
+  `TextBox`/`ComboBox` via FluentTheme's key overrides — drop it and everything else goes
+  untemplated) and merges `avares://Enigma.Avalonia.Desktop/Themes/Fluent.axaml` into
+  `Application.Resources` as a **`ResourceInclude`**; a `StyleInclude` fails the build with
+  `AVLN2000`. Our own `Views/ProgressOverlayCard.axaml` is merged **after** it — a control theme of ours
+  reads the library's brushes, and on a duplicate key the last dictionary wins, so anything of ours
+  merged *before* it is silently ignored. Colours are the library's `Enigma*` brush keys, **always `DynamicResource`** —
+  `StaticResource` freezes the colour and the control stops following a theme switch. The window's own
+  `Background` is ours to set (`EnigmaBackgroundBrush`): the theme paints controls, not windows.
+  Icons come from `Enigma.Icons.Phosphor` through `xmlns:ei="https://github.com/josueclement/Enigma.Icons"`.
 
 Invariants that are easy to violate and must be preserved:
 
@@ -48,11 +58,52 @@ Invariants that are easy to violate and must be preserved:
   conflict handler, progress via `IProgress<T>`. Never reference Avalonia, show a dialog, or read the
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
-- **The Desktop's view models never name Avalonia either.** File pickers, modal dialogs and UI-thread
-  marshaling enter through `IFilePicker` / `IDialogService` / `IUiDispatcher` (`Desktop/Services/`,
-  with the Avalonia implementations beside them); only the Views, `App` and those implementations
-  touch Avalonia types. This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the
-  end-to-end test that drives the real pipeline through the real container.
+- **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run card, the
+  outcome banner, the theme variant and UI-thread marshaling enter through `IFilePicker` /
+  `IDialogService` / `IProgressOverlay` / `INotificationService` / `IThemeSwitcher` / `IUiDispatcher`
+  (`Desktop/Services/`, with the Avalonia
+  implementations beside them); only the Views, `App` and those implementations touch Avalonia types.
+  This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the end-to-end test that drives
+  the real pipeline through the real container, which therefore has to register fakes for the two seams
+  whose real implementations reach for a host control.
+- **The control library's own services are consumed only inside `Desktop/Services/`, behind those
+  interfaces — no view model ever injects one.** `IContentDialogService` hands the caller an Avalonia
+  control and the picker services deal in `IStorageFile`, so injecting one anywhere else breaks the
+  invariant above. They are registered by `AddEnigmaAvaloniaDesktop()` (the package ships no such
+  extension) and each is handed its host control — or the window's storage provider — once in
+  `App.OnFrameworkInitializationCompleted`, before the window is shown; skip that and the first call
+  throws. Since dialogs and pickers no longer need an owner `Window`, nothing supplies one: don't
+  reintroduce a service that holds the main window.
+- **`MainWindow.axaml`'s root `Panel` ends with `Overlay` → `ContentDialog` → `InfoBar`, in that
+  order.** It is deliberately *not* the order in the library's `setup.md`: a `Panel` z-stacks its
+  children, and a mid-run decision (unreadable file, restore conflict) is raised *while* the run
+  overlay is open — behind the scrim it cannot be clicked and the app looks hung.
+- **A run's progress lives on the overlay, and the scrim must always come down.** There is one card
+  (`Views/ProgressOverlayCard`, ours — the library ships none), raised and taken away by
+  `MainWindowViewModel.RunAsync`, whose `finally` is what guarantees the second half: an exception
+  between show and hide leaves a scrim over an app nobody can click. Progress reaches both the view
+  model's own properties and the card through the single `ReportProgress` method, so the two cannot
+  drift; Cancel is *on* the card, because behind the scrim a button in the window cannot be pressed.
+- **Never `await IInfoBarService.ShowAsync`.** Its task completes when the banner is **dismissed**, not
+  when it appears (`InfoBar.ShowAsync` resolves a `TaskCompletionSource` from its `Closed` event), so
+  awaiting it holds the finishing run open until the user clicks the ✕. `NotificationService` starts it
+  and hands the task back only if it has already completed — which is how a host that was never
+  registered still surfaces as an exception.
+- **An in-window dialog has to be given the keyboard focus.** `ContentDialog` handles Escape itself and
+  each dialog's content binds Enter, but both need the focus to be inside the dialog; a window used to
+  grant that for free. Every dialog content takes it on attach (posted at `DispatcherPriority.Loaded`,
+  because the content is attached while the host is still collapsed). Without it the keys reach the
+  window *behind* the scrim. Note also that the dialog's own buttons ignore a command's `CanExecute`,
+  so a question that validates input drives `IsPrimaryButtonEnabled` from its view model.
+- **The app's own preferences are Desktop-owned, and losing them is never fatal.** The theme variant
+  (`System` / `Light` / `Dark`, default `System`) lives in `Desktop/Settings/` and is written to
+  `<config>/Enigma.Backup/settings.json`, beside the `profiles/` folder — deliberately *not* in Core: a
+  theme variant means nothing to a CLI, so a settings concept there would be UI leaking inward past the
+  first invariant above. `IAppSettingsStore` is synchronous because the stored variant has to be applied
+  before the window is shown, and neither of its calls throws — a missing, unreadable or malformed file
+  reads as the defaults with a log line, so a hand-edited preference can never stop the app from
+  opening. `System` is a value of its own (`ThemeVariant.Default`), not the absence of one: collapse it
+  into "whatever we last saw" and "follow the OS" becomes unreachable after the first click.
 - **Passwords are parameters, never state.** They cross the API as a parameter, are prompted per run,
   and are never persisted, logged, or cached.
 - **The pipeline is single-pass and streaming.** No temp files, constant memory regardless of archive
@@ -66,8 +117,12 @@ Invariants that are easy to violate and must be preserved:
   cancels the signal and then waits for a `StopAsync` that never comes, because Avalonia owns the
   foreground loop and `App` calls `_host.Start()`, not `Run()`. A session logout hangs. Keep the
   `Replace` too: the host builder registers its own lifetime first, so `TryAdd` would do nothing.
-- **The `EBK1` container format is specified in the plan.** Field details may be refined *within*
-  version 1 before the first release; any post-release change bumps the version byte.
+- **The `EBK1` container format is specified in the plan, and version 1 is now frozen.** The window
+  for refining field details *within* version 1 closed at 1.0.0: archives written by every released
+  build are in people's hands, so **any** change to the layout bumps the version byte and is called
+  out as breaking in `RELEASENOTES.md`. Every release since has carried the opposite claim — that the
+  byte is unchanged and old archives still open — and `GoldenArchiveCompatibilityTests` is what backs
+  it.
 - **`tests/Enigma.Backup.Core.Tests/Fixtures/` is evidence, not test input — never regenerate it.**
   It holds a real encrypted archive written by the 1.0.0 build, and `GoldenArchiveCompatibilityTests`
   verifies and restores it on every run. That is the only check that can catch a behavioural change
@@ -90,7 +145,11 @@ Invariants that are easy to violate and must be preserved:
 - **Compiled bindings**: every view root and `DataTemplate` needs `x:DataType`.
 - **UI strings are hardcoded English** — an explicit decision for this app; no `.resx`.
 - **Central Package Management**: versions live only in `Directory.Packages.props`; `.csproj` files
-  reference packages without a `Version`. The Avalonia set is version-coupled — bump it as a unit.
+  reference packages without a `Version`. The Avalonia set is version-coupled — bump it as a unit, and
+  `Enigma.Avalonia.Desktop` belongs to it (it pins Avalonia 12.1.1 itself, so it moves with the set or
+  not at all). `Enigma.Core` arrives both from Core's own 1.1.0 pin and transitively from
+  `Enigma.Avalonia.Desktop` at 1.0.0; the higher version wins, and
+  `GoldenArchiveCompatibilityTests` is what guards that resolution.
 - **New extension methods use C# 14 `extension(...)` blocks**, not the legacy `this`-parameter form
   (the sibling repos Draw/HardCopy still use the old form — don't copy it across).
 - Tests are `tests/<Project>.Tests` (xUnit v3, `xunit.v3` package, MTP via `global.json`). Desktop

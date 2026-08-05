@@ -21,9 +21,9 @@ namespace Enigma.Backup.Desktop.Tests.Integration;
 /// <remarks>
 /// Everything here is the shipping wiring — the container built by <c>AddEnigmaBackupCore</c> and
 /// <c>AddEnigmaBackupDesktop</c>, the real profile store, the real streaming pipeline, real files on
-/// disk. Only the three seams that would open a window are replaced: the pickers answer with paths,
-/// the dialogs answer with a password, and the dispatcher runs work where it stands. What is left
-/// untested is the click itself.
+/// disk. Only the seams that would need a window on screen are replaced: the pickers answer with
+/// paths, the dialogs answer with a password, the run card and the outcome banner are recorded rather
+/// than drawn, and the dispatcher runs work where it stands. What is left untested is the click itself.
 /// </remarks>
 public sealed class WindowEndToEndTests
 {
@@ -244,10 +244,14 @@ public sealed class WindowEndToEndTests
 
             ServiceCollection services = [];
 
-            // Registered before the two extensions, whose TryAdd calls then stand down.
+            // Registered before the two extensions, whose TryAdd calls then stand down. The overlay and
+            // the notification banner are among them because the real ones reach for host controls that
+            // only exist once a window has been shown.
             services.AddSingleton<IProfileStore>(new ProfileStore(profilesDirectory));
             services.AddSingleton<IFilePicker>(FilePicker);
             services.AddSingleton<IDialogService>(Dialogs);
+            services.AddSingleton<IProgressOverlay>(Overlay);
+            services.AddSingleton<INotificationService>(Notifications);
             services.AddSingleton<IUiDispatcher>(new ImmediateUiDispatcher());
 
             // Argon2id at its shipped cost would add most of a second to every encrypted case here;
@@ -269,6 +273,10 @@ public sealed class WindowEndToEndTests
         public FakeFilePicker FilePicker { get; } = new();
 
         public FakeDialogService Dialogs { get; } = new();
+
+        public FakeProgressOverlay Overlay { get; } = new();
+
+        public FakeNotificationService Notifications { get; } = new();
 
         public MainWindowViewModel ViewModel { get; }
 

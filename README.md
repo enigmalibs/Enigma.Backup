@@ -6,10 +6,11 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.0.1** — a maintenance release: the cryptography dependency moves to
-> Enigma.Core 1.1.0, and a checked-in archive from the previous release is now part of the test suite,
-> so "your old backups still open" is something the build proves rather than promises. Nothing about
-> the archive format changed. See [RELEASENOTES.md](RELEASENOTES.md).
+> **What's new in 1.1.0** — the app is redrawn on the house control library: dialogs now open inside
+> the window, a run reports itself on a card with `Cancel`, the outcome arrives as a banner, and there
+> is a theme preference (`System` / `Light` / `Dark`) under the gear in the profile bar. Nothing about
+> a backup changed — the archive format, the profile format and the file names are the same, so every
+> 1.0.x archive still opens. See [RELEASENOTES.md](RELEASENOTES.md).
 
 ## Capabilities
 
@@ -25,6 +26,8 @@ and verifies what it wrote.
   against its sidecar (and every GCM tag, when encrypted).
 - **Glob excludes**, live progress with cancel, and a per-error Skip / Retry / Abort policy with an
   end-of-run summary of everything skipped.
+- **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
+  bar), applied the moment you pick it and remembered afterwards.
 
 ## Installing
 
@@ -33,8 +36,8 @@ executable inside. It is self-contained — **no .NET runtime needs to be instal
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.0.1-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.0.1-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.1.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.1.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 There is no installer and nothing is written outside your home directory. To uninstall, delete the
 executable and — if you want your profiles gone too — the config folder listed below.
@@ -49,28 +52,32 @@ The app is a single window, top to bottom:
 1. **Profile** — pick a saved profile from the drop-down, or start from `New`. A profile is just the
    settings below, under a name; `Save`, `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…`
    are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
-   discards them.
+   discards them. The gear at the right-hand end of the bar opens **Settings**, which is where the
+   theme lives.
 2. **Files and folders to back up** — `Add files…`, `Add folder…`, or drop them anywhere on the
    window. Overlapping entries are merged automatically when the backup runs.
 3. **Exclude patterns** — optional globs applied during the scan, one per line: `**/bin/**`,
    `*.log`, `**/node_modules/**`.
 4. **Save backups in** — the output folder. It is always excluded from the backup itself, so
    pointing it inside an input folder is safe.
-5. **Compression** — Zstandard (`.tar.zst`, the default: faster and smaller) or gzip (`.tar.gz`,
-   readable by anything).
-6. **Encrypt with a password** — tick it to get AES-256-GCM encryption. You are prompted for the
-   password each run, with a confirmation field; it is never saved anywhere.
-7. **Back up** — runs the backup, showing the current file and overall progress, with `Cancel`
-   available throughout. **Restore…** asks for an archive and a destination; **Verify…** re-reads an
-   archive and checks it against its sidecar. Every run ends in the **Last run** panel with the
-   counts, the duration, the output path, and a prominent list of anything skipped.
+5. **Archive options → Compression** — Zstandard (`.tar.zst`, the default: faster and smaller) or gzip
+   (`.tar.gz`, readable by anything).
+6. **Archive options → Encrypt with a password** — switch it on to get AES-256-GCM encryption. You are
+   prompted for the password each run, with a confirmation field; it is never saved anywhere.
+7. **Back up** — runs the backup behind a card that shows the phase, the current file, the percentage
+   and `Cancel`. **Restore…** asks for an archive and a destination; **Verify…** re-reads an archive and
+   checks it against its sidecar. When a run ends, the outcome appears as a banner at the top of the
+   window, and the **Last run** panel fills with the counts, the duration, the output path, and a
+   prominent list of anything skipped.
 
 If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort**, with an
 *apply to all further errors* option. Aborting — like cancelling — deletes the partial archive, so a
 half-written backup is never left behind.
 
 Profiles live in `%APPDATA%\Enigma.Backup\profiles` on Windows and
-`~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile.
+`~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile. The app's own preferences —
+currently just the theme — sit in `settings.json` beside that folder. It appears the first time you
+change one, and deleting it simply returns the app to following the system.
 
 ## What a backup run writes
 
@@ -126,6 +133,21 @@ tests/Enigma.Backup.Core.Tests
 tests/Enigma.Backup.Desktop.Tests
 docs/                        roadmap, per-item plans, completion records, release runbook
 ```
+
+## Built on
+
+| Dependency | What it provides |
+|---|---|
+| [.NET 10](https://dotnet.microsoft.com/) | the runtime; the core targets `net10.0` because the archive pipeline is built on `System.Formats.Tar` |
+| [Avalonia 12](https://avaloniaui.net/) | the cross-platform UI framework (with its Fluent theme and the Inter font) |
+| [Enigma.Avalonia.Desktop](https://www.nuget.org/packages/Enigma.Avalonia.Desktop) | the house control library — the theme, the in-window dialog / overlay / notification hosts, the file and folder pickers, the setting cards and typed editors |
+| [Enigma.Icons](https://www.nuget.org/packages/Enigma.Icons) · [.Phosphor](https://www.nuget.org/packages/Enigma.Icons.Phosphor) · [.Avalonia](https://www.nuget.org/packages/Enigma.Icons.Avalonia) | the icons across the window and the dialog headers. The glyphs are [Phosphor Icons](https://phosphoricons.com/), MIT-licensed upstream |
+| [Enigma.Core](https://www.nuget.org/packages/Enigma.Core) | AES-256-GCM and Argon2id, over BouncyCastle |
+| [ZstdSharp.Port](https://www.nuget.org/packages/ZstdSharp.Port) | Zstandard compression (gzip comes from the BCL) |
+| [CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm) · [Microsoft.Extensions](https://www.nuget.org/packages/Microsoft.Extensions.Hosting) | the MVVM layer, and hosting, DI, logging and glob matching |
+
+Versions are pinned centrally in `Directory.Packages.props`; the Avalonia set — the control library
+included — is version-coupled and moves as a unit.
 
 ## Building
 

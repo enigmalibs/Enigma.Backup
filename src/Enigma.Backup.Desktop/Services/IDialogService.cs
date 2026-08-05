@@ -54,6 +54,13 @@ public interface IDialogService
     /// <param name="cancellationToken">Cancels waiting for the acknowledgement.</param>
     Task ShowMessageAsync(string title, string message, MessageSeverity severity, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Shows the app's preferences. Nothing comes back: every choice in there applies — and is
+    /// written out — the moment it is made, so the dialog is closed rather than accepted.
+    /// </summary>
+    /// <param name="cancellationToken">Closes the dialog without waiting for the user.</param>
+    Task ShowSettingsAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Asks the user to confirm something before it happens.</summary>
     /// <param name="title">The dialog's title.</param>
     /// <param name="message">What is about to happen.</param>

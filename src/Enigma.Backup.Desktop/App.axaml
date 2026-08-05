@@ -3,34 +3,26 @@
              x:Class="Enigma.Backup.Desktop.App"
              RequestedThemeVariant="Default">
 
+    <!-- FluentTheme stays: Enigma.Avalonia.Desktop themes only the controls it ships (plus TextBox
+         and ComboBox, by overriding FluentTheme's own brush keys), so dropping it would leave every
+         other framework control — including those nested inside the library's templates — untemplated. -->
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
 
     <Application.Resources>
         <ResourceDictionary>
-            <!-- The app's own accents. Defined here rather than taken from the theme so they are
-                 guaranteed to resolve in both variants and read the same on Windows and Linux. -->
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppDangerBrush" Color="#B3261E" />
-                    <SolidColorBrush x:Key="AppWarningBrush" Color="#8A5300" />
-                    <SolidColorBrush x:Key="AppSuccessBrush" Color="#1B6B36" />
-                    <SolidColorBrush x:Key="AppMutedBrush" Color="#5F6368" />
-                    <!-- Translucent, so the panels lift off whatever the theme's window colour is
-                         instead of being pinned to one that may not match it. -->
-                    <SolidColorBrush x:Key="AppPanelBrush" Color="#FFFFFF" Opacity="0.55" />
-                    <SolidColorBrush x:Key="AppPanelBorderBrush" Color="#000000" Opacity="0.13" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="AppDangerBrush" Color="#F2B8B5" />
-                    <SolidColorBrush x:Key="AppWarningBrush" Color="#F3C669" />
-                    <SolidColorBrush x:Key="AppSuccessBrush" Color="#7EE2A8" />
-                    <SolidColorBrush x:Key="AppMutedBrush" Color="#A9AEB6" />
-                    <SolidColorBrush x:Key="AppPanelBrush" Color="#FFFFFF" Opacity="0.04" />
-                    <SolidColorBrush x:Key="AppPanelBorderBrush" Color="#FFFFFF" Opacity="0.12" />
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- The library's theme has a ResourceDictionary root, so it is merged here as a
+                     ResourceInclude; a StyleInclude fails the build with AVLN2000. Anything of ours
+                     that overrides an Enigma* key must be merged AFTER this line, or the last
+                     dictionary wins and our override is silently ignored. -->
+                <ResourceInclude Source="avares://Enigma.Avalonia.Desktop/Themes/Fluent.axaml" />
+
+                <!-- The run card's own control theme. It reads the library's Enigma* brushes, so it is
+                     merged after them; the overlay it sits on is the library's, the card is ours. -->
+                <ResourceInclude Source="avares://Enigma.Backup.Desktop/Views/ProgressOverlayCard.axaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 
