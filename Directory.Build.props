@@ -9,7 +9,7 @@
          published separately (neither project is packable), so the version lives here rather
          than in either .csproj. publish.sh / publish.ps1 name the release zips after it, which
          they read back through `dotnet msbuild -getProperty:Version`. -->
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
     <!-- Explicit usings everywhere: every file declares its own using directives. -->

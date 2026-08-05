@@ -25,6 +25,10 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Enigma.Avalonia.Desktop" />
+    <PackageReference Include="Enigma.Icons" />
+    <PackageReference Include="Enigma.Icons.Phosphor" />
+    <PackageReference Include="Enigma.Icons.Avalonia" />
   </ItemGroup>
 
   <ItemGroup>

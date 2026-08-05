@@ -25,9 +25,10 @@ namespace Enigma.Backup.Desktop.ViewModels;
 /// <remarks>
 /// <para>
 /// Nothing here knows about Avalonia. Files are chosen through <see cref="IFilePicker"/>, questions
-/// are asked through <see cref="IDialogService"/>, and the UI thread is reached through
-/// <see cref="IUiDispatcher"/> — which is why a test can run a whole backup, answer its error dialog
-/// and read the summary without a window ever existing.
+/// are asked through <see cref="IDialogService"/>, the run's own card and the banner that reports its
+/// outcome through <see cref="IProgressOverlay"/> and <see cref="INotificationService"/>, and the UI
+/// thread is reached through <see cref="IUiDispatcher"/> — which is why a test can run a whole backup,
+/// answer its error dialog and read the summary without a window ever existing.
 /// </para>
 /// <para>
 /// The editor is a working copy of a profile. The store is read on demand and written only when the
@@ -48,6 +49,8 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly IVerificationService _verifications;
     private readonly IFilePicker _filePicker;
     private readonly IDialogService _dialogs;
+    private readonly IProgressOverlay _overlay;
+    private readonly INotificationService _notifications;
     private readonly IUiDispatcher _dispatcher;
     private readonly ILogger<MainWindowViewModel> _logger;
 
@@ -62,6 +65,8 @@ public sealed class MainWindowViewModel : ObservableObject
     /// <param name="editor">The working copy of the profile being edited.</param>
     /// <param name="filePicker">Opens the system file and folder pickers.</param>
     /// <param name="dialogs">Asks the user everything that needs a modal answer.</param>
+    /// <param name="overlay">Shows the running operation, and takes its Cancel button.</param>
+    /// <param name="notifications">Reports how each run ended, as a banner in the window.</param>
     /// <param name="dispatcher">Marshals the core's progress reports onto the UI thread.</param>
     /// <param name="logger">Records what each run did, to the console and the debugger.</param>
     public MainWindowViewModel(
@@ -72,6 +77,8 @@ public sealed class MainWindowViewModel : ObservableObject
         ProfileEditorViewModel editor,
         IFilePicker filePicker,
         IDialogService dialogs,
+        IProgressOverlay overlay,
+        INotificationService notifications,
         IUiDispatcher dispatcher,
         ILogger<MainWindowViewModel> logger)
     {
@@ -82,6 +89,8 @@ public sealed class MainWindowViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(editor);
         ArgumentNullException.ThrowIfNull(filePicker);
         ArgumentNullException.ThrowIfNull(dialogs);
+        ArgumentNullException.ThrowIfNull(overlay);
+        ArgumentNullException.ThrowIfNull(notifications);
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(logger);
 
@@ -91,6 +100,8 @@ public sealed class MainWindowViewModel : ObservableObject
         _verifications = verifications;
         _filePicker = filePicker;
         _dialogs = dialogs;
+        _overlay = overlay;
+        _notifications = notifications;
         _dispatcher = dispatcher;
         _logger = logger;
 
@@ -105,6 +116,7 @@ public sealed class MainWindowViewModel : ObservableObject
         DeleteProfileCommand = new AsyncRelayCommand(OnDeleteProfileAsync, () => !IsBusy && HasSelectedProfile);
         ImportProfileCommand = new AsyncRelayCommand(OnImportProfileAsync, () => !IsBusy);
         ExportProfileCommand = new AsyncRelayCommand(OnExportProfileAsync, () => !IsBusy && HasSelectedProfile);
+        OpenSettingsCommand = new AsyncRelayCommand(OnOpenSettingsAsync, () => !IsBusy);
 
         BackupCommand = new AsyncRelayCommand(OnBackupAsync, () => !IsBusy && Editor.CanRun);
         RestoreCommand = new AsyncRelayCommand(OnRestoreAsync, () => !IsBusy);
@@ -181,7 +193,10 @@ public sealed class MainWindowViewModel : ObservableObject
     /// <summary>Whether nothing is running — what the editor's panel is enabled by.</summary>
     public bool IsIdle => !IsBusy;
 
-    /// <summary>What is happening, in one line.</summary>
+    /// <summary>
+    /// What is happening, in one line: the run card's message while something is running, and the last
+    /// run's headline once it is over.
+    /// </summary>
     public string StatusText
     {
         get;
@@ -203,7 +218,7 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Whether the progress bar should simply animate — true while a scan is running, because how
+    /// Whether the run card's bar should simply animate — true while a scan is running, because how
     /// much there is to do is not known until it has finished.
     /// </summary>
     public bool IsProgressIndeterminate
@@ -251,6 +266,12 @@ public sealed class MainWindowViewModel : ObservableObject
 
     /// <summary>Writes the selected profile out to a file anywhere on disk.</summary>
     public AsyncRelayCommand ExportProfileCommand { get; }
+
+    /// <summary>
+    /// Opens the app's preferences — the gear in the profile bar. It belongs to no profile; it is
+    /// simply the only bar the window has.
+    /// </summary>
+    public AsyncRelayCommand OpenSettingsCommand { get; }
 
     /// <summary>Runs a backup of what the editor holds.</summary>
     public AsyncRelayCommand BackupCommand { get; }
@@ -555,6 +576,10 @@ public sealed class MainWindowViewModel : ObservableObject
         _logger.LogInformation("Exported the profile {Profile} to {Path}.", name, path);
     }
 
+    // The dialog owns everything about a preference — applying it, writing it out — so there is
+    // nothing for the window to do afterwards.
+    private Task OnOpenSettingsAsync() => _dialogs.ShowSettingsAsync();
+
     private async Task<string?> AskForProfileNameAsync(string title, string prompt, string initialName, string? keepAvailable)
     {
         IReadOnlyCollection<string> taken = keepAvailable is null
@@ -606,7 +631,7 @@ public sealed class MainWindowViewModel : ObservableObject
             }
         }
 
-        await RunAsync("backup", discardsOutput: true, async token =>
+        await RunAsync("backup", "Backing up", discardsOutput: true, async token =>
         {
             DispatchedProgress<BackupProgress> progress = new(_dispatcher, ApplyBackupProgress);
             DialogBackupErrorHandler errors = new(_dialogs);
@@ -629,7 +654,7 @@ public sealed class MainWindowViewModel : ObservableObject
             return;
         }
 
-        await RunAsync("restore", discardsOutput: false, async token =>
+        await RunAsync("restore", "Restoring", discardsOutput: false, async token =>
         {
             DispatchedProgress<RestoreProgress> progress = new(_dispatcher, ApplyRestoreProgress);
             DialogRestoreConflictHandler conflicts = new(_dialogs);
@@ -666,7 +691,7 @@ public sealed class MainWindowViewModel : ObservableObject
             return;
         }
 
-        await RunAsync("verification", discardsOutput: false, async token =>
+        await RunAsync("verification", "Checking the archive", discardsOutput: false, async token =>
         {
             DispatchedProgress<VerificationProgress> progress = new(_dispatcher, ApplyVerificationProgress);
 
@@ -689,12 +714,14 @@ public sealed class MainWindowViewModel : ObservableObject
 
     /// <summary>
     /// Runs one operation with everything that surrounds every operation: the busy state, the
-    /// cancellation source the Cancel button needs, and a summary whatever the outcome.
+    /// cancellation source the Cancel button needs, the card that shows it running, the banner that
+    /// reports how it ended, and a summary whatever the outcome.
     /// </summary>
     /// <param name="what">What is running, as it appears in messages — "backup", "restore", …</param>
+    /// <param name="title">The same thing as the run card's heading — "Backing up", "Restoring", …</param>
     /// <param name="discardsOutput">Whether cancelling it also deletes a partial output file.</param>
     /// <param name="operation">The operation, which returns the summary of what it did.</param>
-    private async Task RunAsync(string what, bool discardsOutput, Func<CancellationToken, Task<RunSummary>> operation)
+    private async Task RunAsync(string what, string title, bool discardsOutput, Func<CancellationToken, Task<RunSummary>> operation)
     {
         if (IsBusy)
         {
@@ -705,11 +732,15 @@ public sealed class MainWindowViewModel : ObservableObject
 
         _cancellation = cancellation;
         Summary = null;
-        CurrentItem = null;
-        ProgressPercent = 0;
-        IsProgressIndeterminate = true;
-        StatusText = $"Starting the {what}…";
+
+        // Busy before the card goes up, so Cancel is live the moment it can be clicked.
         IsBusy = true;
+
+        // Last run's outcome belongs to the last run.
+        await _notifications.HideAsync();
+        await _overlay.ShowAsync(title, CancelCommand);
+
+        ReportProgress($"Starting the {what}…", currentItem: null, percent: 0, isIndeterminate: true);
 
         _logger.LogInformation("Starting the {Operation}.", what);
 
@@ -749,12 +780,57 @@ public sealed class MainWindowViewModel : ObservableObject
             {
                 ProgressPercent = 0;
             }
+
+            // Whatever happened above, including a failure the catches did not expect: a scrim left up
+            // is an app nobody can click.
+            await _overlay.HideAsync();
+
+            if (Summary is RunSummary summary)
+            {
+                await NotifyAsync(summary);
+            }
         }
+    }
+
+    /// <summary>Reports how a run ended, as the banner the window shows until the next one starts.</summary>
+    /// <param name="summary">What the run left behind.</param>
+    private Task NotifyAsync(RunSummary summary)
+    {
+        // The headline is the message: the core already writes the sentence it wants shown, and the
+        // title only has to say how to read it. Everything else stays in the "Last run" panel.
+        (string title, NotificationSeverity severity) = summary switch
+        {
+            { IsSuccess: true } => ("Done", NotificationSeverity.Success),
+            { IsFailure: true } => ("Something went wrong", NotificationSeverity.Error),
+            _ => ("Finished, with something to report", NotificationSeverity.Warning),
+        };
+
+        return _notifications.ShowAsync(title, summary.Headline, severity);
+    }
+
+    /// <summary>
+    /// Publishes one progress report to both places that read it — the window's own state and the run
+    /// card — so the card can never drift from the view model.
+    /// </summary>
+    /// <param name="status">What is happening, in one line.</param>
+    /// <param name="currentItem">The file being processed, or <see langword="null"/> when there is none.</param>
+    /// <param name="percent">How far the run has got, from 0 to 100.</param>
+    /// <param name="isIndeterminate">Whether how much there is to do is still unknown.</param>
+    private void ReportProgress(string status, string? currentItem, double percent, bool isIndeterminate)
+    {
+        IsProgressIndeterminate = isIndeterminate;
+        ProgressPercent = percent;
+        CurrentItem = currentItem;
+        StatusText = status;
+
+        _overlay.Update(status, currentItem, percent, isIndeterminate);
     }
 
     private void OnCancel()
     {
-        StatusText = "Cancelling…";
+        // Only the line changes: the bar and the file being worked on are still true until the run
+        // actually stops, and the card is what the user is looking at when they press this.
+        ReportProgress("Cancelling…", CurrentItem, ProgressPercent, IsProgressIndeterminate);
 
         // Finished between the button press and here, the source is simply gone; nothing to stop.
         _cancellation?.Cancel();
@@ -762,34 +838,32 @@ public sealed class MainWindowViewModel : ObservableObject
 
     private void ApplyBackupProgress(BackupProgress progress)
     {
-        IsProgressIndeterminate = progress.Phase == BackupPhase.Scanning;
-        ProgressPercent = progress.PercentComplete;
-        CurrentItem = progress.CurrentPath;
-
-        StatusText = progress.Phase switch
+        string status = progress.Phase switch
         {
             BackupPhase.Scanning => "Scanning the inputs…",
             BackupPhase.Completed => "Writing the checksum…",
             _ => $"Archiving — {DisplayFormat.Bytes(progress.BytesProcessed)} of {DisplayFormat.Bytes(progress.TotalBytes)}, " +
                  $"{DisplayFormat.Count(progress.FilesProcessed, "file", "files")} done",
         };
+
+        ReportProgress(status, progress.CurrentPath, progress.PercentComplete, progress.Phase == BackupPhase.Scanning);
     }
 
-    private void ApplyRestoreProgress(RestoreProgress progress)
-    {
-        IsProgressIndeterminate = false;
-        ProgressPercent = progress.PercentComplete;
-        CurrentItem = progress.CurrentPath;
-        StatusText = $"Restoring — {DisplayFormat.Count(progress.FilesRestored, "file", "files")}, " +
-                     $"{DisplayFormat.Bytes(progress.BytesRestored)} written";
-    }
+    private void ApplyRestoreProgress(RestoreProgress progress) =>
+        ReportProgress(
+            $"Restoring — {DisplayFormat.Count(progress.FilesRestored, "file", "files")}, " +
+            $"{DisplayFormat.Bytes(progress.BytesRestored)} written",
+            progress.CurrentPath,
+            progress.PercentComplete,
+            isIndeterminate: false);
 
-    private void ApplyVerificationProgress(VerificationProgress progress)
-    {
-        IsProgressIndeterminate = false;
-        ProgressPercent = progress.PercentComplete;
-        StatusText = $"Checking — {DisplayFormat.Bytes(progress.BytesProcessed)} of {DisplayFormat.Bytes(progress.TotalBytes)}";
-    }
+    // A verification reads one file from end to end, so there is no item within it to name.
+    private void ApplyVerificationProgress(VerificationProgress progress) =>
+        ReportProgress(
+            $"Checking — {DisplayFormat.Bytes(progress.BytesProcessed)} of {DisplayFormat.Bytes(progress.TotalBytes)}",
+            currentItem: null,
+            progress.PercentComplete,
+            isIndeterminate: false);
 
     private void RefreshCommandStates()
     {
@@ -801,6 +875,7 @@ public sealed class MainWindowViewModel : ObservableObject
         DeleteProfileCommand.NotifyCanExecuteChanged();
         ImportProfileCommand.NotifyCanExecuteChanged();
         ExportProfileCommand.NotifyCanExecuteChanged();
+        OpenSettingsCommand.NotifyCanExecuteChanged();
         BackupCommand.NotifyCanExecuteChanged();
         RestoreCommand.NotifyCanExecuteChanged();
         VerifyCommand.NotifyCanExecuteChanged();

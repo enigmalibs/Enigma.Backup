@@ -1,7 +1,10 @@
+using System;
 using System.Linq;
+using Enigma.Avalonia.Desktop.Services;
 using Enigma.Backup.Core.Hosting;
 using Enigma.Backup.Desktop.Hosting;
 using Enigma.Backup.Desktop.Services;
+using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.ViewModels;
 using Enigma.Backup.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +42,39 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.IsType<AvaloniaUiDispatcher>(provider.GetRequiredService<IUiDispatcher>());
         Assert.IsType<FilePicker>(provider.GetRequiredService<IFilePicker>());
         Assert.IsType<DialogService>(provider.GetRequiredService<IDialogService>());
+        Assert.IsType<ProgressOverlay>(provider.GetRequiredService<IProgressOverlay>());
+        Assert.IsType<NotificationService>(provider.GetRequiredService<INotificationService>());
+        Assert.IsType<ThemeSwitcher>(provider.GetRequiredService<IThemeSwitcher>());
+    }
+
+    /// <remarks>
+    /// The store has a second constructor taking an explicit file, which the container cannot resolve
+    /// and which a test would silently get instead — so it is registered through a factory, and this is
+    /// what proves the app's one is pointed at the per-user configuration folder.
+    /// </remarks>
+    [Fact]
+    public void TheSettingsStoreResolvesOntoThePerUserConfigurationFile()
+    {
+        using ServiceProvider provider = Build();
+
+        IAppSettingsStore store = provider.GetRequiredService<IAppSettingsStore>();
+
+        Assert.IsType<AppSettingsStore>(store);
+        Assert.Equal(AppSettingsStore.DefaultPath, store.FilePath);
+        Assert.Same(store, provider.GetRequiredService<IAppSettingsStore>());
+    }
+
+    /// <remarks>
+    /// The overlay holds the card it is currently showing, so a second instance would be one whose
+    /// progress reports draw on nothing at all.
+    /// </remarks>
+    [Fact]
+    public void TheRunOverlayIsOneInstance()
+    {
+        using ServiceProvider provider = Build();
+
+        Assert.Same(provider.GetRequiredService<IProgressOverlay>(), provider.GetRequiredService<IProgressOverlay>());
+        Assert.Same(provider.GetRequiredService<INotificationService>(), provider.GetRequiredService<INotificationService>());
     }
 
     /// <remarks>
@@ -60,16 +96,47 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IHostLifetime));
     }
 
+    /// <remarks>
+    /// Three of these own a host control and two own the window's storage provider, all handed over
+    /// exactly once in <c>App</c>. A second instance would be one nobody ever wired, and every call
+    /// on it would throw — so "singleton" is the behaviour under test, not a preference.
+    /// </remarks>
     [Fact]
-    public void TheWindowProviderIsOneInstance_SoFillingItInReachesEveryDialog()
+    public void TheLibrarysServicesResolveToOneInstanceEach()
     {
         using ServiceProvider provider = Build();
 
-        MainWindowProvider settable = provider.GetRequiredService<MainWindowProvider>();
-        IMainWindowProvider read = provider.GetRequiredService<IMainWindowProvider>();
+        Assert.IsType<ContentDialogService>(provider.GetRequiredService<IContentDialogService>());
+        Assert.IsType<OverlayService>(provider.GetRequiredService<IOverlayService>());
+        Assert.IsType<InfoBarService>(provider.GetRequiredService<IInfoBarService>());
+        Assert.IsType<FileDialogService>(provider.GetRequiredService<IFileDialogService>());
+        Assert.IsType<FolderDialogService>(provider.GetRequiredService<IFolderDialogService>());
+        Assert.IsType<NavigationService>(provider.GetRequiredService<INavigationService>());
 
-        Assert.Same(settable, read);
-        Assert.Null(read.Window);
+        Assert.Same(provider.GetRequiredService<IContentDialogService>(), provider.GetRequiredService<IContentDialogService>());
+        Assert.Same(provider.GetRequiredService<IOverlayService>(), provider.GetRequiredService<IOverlayService>());
+        Assert.Same(provider.GetRequiredService<IInfoBarService>(), provider.GetRequiredService<IInfoBarService>());
+        Assert.Same(provider.GetRequiredService<IFileDialogService>(), provider.GetRequiredService<IFileDialogService>());
+        Assert.Same(provider.GetRequiredService<IFolderDialogService>(), provider.GetRequiredService<IFolderDialogService>());
+        Assert.Same(provider.GetRequiredService<INavigationService>(), provider.GetRequiredService<INavigationService>());
+    }
+
+    /// <remarks>
+    /// <c>MainWindowProvider</c> existed only because dialogs and pickers needed an owner window that
+    /// could not be injected without closing a cycle. The library's services need no window, so it is
+    /// gone — and nothing may quietly bring it back, because a service that holds the window is how
+    /// Avalonia types start leaking towards the view models again. Asserted by name rather than by
+    /// type, since the type no longer exists to be named.
+    /// </remarks>
+    [Fact]
+    public void NothingHoldsTheMainWindowAnyMore()
+    {
+        ServiceCollection services = [];
+        services.AddEnigmaBackupDesktop();
+
+        Assert.DoesNotContain(
+            services,
+            descriptor => descriptor.ServiceType.Name.Contains("MainWindowProvider", StringComparison.Ordinal));
     }
 
     [Fact]

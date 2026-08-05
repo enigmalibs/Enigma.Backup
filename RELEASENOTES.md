@@ -1,3 +1,90 @@
+# Enigma.Backup v1.1.0 Release Notes
+
+The app is redrawn. Enigma.Backup is now built on **Enigma.Avalonia.Desktop**, the house control
+library — its Fluent theme, its in-window dialogs, its overlay and its notification bar — and it has
+a preference of its own for the first time: the theme. Nothing about a backup changed. The pipeline,
+the container, the profile format and the file names are the same, so an archive written by any 1.0.x
+build opens here exactly as it did.
+
+## What is new
+
+- **A theme preference — `System`, `Light` or `Dark`.** The gear at the end of the profile bar opens
+  **Settings**; the choice repaints the app the moment you make it and is remembered afterwards. The
+  default is `System`, which follows the desktop rather than pinning a variant — and it is a value you
+  can return to, not just the state before your first click.
+- **Dialogs open in the window, not beside it.** Every question the app asks — the password, a profile
+  name, a confirmation, the Skip / Retry / Abort decision, a restore conflict — is now raised inside
+  the main window over a dimmed background instead of as a separate window. Enter and Escape work as
+  they did, and dismissing a decision still aborts rather than silently skipping.
+- **A run reports itself on a card.** Backup, restore and verify each raise a card over the window
+  carrying the phase, the current file, the percentage and **Cancel**. The status bar and progress bar
+  at the bottom of the window are gone; the action row is just the three buttons now.
+- **The outcome arrives as a banner.** When a run ends, a bar at the top of the window says how it
+  went — success, something left out, or a failure — and the **Last run** panel still holds the full
+  detail: the archive path, the sizes, the durations and the per-file skipped and warning lists.
+- **The window itself is restyled.** The output folder and the exclude-glob field are typed editors
+  with their action buttons inline, compression and encryption are grouped as setting cards under
+  *Archive options*, and every command and section heading carries a Phosphor icon.
+
+## Files
+
+- **New: `settings.json`**, beside the `profiles/` folder that already exists —
+  `%APPDATA%\Enigma.Backup\settings.json` on Windows, `~/.config/Enigma.Backup/settings.json` on
+  Linux. It holds the theme preference and nothing else. It is written the first time you change one,
+  so **its absence is normal**; deleting it simply returns the app to following the system, and a file
+  that has been hand-edited into something unreadable is logged and ignored rather than being allowed
+  to stop the app from opening.
+- Profiles are untouched, in the same folder and the same format as before.
+
+## Dependencies
+
+Four packages are added, all at 1.0.0, all in the Avalonia-coupled group:
+
+- **Enigma.Avalonia.Desktop** — the control library: its Fluent theme, the `ContentDialog` / `Overlay`
+  / `InfoBar` hosts, the file and folder picker services, the `SettingsCard` family and the typed
+  editors.
+- **Enigma.Icons**, **Enigma.Icons.Phosphor**, **Enigma.Icons.Avalonia** — the icon set used across
+  the restyled window and the dialog headers. The glyphs are [Phosphor
+  Icons](https://phosphoricons.com/), MIT-licensed upstream.
+- **Size.** Together these add about **4.1 MB** of assemblies to the published build, nearly all of it
+  `Enigma.Icons.Phosphor.dll` (4.0 MB — the whole glyph set). The zips grow accordingly; for
+  reference, 1.0.1's were 45 MB (linux-x64) and 47 MB (win-x64).
+- Enigma.Avalonia.Desktop depends on **Enigma.Core 1.0.0**, which loses to the **1.1.0** this solution
+  already pins — so the cryptography under an archive is the same build 1.0.1 shipped, and
+  `GoldenArchiveCompatibilityTests` is what proves that resolution held.
+- Nothing else moved. Avalonia stays at 12.1.1 with its coupled Fluent/Inter/DiagnosticsSupport set,
+  ZstdSharp.Port at 0.8.8, the Microsoft.Extensions packages at 10.0.10, CommunityToolkit.Mvvm at
+  8.4.2 and xunit.v3 at 3.2.2. `dotnet list package --outdated` reports no update available for any
+  project, and `--vulnerable --include-transitive` reports no known vulnerability.
+
+## Compatibility
+
+- **The engine did not change at all.** `Enigma.Backup.Core` — scanning, tar, compression, the `EBK1`
+  container, restore and verification — is byte-for-byte identical to the 1.0.1 tag. This release is
+  the app around it.
+- **The `EBK1` container version byte is unchanged.** Every encrypted archive written by 1.0.0 or
+  1.0.1 opens, verifies and restores here, and the 1.0.0 archive checked into the test suite is
+  verified and restored byte-for-byte on every build.
+- **Profile JSON is unchanged** — same `formatVersion`, same fields, same folder. A profile written by
+  1.0.x loads unchanged, and one written here is still readable by 1.0.x.
+- **Archive naming and the `.sha256` sidecar format are unchanged**, as are the unencrypted
+  `.tar.zst` / `.tar.gz` archives, which remain ordinary tar files any standard tool can unpack.
+- **Restore and verify behave as before**, including the per-conflict Skip / Overwrite / Abort choice
+  and the Skip / Retry / Abort error policy with *apply to all*.
+- The only new file on disk is `settings.json`, and it is additive: 1.0.x ignores it, and this release
+  works without it.
+- **Windows x64** and **Linux x64**, still shipped as self-contained single-file zips that need no
+  installed .NET runtime.
+
+## Version
+
+- Minor release: **1.1.0**. User-visible functionality is added — a theme preference, in-window
+  dialogs, the run card and the outcome banner — and nothing breaks: no format, no file name and no
+  stored data changed, so every 1.0.x archive and profile still works. A patch would misdescribe a
+  redrawn app; a major would claim a compatibility break that did not happen.
+
+---
+
 # Enigma.Backup v1.0.1 Release Notes
 
 A maintenance release. It moves the cryptography dependency forward and adds the regression guard

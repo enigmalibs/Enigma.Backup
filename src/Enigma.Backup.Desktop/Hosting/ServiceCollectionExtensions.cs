@@ -1,9 +1,11 @@
 using Enigma.Backup.Desktop.Services;
+using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.ViewModels;
 using Enigma.Backup.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Enigma.Backup.Desktop.Hosting;
 
@@ -16,11 +18,10 @@ public static class ServiceCollectionExtensions
         /// <returns>The same collection, so registrations can be chained.</returns>
         public IServiceCollection AddEnigmaBackupDesktop()
         {
-            // The main window is handed to the provider once it has been resolved (see App): the
-            // services that open dialogs over it cannot take it as a dependency without closing a
-            // cycle, since the window is built from the view model that depends on them.
-            services.TryAddSingleton<MainWindowProvider>();
-            services.TryAddSingleton<IMainWindowProvider>(static provider => provider.GetRequiredService<MainWindowProvider>());
+            // The control library's dialogs, overlay, notifications and pickers. Nothing here has a
+            // window to be shown over: App hands each of them its host control, or the window's
+            // storage provider, once the window exists.
+            services.AddEnigmaAvaloniaDesktop();
 
             // Replace, not TryAdd: the host builder has already registered its ConsoleLifetime by
             // the time this runs, and that one swallows SIGTERM (see AvaloniaHostLifetime).
@@ -30,6 +31,19 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();
             services.TryAddSingleton<IFilePicker, FilePicker>();
             services.TryAddSingleton<IDialogService, DialogService>();
+            services.TryAddSingleton<INotificationService, NotificationService>();
+            services.TryAddSingleton<IThemeSwitcher, ThemeSwitcher>();
+
+            // The app's own preferences — Desktop-owned, because a theme variant means nothing to a
+            // command line. Registered through a factory because the store's second constructor (an
+            // explicit file) exists for tests and cannot be resolved from the container. Its state is
+            // the file, so one instance is enough.
+            services.TryAddSingleton<IAppSettingsStore>(static provider =>
+                new AppSettingsStore(provider.GetRequiredService<ILogger<AppSettingsStore>>()));
+
+            // Singleton because it holds the card it is currently showing: a second instance would be
+            // one whose Update calls draw on nothing.
+            services.TryAddSingleton<IProgressOverlay, ProgressOverlay>();
 
             // Transient: views and view models are cheap and per-consumer (see dotnet-di-design).
             services.AddTransient<ProfileEditorViewModel>();

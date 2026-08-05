@@ -1,43 +1,42 @@
 using System;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Enigma.Backup.Desktop.ViewModels;
 
 namespace Enigma.Backup.Desktop.Views;
 
 /// <summary>The Skip / Retry / Abort prompt raised for every file a backup cannot read.</summary>
-public partial class ErrorDecisionDialog : Window
+/// <remarks>
+/// The content of a <c>ContentDialog</c>, not a window — see <see cref="Services.DialogService"/>.
+/// </remarks>
+public partial class ErrorDecisionDialog : UserControl
 {
-    private ErrorDecisionDialogViewModel? _viewModel;
-
     // Parameterless constructor for the XAML previewer/designer.
     public ErrorDecisionDialog()
     {
         InitializeComponent();
     }
 
-    /// <summary>Creates the dialog around its view model.</summary>
+    /// <summary>Creates the dialog's content around its view model.</summary>
     /// <param name="viewModel">The failure to show, which also holds the decision afterwards.</param>
     public ErrorDecisionDialog(ErrorDecisionDialogViewModel viewModel)
         : this()
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
-        _viewModel = viewModel;
         DataContext = viewModel;
-        viewModel.CloseRequested += OnCloseRequested;
     }
 
     /// <inheritdoc />
-    protected override void OnClosed(EventArgs e)
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        if (_viewModel is not null)
-        {
-            _viewModel.CloseRequested -= OnCloseRequested;
-            _viewModel = null;
-        }
+        base.OnAttachedToVisualTree(e);
 
-        base.OnClosed(e);
+        // A dialog with nothing to type in still has to hold the focus, or Enter and Escape go to
+        // whatever the main window had focused — behind the scrim, where they must not land. Posted
+        // because this content is attached while the dialog host is still collapsed, and an
+        // invisible control cannot take the focus.
+        Dispatcher.UIThread.Post(() => Focus(), DispatcherPriority.Loaded);
     }
-
-    private void OnCloseRequested(object? sender, EventArgs e) => Close();
 }
