@@ -1,6 +1,6 @@
 # FEATURE-7F99 — Pattern inputs, zip format & window polish — 1.2.0 release
 
-**Status:** IN PROGRESS
+**Status:** DONE
 **Type:** multi-phase feature (5 phases)
 **Branches (created by `/build`, each from `HEAD`):** one per phase, see *Phases*
 
@@ -382,7 +382,7 @@ Branch: `feature/feature-7f99-phase04-settings-about`
 config), the project link opens the browser, the About section shows "Version 1.2.0", the icon
 renders, and the grown dialog fits the 680×560 host cap in both variants (screenshots).
 
-### PHASE05 — Release readiness: 1.2.0 (TODO)
+### PHASE05 — Release readiness: 1.2.0 (DONE)
 
 Branch: `feature/feature-7f99-phase05-release`
 

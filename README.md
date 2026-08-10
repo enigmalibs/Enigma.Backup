@@ -6,18 +6,18 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.1.0** — the app is redrawn on the house control library: dialogs now open inside
-> the window, a run reports itself on a card with `Cancel`, the outcome arrives as a banner, and there
-> is a theme preference (`System` / `Light` / `Dark`) under the gear in the profile bar. Nothing about
-> a backup changed — the archive format, the profile format and the file names are the same, so every
-> 1.0.x archive still opens. See [RELEASENOTES.md](RELEASENOTES.md).
+> **What's new in 1.2.0** — an input can be a **pattern** now (a folder plus a glob, worked out again
+> on every run), a backup can be written as a plain **`.zip`** that any file manager opens, `Restore…`
+> and `Verify…` moved up beside the settings gear, and `Settings` opens the folder your profiles live in
+> and says which version you are running. The archive container, the file names and every existing
+> profile are untouched, so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
 
 ## Capabilities
 
 - **Reusable profiles** — the input paths, output folder, compression and encryption choices of a
   backup, stored as JSON in the per-user config folder, with import/export.
 - **Full backups** — one timestamped archive per run: `<Profile>_yyyy-MM-dd_HHmmss.tar.zst`
-  (or `.tar.gz`), plus `.enc` when encrypted, and a `.sha256` sidecar.
+  (or `.tar.gz`, or `.zip`), plus `.enc` when encrypted, and a `.sha256` sidecar.
 - **Streaming pipeline** — `scan → tar → compress → [encrypt] → file` in a single pass, so archive
   size is bounded by disk, not memory.
 - **Optional encryption** — AES-256-GCM in chunked segments, key derived with Argon2id; the
@@ -27,6 +27,9 @@ and verifies what it wrote.
 - **Pattern inputs** — a base folder plus a glob (`/var/log` + `*.log`, or `DirPrefix*`), worked out
   again on every run rather than fixed when you add it. `*` matches inside one folder level and `**`
   at any depth; a pattern that matches a folder's name takes that folder with everything in it.
+- **A plain `.zip`, when you want one** — a third choice under *Compression* that writes an ordinary
+  zip any file manager opens without this app. It can never be encrypted, and the app says so instead
+  of offering something that only looks like protection.
 - **Glob excludes**, live progress with cancel, and a per-error Skip / Retry / Abort policy with an
   end-of-run summary of everything skipped.
 - **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
@@ -40,8 +43,8 @@ executable inside. It is self-contained — **no .NET runtime needs to be instal
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.1.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.1.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.2.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.2.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 There is no installer and nothing is written outside your home directory. To uninstall, delete the
 executable and — if you want your profiles gone too — the config folder listed below.
@@ -68,15 +71,19 @@ The app is a single window, top to bottom:
    `*.log`, `**/node_modules/**`.
 4. **Save backups in** — the output folder. It is always excluded from the backup itself, so
    pointing it inside an input folder is safe.
-5. **Archive options → Compression** — Zstandard (`.tar.zst`, the default: faster and smaller) or gzip
-   (`.tar.gz`, readable by anything).
+5. **Archive options → Compression** — Zstandard (`.tar.zst`, the default: faster and smaller), gzip
+   (`.tar.gz`, readable by anything), or Zip (`.zip`, which any file manager opens without this app —
+   at the cost of two-second timestamps, no Unix permission bits, and no encryption).
 6. **Archive options → Encrypt with a password** — switch it on to get AES-256-GCM encryption. You are
-   prompted for the password each run, with a confirmation field; it is never saved anywhere.
-7. **Back up** — runs the backup behind a card that shows the phase, the current file, the percentage
-   and `Cancel`. **Restore…** asks for an archive and a destination; **Verify…** re-reads an archive and
-   checks it against its sidecar. When a run ends, the outcome appears as a banner at the top of the
-   window, and the **Last run** panel fills with the counts, the duration, the output path, and a
-   prominent list of anything skipped.
+   prompted for the password each run, with a confirmation field; it is never saved anywhere. Choosing
+   Zip switches it off and greys it out, with the reason on the card.
+7. **Back up** — the accent button at the bottom. It runs the backup behind a card that shows the
+   phase, the current file, the percentage and `Cancel`. When a run ends, the outcome appears as a
+   banner at the top of the window, and the **Last run** panel fills with the counts, the duration, the
+   output path, and a prominent list of anything skipped — including any pattern that matched nothing.
+8. **Restore… and Verify…** are in the **top bar**, beside the gear, because neither one reads anything
+   from the form: **Restore…** asks for an archive and a destination, **Verify…** re-reads an archive
+   and checks it against its sidecar. Both report on the same card and the same banner as a backup.
 
 If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort**, with an
 *apply to all further errors* option. Aborting — like cancelling — deletes the partial archive, so a
@@ -97,14 +104,17 @@ Documents_2026-08-01_143012.tar.zst          the archive
 Documents_2026-08-01_143012.tar.zst.sha256   its checksum
 ```
 
+With Zip selected it is the same pair under a different name — `Documents_2026-08-01_143012.zip` and
+`Documents_2026-08-01_143012.zip.sha256`.
+
 Encrypted runs add `.enc` to the archive name (`…tar.zst.enc`, with the sidecar alongside it as
 `…tar.zst.enc.sha256`). Nothing is ever overwritten or pruned — the timestamp makes each run a new
 pair of files, and deleting old ones is up to you.
 
 ## Restoring without Enigma.Backup
 
-**Unencrypted archives are ordinary tar files** — the app is a convenience, not a dependency. If you
-ever lose it, any standard tool will unpack your data:
+**Unencrypted archives are ordinary files** — a tar, or a zip. The app is a convenience, not a
+dependency: if you ever lose it, any standard tool will unpack your data.
 
 ```bash
 # gzip
@@ -115,6 +125,9 @@ tar --zstd -xf Documents_2026-08-01_143012.tar.zst -C ./restored
 
 # Zstandard, with any tar
 zstd -dc Documents_2026-08-01_143012.tar.zst | tar -xf - -C ./restored
+
+# Zip — Deflate, no Zip64, no encryption, so anything opens it
+unzip Documents_2026-08-01_143012.zip -d ./restored
 ```
 
 The sidecar is in `sha256sum` format, so it verifies with the standard tool — run it from the folder
@@ -124,8 +137,9 @@ holding the archive:
 sha256sum -c Documents_2026-08-01_143012.tar.zst.sha256
 ```
 
-On Windows, 7-Zip opens `.tar.gz` directly and `.tar.zst` with the Zstandard-enabled build; the
-checksum can be compared against `certutil -hashfile <archive> SHA256`.
+On Windows, a `.zip` needs nothing at all — Explorer opens it by double-click; 7-Zip opens `.tar.gz`
+directly and `.tar.zst` with the Zstandard-enabled build. The checksum can be compared against
+`certutil -hashfile <archive> SHA256`.
 
 **Encrypted archives (`.enc`) need Enigma.Backup** — or an implementation of its container format.
 They are not a standard format: the `EBK1` container is specified in full in

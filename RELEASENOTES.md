@@ -1,3 +1,112 @@
+# Enigma.Backup v1.2.0 Release Notes
+
+Two additions to what a backup can *be*, and two corrections to where the app keeps things. An input
+can now be a **rule** rather than a place — a folder plus a glob, worked out again on every run — and
+an archive can now be a plain **`.zip`**, the file any file manager opens without this application.
+**Restore…** and **Verify…** moved to the top bar, where they belong, and **Settings** learned to open
+the folder it writes to and to say which build you are running.
+
+The engine underneath is the one you already have: the `EBK1` container version byte has not moved,
+and the real 1.0.0 archive checked into the test suite is still verified and restored byte-for-byte on
+every build.
+
+## What is new
+
+- **Pattern inputs — a backup input can be a rule.** **`Add pattern…`** joins `Add files…` and
+  `Add folder…`: pick the folder the rule applies to, type the glob, and the row reads
+  `folder ▸ pattern`. It is re-resolved on **every** run, so files that appear after you saved the
+  profile are picked up rather than missed. `*` matches inside one folder level and `**` at any depth —
+  the same language, and the same platform case sensitivity, as the exclude field. One deliberate
+  extension in the include direction: **a pattern that matches a folder's name takes that folder with
+  everything in it**, which is what `DirPrefix*` is asking for and what strict file-glob semantics would
+  silently answer with nothing. Excludes still win over a match, and a pattern that matches nothing is
+  reported as a **warning** in the *Last run* panel — the base folder is recorded in the archive anyway,
+  so it says where it looked. Silence would leave "my backup is smaller than I thought" as the only
+  symptom.
+- **A plain `.zip` archive format.** A third entry in *Archive options → Compression* — *"Zip (.zip) —
+  Opens anywhere without this app. Cannot be encrypted, and keeps no Unix modes."* It is written in the
+  same single pass as the tar formats, with the same `.sha256` sidecar beside it, and **Restore…** and
+  **Verify…** open it in-app exactly as they open the others. So does every unzip tool.
+- **A zip is never encrypted, and the app says so rather than pretending.** Choosing Zip clears the
+  *Encrypt with a password* toggle and disables it, with the reason on the card; a hand-edited profile
+  asking for both is refused with a clear message before a single byte is written. The BCL offers no zip
+  encryption at all, ZipCrypto is broken, and WinZip-AES would not open in Explorer — every alternative
+  either defeats the point of choosing zip or offers something that merely looks like protection. If you
+  want encryption, choose Zstandard or Gzip.
+- **Restore… and Verify… are in the top bar now**, beside the settings gear, and the bottom bar is the
+  accent **Back up** alone. Neither command ever read anything from the form — both are "pick an
+  archive, go" — but sitting beside **Back up** they read as its peers, which was exactly wrong. Nothing
+  about what they do changed.
+- **Settings names the folder it writes to, and opens it.** A **Storage** card carries the
+  `%APPDATA%\Enigma.Backup` / `~/.config/Enigma.Backup` path — the folder holding both `settings.json`
+  and `profiles/` — with an **Open folder** button that shows it in your file manager, creating it first
+  if nothing has been written there yet.
+- **Settings says which version you are running.** An **About** section below the cards: the app icon,
+  the name, `Version 1.2.0`, the copyright line, and a link to the project page.
+
+## Files
+
+- **A profile is written as the lowest format version that can express it.** A profile carrying at
+  least one **pattern input**, or **`Compression: Zip`**, is stamped `formatVersion` **2**. Every other
+  profile is still written as `formatVersion` **1**, byte-for-byte as 1.1.0 wrote it. Both are read
+  here; what a profile *says* is always what it *is*.
+- **A zip run writes the same pair of files as any other run** —
+  `<Profile>_yyyy-MM-dd_HHmmss.zip` and `<Profile>_yyyy-MM-dd_HHmmss.zip.sha256` — in the output
+  folder, with the naming and the `sha256sum` sidecar format unchanged.
+- **Nothing new is stored.** The Storage card and the About section only read what is already there;
+  `settings.json` still holds the theme and nothing else.
+
+## Dependencies
+
+- **Nothing was added and nothing moved.** Zip comes from the BCL's `System.IO.Compression`, so a third
+  archive format costs no package at all.
+- The set is unchanged: Avalonia 12.1.1 with its coupled Fluent/Inter/DiagnosticsSupport set and
+  Enigma.Avalonia.Desktop 1.0.0, the three Enigma.Icons packages at 1.0.0, Enigma.Core 1.1.0,
+  ZstdSharp.Port 0.8.8, the Microsoft.Extensions packages at 10.0.10, CommunityToolkit.Mvvm 8.4.2 and
+  xunit.v3 3.2.2.
+- `dotnet list package --outdated` reports no update available for any of the four projects, and
+  `--vulnerable --include-transitive` reports no known vulnerability.
+
+## Compatibility
+
+- **The `EBK1` container version byte is unchanged.** Every encrypted archive written by 1.0.0, 1.0.1
+  or 1.1.0 opens, verifies and restores here. This is not an assurance: a real 1.0.0 archive is checked
+  into the test suite and is verified and restored byte-for-byte on every build.
+- **Archive naming and the `.sha256` sidecar format are unchanged**, and the unencrypted `.tar.zst` /
+  `.tar.gz` archives are still ordinary tar files any standard tool unpacks.
+- **A profile that uses nothing new is still `formatVersion` 1**, and remains readable by 1.0.x and
+  1.1.0 exactly as 1.1.0 promised. A test pins that rule, because it is what the promise stands on.
+- **A profile that uses a pattern input or Zip is `formatVersion` 2, and 1.0.x / 1.1.0 refuse it — by
+  design.** They stop with their existing "different format version" message instead of reading it as
+  less than it says. This is forward incompatibility, chosen deliberately: an older build quietly
+  backing up fewer files than the profile asks for is the failure a backup tool must not have. Nothing
+  already in your hands breaks — an older build simply declines a profile that asks for something it
+  does not have.
+- **`.zip` archives open in any stock tool** — Explorer, Finder, `unzip`, 7-Zip. They use Deflate with
+  trailing data descriptors (the consequence of writing in one pass), no Zip64 and no encryption.
+- **What a zip does not carry.** Timestamps are DOS dates: two-second resolution, and a hard
+  1980–2107 range that an out-of-range modification time is **clamped** into rather than failing the run
+  over. Unix permission bits are not representable in the format and are not written, so an executable
+  restored from a zip needs its bit set again. Tar keeps both. This is the price of a file that anything
+  can open, and it is stated on the format's own row in the drop-down rather than left to be discovered.
+- **Restore and verify behave as before**, including the per-conflict Skip / Overwrite / Abort choice
+  and the Skip / Retry / Abort error policy with *apply to all* — the zip restore runs through the same
+  path-traversal rejection, the same conflict question and the same progress as the tar one.
+- **Windows x64** and **Linux x64**, still shipped as self-contained single-file zips that need no
+  installed .NET runtime.
+
+## Version
+
+- Minor release: **1.2.0**. User-visible functionality is added — pattern inputs, a third archive
+  format, the relocated commands and the Settings additions — and nothing already released breaks: the
+  `EBK1` byte, archive naming, the sidecar format and version-1 profiles are all untouched, so every
+  archive and every feature-free profile still works. A patch would misdescribe two new capabilities;
+  a major would claim a compatibility break that did not happen. An older build declining a profile that
+  asks for a feature it does not have is forward incompatibility — stated above rather than hidden, and
+  exactly what a minor is for.
+
+---
+
 # Enigma.Backup v1.1.0 Release Notes
 
 The app is redrawn. Enigma.Backup is now built on **Enigma.Avalonia.Desktop**, the house control
