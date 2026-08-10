@@ -57,6 +57,12 @@
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
+    <!-- The input actions wrap rather than overflow: five buttons do not fit the panel at the window's
+         minimum width, and a button pushed past the edge is a button nobody can press. -->
+    <Style Selector="WrapPanel.actions > Button">
+      <Setter Property="Margin" Value="0,0,6,4" />
+    </Style>
+
     <!-- The lists sit on their own surface inside the panel, so a long path reads as being *in* a box. -->
     <Style Selector="ListBox.framed">
       <Setter Property="Background" Value="{DynamicResource EnigmaSurfaceLowBrush}" />
@@ -167,7 +173,7 @@
 
             <StackPanel Grid.Row="0" Classes="glyphrow">
               <PathIcon Data="{ei:IconGeometry Files}" />
-              <TextBlock Text="Files and folders to back up" Classes="section" />
+              <TextBlock Text="Files, folders and patterns to back up" Classes="section" />
             </StackPanel>
 
             <!-- No MinHeight: this row is the one that gives when the window is made small, and a list
@@ -177,13 +183,13 @@
                      ItemsSource="{Binding Editor.Inputs}"
                      SelectedItem="{Binding Editor.SelectedInput}">
               <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="sys:String">
-                  <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding}" />
+                <DataTemplate x:DataType="vm:InputItem">
+                  <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Detail}" />
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
+            <WrapPanel Grid.Row="2" Classes="actions">
               <Button Command="{Binding Editor.AddFilesCommand}">
                 <StackPanel Classes="glyphrow">
                   <PathIcon Data="{ei:IconGeometry FilePlus}" />
@@ -194,6 +200,14 @@
                 <StackPanel Classes="glyphrow">
                   <PathIcon Data="{ei:IconGeometry FolderPlus}" />
                   <TextBlock Text="Add folder…" />
+                </StackPanel>
+              </Button>
+              <!-- On the window, not the editor: a pattern is asked for with a dialog rather than a
+                   picker, and the window is what owns the app's questions. -->
+              <Button Command="{Binding AddPatternCommand}" ToolTip.Tip="A folder plus a pattern, re-read on every run">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry Asterisk}" />
+                  <TextBlock Text="Add pattern…" />
                 </StackPanel>
               </Button>
               <Button Command="{Binding Editor.RemoveInputCommand}">
@@ -208,7 +222,7 @@
                   <TextBlock Text="Remove all" />
                 </StackPanel>
               </Button>
-            </StackPanel>
+            </WrapPanel>
 
             <TextBlock Grid.Row="3"
                        Text="Anything dropped on this window is added here too."

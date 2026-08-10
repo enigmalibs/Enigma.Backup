@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace Enigma.Backup.Core.Profiles;
@@ -8,8 +9,18 @@ namespace Enigma.Backup.Core.Profiles;
 /// rather than the deserialized object, so a file that simply omits the field is rejected instead of
 /// silently inheriting the current version from <see cref="BackupProfile"/>'s property initializer.
 /// </summary>
+/// <remarks>
+/// A profile is written as the *lowest* version that can express it: version 2 only once it uses
+/// something version 1 has no field for. That is what keeps the promise made for every profile
+/// already on disk — one that uses no newer feature is still written as version 1 and still opens in
+/// the builds that only read version 1, while one that does use a newer feature is refused by them
+/// loudly rather than read as less than it says.
+/// </remarks>
 internal static class ProfileSerializer
 {
+    /// <summary>The format version that introduced the fields version 1 has no place for.</summary>
+    private const int ExtendedFormatVersion = 2;
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -26,19 +37,24 @@ internal static class ProfileSerializer
     };
 
     /// <summary>Renders <paramref name="profile"/> as the JSON stored on disk.</summary>
-    /// <param name="profile">The profile to write.</param>
+    /// <param name="profile">
+    /// The profile to write. Its <see cref="BackupProfile.FormatVersion"/> is set to the version that
+    /// was written, so the object and the file agree afterwards.
+    /// </param>
     /// <returns>The JSON text, indented and UTF-8 friendly.</returns>
     /// <exception cref="ProfileFormatException">The profile carries a format version this build does not write.</exception>
     public static string Serialize(BackupProfile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        if (profile.FormatVersion != BackupProfile.CurrentFormatVersion)
+        if (profile.FormatVersion is < BackupProfile.MinimumFormatVersion or > BackupProfile.CurrentFormatVersion)
         {
             throw new ProfileFormatException(
-                $"Profile '{profile.Name}' declares format version {profile.FormatVersion}; " +
-                $"this build writes version {BackupProfile.CurrentFormatVersion} only.");
+                $"Profile '{profile.Name}' declares format version {profile.FormatVersion}; this build writes " +
+                $"versions {BackupProfile.MinimumFormatVersion} to {BackupProfile.CurrentFormatVersion} only.");
         }
+
+        profile.FormatVersion = RequiredFormatVersion(profile);
 
         return JsonSerializer.Serialize(profile, SerializerOptions);
     }
@@ -67,17 +83,16 @@ internal static class ProfileSerializer
                 throw new ProfileFormatException($"'{source}' is not a valid profile file: the root is not a JSON object.");
             }
 
-            int? formatVersion = ReadFormatVersion(document.RootElement);
-            if (formatVersion is null)
+            if (ReadFormatVersion(document.RootElement) is not int formatVersion)
             {
                 throw new ProfileFormatException($"'{source}' does not declare a valid 'formatVersion'.");
             }
 
-            if (formatVersion != BackupProfile.CurrentFormatVersion)
+            if (formatVersion is < BackupProfile.MinimumFormatVersion or > BackupProfile.CurrentFormatVersion)
             {
                 throw new ProfileFormatException(
-                    $"'{source}' declares profile format version {formatVersion}; " +
-                    $"this build reads version {BackupProfile.CurrentFormatVersion} only.");
+                    $"'{source}' declares profile format version {formatVersion}; this build reads " +
+                    $"versions {BackupProfile.MinimumFormatVersion} to {BackupProfile.CurrentFormatVersion} only.");
             }
 
             BackupProfile? profile;
@@ -98,6 +113,13 @@ internal static class ProfileSerializer
             return Normalize(profile);
         }
     }
+
+    /// <summary>
+    /// The lowest format version that can express <paramref name="profile"/>: version 2 only once it
+    /// carries something version 1 has no field for.
+    /// </summary>
+    private static int RequiredFormatVersion(BackupProfile profile) =>
+        profile.PatternInputs is { Count: > 0 } ? ExtendedFormatVersion : BackupProfile.MinimumFormatVersion;
 
     /// <summary>Replaces the nulls a hand-edited file can smuggle past the non-nullable properties.</summary>
     private static BackupProfile Normalize(BackupProfile profile)
@@ -122,7 +144,38 @@ internal static class ProfileSerializer
             profile.ExcludeGlobs = [];
         }
 
+        profile.PatternInputs = NormalizePatternInputs(profile.PatternInputs);
+
         return profile;
+    }
+
+    /// <summary>
+    /// Rebuilds the pattern list without the nulls a hand-edited file can put in it. A blank base
+    /// folder or pattern is kept rather than dropped: the scan reports it, where dropping it would
+    /// silently back up less than the profile says.
+    /// </summary>
+    private static List<PatternInput> NormalizePatternInputs(IList<PatternInput>? patternInputs)
+    {
+        List<PatternInput> normalized = [];
+
+        if (patternInputs is null)
+        {
+            return normalized;
+        }
+
+        foreach (PatternInput? patternInput in patternInputs)
+        {
+            if (patternInput is null)
+            {
+                continue;
+            }
+
+            normalized.Add(patternInput.BaseDirectory is null || patternInput.Pattern is null
+                ? new PatternInput(patternInput.BaseDirectory ?? string.Empty, patternInput.Pattern ?? string.Empty)
+                : patternInput);
+        }
+
+        return normalized;
     }
 
     /// <summary>

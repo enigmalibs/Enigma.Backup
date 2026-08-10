@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Enigma.Avalonia.Desktop.Controls.ContentDialog;
 using Enigma.Avalonia.Desktop.Services;
 using Enigma.Backup.Core.Errors;
+using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Core.Restoring;
 using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.ViewModels;
@@ -42,12 +43,17 @@ public sealed class DialogService : IDialogService
 {
     private readonly IContentDialogService _dialogs;
     private readonly IUiDispatcher _dispatcher;
+    private readonly IFilePicker _filePicker;
     private readonly IAppSettingsStore _settings;
     private readonly IThemeSwitcher _themes;
 
     /// <summary>Creates a dialog service.</summary>
     /// <param name="dialogs">The library's dialog host, registered by <see cref="App"/> at startup.</param>
     /// <param name="dispatcher">Marshals every dialog onto the UI thread.</param>
+    /// <param name="filePicker">
+    /// The folder picker the pattern prompt puts behind its Choose button — held here for the same
+    /// reason the preferences are: this is where each dialog's view model is built.
+    /// </param>
     /// <param name="settings">
     /// The preferences the Settings dialog reads and writes. Held here for the same reason the other
     /// questions' data is: this is where each dialog's view model is built.
@@ -56,16 +62,19 @@ public sealed class DialogService : IDialogService
     public DialogService(
         IContentDialogService dialogs,
         IUiDispatcher dispatcher,
+        IFilePicker filePicker,
         IAppSettingsStore settings,
         IThemeSwitcher themes)
     {
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(filePicker);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(themes);
 
         _dialogs = dialogs;
         _dispatcher = dispatcher;
+        _filePicker = filePicker;
         _settings = settings;
         _themes = themes;
     }
@@ -122,6 +131,25 @@ public sealed class DialogService : IDialogService
             cancellationToken,
             isPrimaryEnabled: static viewModel => viewModel.CanAccept);
     }
+
+    /// <inheritdoc />
+    public Task<PatternInput?> RequestPatternInputAsync(CancellationToken cancellationToken = default) =>
+        ShowAsync(
+            new PatternInputDialogViewModel(_filePicker),
+            static viewModel => new PatternInputDialog(viewModel),
+            static (viewModel, dialog, button) =>
+            {
+                dialog.Title = viewModel.Title;
+                dialog.IconData = Glyph(PhosphorIcon.Asterisk);
+                dialog.PrimaryButtonText = "Add";
+                dialog.PrimaryButtonCommand = button(viewModel.AcceptCommand);
+                dialog.CloseButtonText = "Cancel";
+                dialog.CloseButtonCommand = button(viewModel.CancelCommand);
+                dialog.DefaultButton = DefaultButton.Primary;
+            },
+            static viewModel => viewModel.Result,
+            cancellationToken,
+            isPrimaryEnabled: static viewModel => viewModel.CanAccept);
 
     /// <inheritdoc />
     public Task<BackupErrorDecision> RequestErrorDecisionAsync(BackupError error, CancellationToken cancellationToken = default)

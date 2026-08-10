@@ -1,6 +1,6 @@
 # FEATURE-7F99 — Pattern inputs, zip format & window polish — 1.2.0 release
 
-**Status:** TODO
+**Status:** IN PROGRESS
 **Type:** multi-phase feature (5 phases)
 **Branches (created by `/build`, each from `HEAD`):** one per phase, see *Phases*
 
@@ -287,7 +287,7 @@ correct (both commands are `!IsBusy` anyway). The bottom `Border.panel` keeps on
 
 ## Phases
 
-### PHASE01 — Pattern inputs (TODO)
+### PHASE01 — Pattern inputs (DONE)
 
 Branch: `feature/feature-7f99-phase01-pattern-inputs`
 

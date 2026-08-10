@@ -44,6 +44,111 @@ public sealed class ProfileSerializationTests
         Assert.DoesNotContain("password", json, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <remarks>
+    /// This is what the release notes' compatibility claim rests on: a profile that uses nothing newer
+    /// is still written as version 1, so the builds that only read version 1 still open it. It is a
+    /// deliberate rule, not a side effect, which is why it has a test of its own.
+    /// </remarks>
+    [Fact]
+    public async Task SavingAProfileThatUsesNoNewerFeature_StillWritesFormatVersion1()
+    {
+        string json = await ExportedJsonAsync(new BackupProfile
+        {
+            Name = "Documents",
+            Inputs = ["/data"],
+            OutputDirectory = "/backups",
+            ExcludeGlobs = ["*.tmp"],
+        });
+
+        Assert.Contains("\"formatVersion\": 1", json, StringComparison.Ordinal);
+        Assert.Contains("\"patternInputs\": []", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task SavingAProfileWithAPatternInput_WritesFormatVersion2()
+    {
+        string json = await ExportedJsonAsync(new BackupProfile
+        {
+            Name = "Logs",
+            OutputDirectory = "/backups",
+            PatternInputs = [new PatternInput("/var/log", "*.log")],
+        });
+
+        Assert.Contains("\"formatVersion\": 2", json, StringComparison.Ordinal);
+        Assert.Contains("\"baseDirectory\": \"/var/log\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"pattern\": \"*.log\"", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ImportAsync_ReadsAVersion2ProfileWithItsPatterns()
+    {
+        BackupProfile profile = await ImportJsonAsync(
+            """
+            {
+              "formatVersion": 2,
+              "name": "Logs",
+              "inputs": [ "/data" ],
+              "patternInputs": [ { "baseDirectory": "/var/log", "pattern": "*.log" } ]
+            }
+            """);
+
+        Assert.Equal("/data", Assert.Single(profile.Inputs));
+        PatternInput patternInput = Assert.Single(profile.PatternInputs);
+        Assert.Equal("/var/log", patternInput.BaseDirectory);
+        Assert.Equal("*.log", patternInput.Pattern);
+    }
+
+    [Fact]
+    public async Task ImportAsync_TreatsAMissingOrNullPatternListAsEmpty()
+    {
+        Assert.Empty((await ImportJsonAsync("""{ "formatVersion": 2, "name": "None" }""")).PatternInputs);
+        Assert.Empty((await ImportJsonAsync("""{ "formatVersion": 2, "name": "Null", "patternInputs": null }""")).PatternInputs);
+        Assert.Empty((await ImportJsonAsync("""{ "formatVersion": 2, "name": "Hole", "patternInputs": [ null ] }""")).PatternInputs);
+    }
+
+    [Fact]
+    public async Task ImportAsync_TreatsAPatternsMissingFieldsAsBlankRatherThanRefusingTheFile()
+    {
+        // Blank rather than dropped: the scan reports a pattern it cannot resolve, and a profile that
+        // quietly backs up less than it says is the worse of the two failures.
+        BackupProfile profile = await ImportJsonAsync(
+            """{ "formatVersion": 2, "name": "Partial", "patternInputs": [ { "pattern": null } ] }""");
+
+        PatternInput patternInput = Assert.Single(profile.PatternInputs);
+        Assert.Equal(string.Empty, patternInput.BaseDirectory);
+        Assert.Equal(string.Empty, patternInput.Pattern);
+    }
+
+    /// <remarks>
+    /// A hand-edited file can carry a version-2 field under a version-1 header. Reading it is the
+    /// lenient half — the fields are there, and refusing them would lose data the user asked for — and
+    /// the write rule is the strict half: the next save states version 2, which is what the profile
+    /// actually is.
+    /// </remarks>
+    [Fact]
+    public async Task AVersion1FileCarryingAPattern_IsReadAndSavedBackAsVersion2()
+    {
+        using TempDirectory temp = new();
+        ProfileStore store = new(Path.Combine(temp.FullPath, "store"));
+        string incoming = temp.WriteFile(
+            "incoming.json",
+            """
+            {
+              "formatVersion": 1,
+              "name": "HandEdited",
+              "patternInputs": [ { "baseDirectory": "/var/log", "pattern": "*.log" } ]
+            }
+            """);
+
+        BackupProfile imported = await store.ImportAsync(incoming, Token);
+
+        Assert.Single(imported.PatternInputs);
+        Assert.Equal(2, imported.FormatVersion);
+
+        string stored = File.ReadAllText(Path.Combine(store.DirectoryPath, "HandEdited.json"));
+        Assert.Contains("\"formatVersion\": 2", stored, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task ImportAsync_AppliesTheDocumentedDefaultsForOmittedFields()
     {
@@ -94,7 +199,7 @@ public sealed class ProfileSerializationTests
 
     [Theory]
     [InlineData("""{ "name": "NoVersion" }""")]
-    [InlineData("""{ "formatVersion": 2, "name": "FromTheFuture" }""")]
+    [InlineData("""{ "formatVersion": 3, "name": "FromTheFuture" }""")]
     [InlineData("""{ "formatVersion": 0, "name": "Zero" }""")]
     [InlineData("""{ "formatVersion": "1", "name": "NotANumber" }""")]
     [InlineData("""[ { "formatVersion": 1 } ]""")]
@@ -122,5 +227,18 @@ public sealed class ProfileSerializationTests
         string path = temp.WriteFile("incoming.json", json);
 
         return await store.ImportAsync(path, Token);
+    }
+
+    /// <summary>Saves a profile and hands back the JSON the store wrote for it.</summary>
+    private static async Task<string> ExportedJsonAsync(BackupProfile profile)
+    {
+        using TempDirectory temp = new();
+        ProfileStore store = new(Path.Combine(temp.FullPath, "store"));
+        await store.SaveAsync(profile, Token);
+
+        string destination = Path.Combine(temp.FullPath, "exported.json");
+        await store.ExportAsync(profile.Name, destination, Token);
+
+        return File.ReadAllText(destination);
     }
 }

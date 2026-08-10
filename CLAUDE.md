@@ -33,8 +33,8 @@ properties in a `.csproj`.
 Two production projects (`src/`), both `net10.0` on purpose:
 
 - **`Enigma.Backup.Core`** — everything: profiles + JSON persistence, input scanning with glob
-  excludes, the streaming `scan → tar → compress → [encrypt] → file` pipeline, restore, and
-  verification. Targets `net10.0` rather than `netstandard2.0` because it is built on
+  excludes and pattern inputs, the streaming `scan → tar → compress → [encrypt] → file` pipeline,
+  restore, and verification. Targets `net10.0` rather than `netstandard2.0` because it is built on
   `System.Formats.Tar` (see the csproj comment).
 - **`Enigma.Backup.Desktop`** — Avalonia 12 MVVM app, bootstrapped through
   `Microsoft.Extensions.Hosting` (`App.OnFrameworkInitializationCompleted` builds and starts the
@@ -123,6 +123,26 @@ Invariants that are easy to violate and must be preserved:
   out as breaking in `RELEASENOTES.md`. Every release since has carried the opposite claim — that the
   byte is unchanged and old archives still open — and `GoldenArchiveCompatibilityTests` is what backs
   it.
+- **A profile is written as the lowest format version that can express it.**
+  `BackupProfile.CurrentFormatVersion` is 2 and `MinimumFormatVersion` is 1; `ProfileSerializer` reads
+  both and writes **2 only when the profile carries something version 1 has no field for** — today a
+  `PatternInputs` entry — and 1 otherwise, stamping the profile with what it wrote. That rule *is* the
+  compatibility claim in the release notes: a profile using no newer feature is still readable by
+  1.0.x/1.1.0, while one that does use a newer feature is refused loudly by those builds instead of
+  being read as less than it says. So a new feature extends `RequiredFormatVersion`, never the
+  unconditional write; a serializer test pins that a feature-free profile still writes 1. Reading is
+  the lenient half — a hand-edited version-1 file carrying a version-2 field is read rather than
+  refused, and the next save states 2, which is what the profile actually is.
+- **A pattern input is a rule, not a place, and it never merges.** `PatternInput` is a
+  *(base folder, glob)* pair re-resolved on every run, matched by `PatternMatcher` — the exclude
+  field's `Matcher` and `PathUtilities.Comparison`, in the include direction, plus one documented
+  extension: a pattern matching a *directory's* relative path takes that directory's whole subtree
+  (what `DirPrefix*` means). The scan resolves each pattern independently of the path-input
+  merge/overlap logic, so a base folder that is also a path input becomes a second top-level name via
+  `AllocateRootName`; excludes still win over a match; the base folder is emitted even when nothing
+  matched, and a match-free pattern is a `PatternMatchedNothing` **warning**, never an error — there
+  may be no logs today, and a pattern that quietly backs up nothing is the failure a backup tool must
+  not have.
 - **`tests/Enigma.Backup.Core.Tests/Fixtures/` is evidence, not test input — never regenerate it.**
   It holds a real encrypted archive written by the 1.0.0 build, and `GoldenArchiveCompatibilityTests`
   verifies and restores it on every run. That is the only check that can catch a behavioural change

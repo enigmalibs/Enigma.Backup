@@ -202,7 +202,7 @@ public sealed class WindowEndToEndTests
         await reopened.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
 
         Assert.Equal("Documents", reopened.ViewModel.SelectedProfileName);
-        Assert.Equal(temp.Path, Assert.Single(reopened.Editor.Inputs));
+        Assert.Equal(temp.Path, Assert.Single(reopened.Editor.Inputs).Path);
         Assert.Equal(CompressionAlgorithm.Gzip, reopened.Editor.SelectedCompression.Value);
         Assert.True(reopened.Editor.Encrypt);
         Assert.Equal("*.tmp", Assert.Single(reopened.Editor.ExcludeGlobs));
@@ -221,6 +221,68 @@ public sealed class WindowEndToEndTests
         Assert.Equal("Documents", elsewhere.ViewModel.SelectedProfileName);
         Assert.Equal("*.tmp", Assert.Single(elsewhere.Editor.ExcludeGlobs));
         Assert.True(elsewhere.Editor.Encrypt);
+    }
+
+    /// <remarks>
+    /// The pattern inputs' acceptance criterion, run rather than described: two patterns over one
+    /// folder, through the real scan, the real archive and the real restore, so what comes back out is
+    /// the proof of what went in.
+    /// </remarks>
+    [Fact]
+    public async Task APatternInputBacksUpWhatItMatchesAndNothingElse()
+    {
+        using TempDirectory temp = new();
+
+        string logs = temp.Combine("source", "logs");
+        Directory.CreateDirectory(logs);
+        temp.WriteFile(Path.Combine("source", "logs", "app.log"), "today's log");
+        temp.WriteFile(Path.Combine("source", "logs", "keep.txt"), "not a log");
+        temp.WriteFile(Path.Combine("source", "logs", "deep", "nested.log"), "a log, but not at this level");
+        temp.WriteFile(Path.Combine("source", "logs", "DirPrefixOne", "inner.txt"), "inside a matching folder");
+        temp.WriteFile(Path.Combine("source", "logs", "other", "x.txt"), "left behind");
+
+        string output = temp.Combine("out");
+        string restored = temp.Combine("restored");
+        Directory.CreateDirectory(output);
+
+        Fixture fixture = new(temp.Combine("profiles"));
+
+        // "*.log" is one level deep; "DirPrefix*" matches a folder's name and so takes the folder.
+        Assert.True(fixture.Editor.AddPatternInput(logs, "*.log"));
+        Assert.True(fixture.Editor.AddPatternInput(logs, "DirPrefix*"));
+        fixture.Editor.OutputDirectory = output;
+
+        fixture.Dialogs.ProfileNames.Enqueue("Logs");
+        await fixture.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+
+        // A profile that uses a 1.2.0 feature says so, and the older builds refuse it rather than read
+        // it as less than it is.
+        string profileJson = File.ReadAllText(Path.Combine(fixture.ProfilesDirectory, "Logs.json"));
+        Assert.Contains("\"formatVersion\": 2", profileJson, StringComparison.Ordinal);
+
+        await fixture.ViewModel.BackupCommand.ExecuteAsync(null);
+
+        RunSummary backup = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        Assert.True(backup.IsSuccess, backup.Headline);
+
+        string archive = Assert.Single(Directory.GetFiles(output), static path => !path.EndsWith(".sha256", StringComparison.Ordinal));
+
+        fixture.FilePicker.Archives.Enqueue(archive);
+        fixture.FilePicker.Folders.Enqueue(restored);
+        await fixture.ViewModel.RestoreCommand.ExecuteAsync(null);
+
+        RunSummary restore = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        Assert.True(restore.IsSuccess, restore.Headline);
+
+        // The second pattern over the same folder gets its own top-level name rather than merging.
+        string[] expected =
+        [
+            Path.Combine("logs", "app.log"),
+            Path.Combine("logs_2", "DirPrefixOne", "inner.txt"),
+        ];
+
+        Assert.Equal(expected, ReadTree(restored).Keys.Order(StringComparer.Ordinal));
+        Assert.Empty(fixture.Dialogs.Messages);
     }
 
     private static Dictionary<string, byte[]> ReadTree(string root)

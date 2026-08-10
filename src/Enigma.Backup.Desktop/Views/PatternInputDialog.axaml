@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ei="https://github.com/josueclement/Enigma.Icons"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             xmlns:editors="using:Enigma.Avalonia.Desktop.Controls.Editors"
+             x:Class="Enigma.Backup.Desktop.Views.PatternInputDialog"
+             x:DataType="vm:PatternInputDialogViewModel">
+
+  <!-- Enter adds the pattern, as the dialog's own Primary button does. Inert while the pair is
+       incomplete: the command's CanExecute and IsPrimaryButtonEnabled say the same thing. -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding AcceptCommand}" />
+  </UserControl.KeyBindings>
+
+  <StackPanel Spacing="12" Width="520">
+
+    <TextBlock Text="{Binding Prompt}" TextWrapping="Wrap" />
+
+    <!-- Read-only on purpose: the folder is what the picker returned, so it is a folder that exists
+         rather than a path that was typed. -->
+    <editors:TextEditor Title="Folder"
+                        Text="{Binding BaseDirectory}"
+                        IsReadOnly="True"
+                        PlaceholderText="No folder chosen yet">
+      <editors:TextEditor.LeadingContent>
+        <PathIcon Data="{ei:IconGeometry Folder}" Width="15" Height="15" VerticalAlignment="Center" />
+      </editors:TextEditor.LeadingContent>
+      <editors:TextEditor.ActionContent>
+        <Button Command="{Binding ChooseBaseDirectoryCommand}" Padding="8,3" FontSize="12">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{ei:IconGeometry FolderOpen}" Width="15" Height="15" VerticalAlignment="Center" />
+            <TextBlock Text="Choose…" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </editors:TextEditor.ActionContent>
+    </editors:TextEditor>
+
+    <editors:TextEditor x:Name="PatternBox"
+                        Title="Pattern"
+                        Text="{Binding Pattern}"
+                        PlaceholderText="e.g. *.log or DirPrefix*">
+      <editors:TextEditor.LeadingContent>
+        <PathIcon Data="{ei:IconGeometry Asterisk}" Width="15" Height="15" VerticalAlignment="Center" />
+      </editors:TextEditor.LeadingContent>
+    </editors:TextEditor>
+
+    <TextBlock Text="{Binding Help}"
+               Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}"
+               FontSize="12"
+               TextWrapping="Wrap" />
+
+    <TextBlock Text="{Binding ValidationMessage}"
+               Foreground="{DynamicResource EnigmaErrorBrush}"
+               TextWrapping="Wrap"
+               IsVisible="{Binding ValidationMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+  </StackPanel>
+
+</UserControl>

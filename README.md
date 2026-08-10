@@ -24,6 +24,9 @@ and verifies what it wrote.
   password is prompted per run and never stored.
 - **Restore and verify** — restore from the app with conflict handling, and re-check an archive
   against its sidecar (and every GCM tag, when encrypted).
+- **Pattern inputs** — a base folder plus a glob (`/var/log` + `*.log`, or `DirPrefix*`), worked out
+  again on every run rather than fixed when you add it. `*` matches inside one folder level and `**`
+  at any depth; a pattern that matches a folder's name takes that folder with everything in it.
 - **Glob excludes**, live progress with cancel, and a per-error Skip / Retry / Abort policy with an
   end-of-run summary of everything skipped.
 - **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
@@ -54,8 +57,11 @@ The app is a single window, top to bottom:
    are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
    discards them. The gear at the right-hand end of the bar opens **Settings**, which is where the
    theme lives.
-2. **Files and folders to back up** — `Add files…`, `Add folder…`, or drop them anywhere on the
-   window. Overlapping entries are merged automatically when the backup runs.
+2. **Files, folders and patterns to back up** — `Add files…`, `Add folder…`, or drop them anywhere on
+   the window. Overlapping entries are merged automatically when the backup runs. `Add pattern…` adds
+   a rule instead of a path: pick the folder it applies to, type the glob, and the row reads
+   `folder ▸ pattern`. It is re-resolved on every run, so a pattern that matches nothing today simply
+   says so in the run summary.
 3. **Exclude patterns** — optional globs applied during the scan, one per line: `**/bin/**`,
    `*.log`, `**/node_modules/**`.
 4. **Save backups in** — the output folder. It is always excluded from the backup itself, so

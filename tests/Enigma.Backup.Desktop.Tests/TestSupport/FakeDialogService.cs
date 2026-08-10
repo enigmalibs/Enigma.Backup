@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Enigma.Backup.Core.Errors;
+using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Core.Restoring;
 using Enigma.Backup.Desktop.Services;
 
@@ -22,6 +23,9 @@ internal sealed class FakeDialogService : IDialogService
 
     /// <summary>The profile names to hand back, in order; <see langword="null"/> is a cancelled prompt.</summary>
     public Queue<string?> ProfileNames { get; } = new();
+
+    /// <summary>The patterns to hand back, in order; <see langword="null"/> is a cancelled prompt.</summary>
+    public Queue<PatternInput?> Patterns { get; } = new();
 
     /// <summary>The answers to error prompts, in order.</summary>
     public Queue<BackupErrorDecision> ErrorDecisions { get; } = new();
@@ -50,6 +54,9 @@ internal sealed class FakeDialogService : IDialogService
     /// <summary>Every confirmation that was asked for.</summary>
     public List<(string Title, string Message, string ConfirmLabel)> ConfirmationRequests { get; } = [];
 
+    /// <summary>How many times a pattern was asked for.</summary>
+    public int PatternRequests { get; private set; }
+
     /// <summary>How many times the preferences were opened. There is nothing to answer.</summary>
     public int SettingsRequests { get; private set; }
 
@@ -67,6 +74,14 @@ internal sealed class FakeDialogService : IDialogService
         ProfileNameRequests.Add(request);
 
         return Task.FromResult(ProfileNames.Count > 0 ? ProfileNames.Dequeue() : null);
+    }
+
+    /// <inheritdoc />
+    public Task<PatternInput?> RequestPatternInputAsync(CancellationToken cancellationToken = default)
+    {
+        PatternRequests++;
+
+        return Task.FromResult(Patterns.Count > 0 ? Patterns.Dequeue() : null);
     }
 
     /// <inheritdoc />
