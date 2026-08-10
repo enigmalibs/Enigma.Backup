@@ -343,7 +343,7 @@ manually — an unencrypted zip backup of a nested tree restores byte-identicall
 extracts with a stock unzip tool; verify reports the checksum result; the Encrypt toggle is
 visibly disabled with its explanation under Zip (screenshots both variants).
 
-### PHASE03 — Restore & Verify relocation (TODO)
+### PHASE03 — Restore & Verify relocation (DONE)
 
 Branch: `feature/feature-7f99-phase03-action-buttons`
 
