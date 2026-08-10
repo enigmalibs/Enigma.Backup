@@ -124,6 +124,17 @@ public sealed class ProfileEditorViewModel : ObservableObject
         {
             if (SetProperty(ref field, value ?? CompressionOption.All[0]))
             {
+                OnPropertyChanged(nameof(CanEncrypt));
+                OnPropertyChanged(nameof(EncryptDescription));
+
+                // A format that cannot be encrypted turns the toggle off rather than leaving a promise
+                // the run would have to refuse. Switching back does not restore it: off is the honest
+                // default after a format that forbade it.
+                if (!CanEncrypt)
+                {
+                    Encrypt = false;
+                }
+
                 MarkChanged();
             }
         }
@@ -141,6 +152,21 @@ public sealed class ProfileEditorViewModel : ObservableObject
             }
         }
     }
+
+    /// <summary>
+    /// Whether the selected format can be encrypted at all. Zip cannot: <c>System.IO.Compression</c>
+    /// has no encryption, and every way of adding one would either stop a file manager opening the
+    /// archive or offer security it does not have.
+    /// </summary>
+    public bool CanEncrypt => SelectedCompression.Value != CompressionAlgorithm.Zip;
+
+    /// <summary>
+    /// What the encryption card says. This is where a disabled toggle explains itself — a control that
+    /// cannot be clicked and does not say why reads as a bug.
+    /// </summary>
+    public string EncryptDescription => CanEncrypt
+        ? "Asked for at the start of every run, and never stored."
+        : "A zip archive cannot be encrypted. Choose Zstandard or Gzip to protect one with a password.";
 
     /// <summary>Whether the profile has been edited since it was loaded or last saved.</summary>
     public bool IsDirty

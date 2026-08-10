@@ -304,6 +304,69 @@ public sealed class ProfileEditorViewModelTests
     }
 
     [Fact]
+    public void SelectingZip_TurnsEncryptionOffAndKeepsItOut()
+    {
+        ProfileEditorViewModel editor = Editor();
+        editor.Encrypt = true;
+
+        editor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Zip);
+
+        Assert.False(editor.CanEncrypt);
+        Assert.False(editor.Encrypt);
+        Assert.Contains("cannot be encrypted", editor.EncryptDescription, StringComparison.Ordinal);
+        Assert.False(editor.ToProfile("Shared").Encrypt);
+    }
+
+    /// <remarks>
+    /// Off, not "whatever it was": a format that forbade encryption is a poor reason to switch it back
+    /// on behind the user, and an archive quietly encrypted with a password nobody expected to be asked
+    /// for is worse than one they have to tick again.
+    /// </remarks>
+    [Fact]
+    public void SwitchingAwayFromZip_AllowsEncryptionAgainWithoutTurningItBackOn()
+    {
+        ProfileEditorViewModel editor = Editor();
+        editor.Encrypt = true;
+        editor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Zip);
+
+        editor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Zstd);
+
+        Assert.True(editor.CanEncrypt);
+        Assert.False(editor.Encrypt);
+        Assert.Contains("never stored", editor.EncryptDescription, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ZipRoundTripsThroughTheProfile()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        editor.LoadFrom(Harness.Profile(inputs: ["/a"], compression: CompressionAlgorithm.Zip));
+
+        Assert.Equal(CompressionAlgorithm.Zip, editor.SelectedCompression.Value);
+        Assert.False(editor.CanEncrypt);
+        Assert.Equal(CompressionAlgorithm.Zip, editor.ToProfile("Shared").Compression);
+        Assert.False(editor.IsDirty);
+    }
+
+    /// <remarks>
+    /// A profile only a hand edit can produce. It is shown as it is rather than quietly repaired —
+    /// silently dropping "encrypt this" is not a decision a backup tool gets to make on its own — and
+    /// the run refuses it with an error that says why.
+    /// </remarks>
+    [Fact]
+    public void LoadFrom_AProfileAskingForAnEncryptedZip_ShowsBothAsTheyAre()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        editor.LoadFrom(Harness.Profile(compression: CompressionAlgorithm.Zip, encrypt: true));
+
+        Assert.True(editor.Encrypt);
+        Assert.False(editor.CanEncrypt);
+        Assert.False(editor.IsDirty);
+    }
+
+    [Fact]
     public void AddPatternInput_AddsARowThatReadsAsThePair()
     {
         ProfileEditorViewModel editor = Editor();

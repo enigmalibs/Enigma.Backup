@@ -314,7 +314,7 @@ and confirm the archive holds exactly the expected entries, the empty-match warn
 Last-run panel when nothing matches, and both variants render the new list items and dialog
 correctly (screenshots in the completion doc).
 
-### PHASE02 — Zip archive format (TODO)
+### PHASE02 — Zip archive format (DONE)
 
 Branch: `feature/feature-7f99-phase02-zip-format`
 

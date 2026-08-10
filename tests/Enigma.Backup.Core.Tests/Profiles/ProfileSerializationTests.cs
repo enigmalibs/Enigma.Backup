@@ -79,6 +79,25 @@ public sealed class ProfileSerializationTests
         Assert.Contains("\"pattern\": \"*.log\"", json, StringComparison.Ordinal);
     }
 
+    /// <remarks>
+    /// Zip is a version-2 <em>value</em> of a version-1 field. Saying 2 is what makes an older build
+    /// refuse the profile with its format message instead of an unknown-enum-name JSON error.
+    /// </remarks>
+    [Fact]
+    public async Task SavingAProfileThatAsksForZip_WritesFormatVersion2()
+    {
+        string json = await ExportedJsonAsync(new BackupProfile
+        {
+            Name = "Shared",
+            Inputs = ["/data"],
+            OutputDirectory = "/backups",
+            Compression = CompressionAlgorithm.Zip,
+        });
+
+        Assert.Contains("\"formatVersion\": 2", json, StringComparison.Ordinal);
+        Assert.Contains("\"compression\": \"Zip\"", json, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task ImportAsync_ReadsAVersion2ProfileWithItsPatterns()
     {

@@ -26,7 +26,7 @@ public sealed class FilePicker : IFilePicker
 {
     private static readonly FilePickerFileType ArchiveFileType = new("Enigma.Backup archives")
     {
-        Patterns = ["*.tar.zst", "*.tar.gz", "*.tar.zst.enc", "*.tar.gz.enc", "*.enc"],
+        Patterns = ["*.tar.zst", "*.tar.gz", "*.zip", "*.tar.zst.enc", "*.tar.gz.enc", "*.enc"],
     };
 
     private static readonly FilePickerFileType ProfileFileType = new("Backup profiles")

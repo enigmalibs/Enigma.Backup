@@ -19,6 +19,9 @@ internal static class ArchiveNaming
     /// <summary>The extension appended to an encrypted archive.</summary>
     public const string EncryptedExtension = ".enc";
 
+    /// <summary>The extension of a plain zip archive.</summary>
+    public const string ZipExtension = ".zip";
+
     /// <summary>Builds the name stem — everything before the extension — for one run.</summary>
     /// <param name="profileName">The profile's name; sanitized so any profile can produce a file.</param>
     /// <param name="timestamp">The run's local start time.</param>
@@ -32,8 +35,20 @@ internal static class ArchiveNaming
     /// <summary>Builds the extension for one run, including the encryption suffix.</summary>
     /// <param name="algorithm">The compression the archive is written with.</param>
     /// <param name="encrypted">Whether the archive is encrypted.</param>
-    public static string BuildExtension(CompressionAlgorithm algorithm, bool encrypted) =>
-        encrypted ? CompressionStreams.GetExtension(algorithm) + EncryptedExtension : CompressionStreams.GetExtension(algorithm);
+    /// <remarks>
+    /// Zip names itself: it is a container rather than a codec around a tar stream, and it has no
+    /// <c>.enc</c> arm because a zip is never encrypted — <c>BackupService</c> refuses the combination
+    /// before a byte is written, so a <c>.zip.enc</c> is unreachable rather than merely unwanted.
+    /// </remarks>
+    public static string BuildExtension(CompressionAlgorithm algorithm, bool encrypted)
+    {
+        if (algorithm == CompressionAlgorithm.Zip)
+        {
+            return ZipExtension;
+        }
+
+        return encrypted ? CompressionStreams.GetExtension(algorithm) + EncryptedExtension : CompressionStreams.GetExtension(algorithm);
+    }
 
     /// <summary>
     /// Combines a directory, a stem and an extension into a path nothing occupies yet, adding

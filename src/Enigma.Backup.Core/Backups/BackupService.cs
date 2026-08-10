@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Formats.Tar;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,8 @@ using Enigma.Backup.Core.Scanning;
 namespace Enigma.Backup.Core.Backups;
 
 /// <summary>
-/// The streaming <see cref="IBackupService"/>: <c>scan → tar → compress → file</c> in a single pass.
+/// The streaming <see cref="IBackupService"/>: <c>scan → tar → compress → file</c> in a single pass, or
+/// <c>scan → zip → file</c> when the profile asks for a plain <c>.zip</c>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -26,6 +26,12 @@ namespace Enigma.Backup.Core.Backups;
 /// that same order, because each layer's epilogue has to reach the file before the one below it
 /// closes. The digest sits closest to the file, so it covers the bytes that are actually on disk,
 /// encrypted ones included: a <c>.sha256</c> sidecar can be checked without the password.
+/// </para>
+/// <para>
+/// Which archive the entries go into is the only thing the format changes — an
+/// <c>IArchiveEntryWriter</c> either side of the same scan, the same error handler and the same
+/// progress. A zip is never encrypted, and a profile asking for both is refused here before the output
+/// file is even named.
 /// </para>
 /// <para>
 /// If anything goes wrong — a failure, an Abort, a cancellation — the partial archive is deleted:
@@ -69,6 +75,15 @@ public sealed class BackupService : IBackupService
         if (string.IsNullOrWhiteSpace(profile.OutputDirectory))
         {
             throw new ArgumentException("The profile has no output directory.", nameof(profile));
+        }
+
+        if (profile.Encrypt && profile.Compression == CompressionAlgorithm.Zip)
+        {
+            // Checked before the password, so a hand-edited profile is told what is actually wrong with
+            // it rather than that a password is missing. The window never offers the combination.
+            throw new ProfileFormatException(
+                $"Profile '{profile.Name}' asks for an encrypted zip archive, which cannot be written: a zip is never " +
+                "encrypted. Choose Zstandard or Gzip to encrypt the archive, or turn encryption off to keep the zip.");
         }
 
         if (profile.Encrypt && string.IsNullOrEmpty(password))
@@ -169,21 +184,19 @@ public sealed class BackupService : IBackupService
 
         await using (encryptor)
         {
-            await using (Stream compressor = CompressionStreams.CreateCompressor(encryptor ?? (Stream)hashing, profile.Compression))
+            await using (IArchiveEntryWriter writer = CreateEntryWriter(profile.Compression, encryptor ?? (Stream)hashing))
             {
-                await using TarWriter tar = new(compressor, TarEntryFormat.Pax, leaveOpen: true);
-
                 foreach (ScanEntry entry in scan.Entries)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     if (entry.Kind == ScanEntryKind.Directory)
                     {
-                        await WriteDirectoryEntryAsync(tar, entry, cancellationToken).ConfigureAwait(false);
+                        await writer.WriteDirectoryAsync(entry, cancellationToken).ConfigureAwait(false);
                     }
                     else
                     {
-                        await WriteFileEntryAsync(tar, entry, reporter, policy, skipped, warnings, cancellationToken).ConfigureAwait(false);
+                        await WriteFileEntryAsync(writer, entry, reporter, policy, skipped, warnings, cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -196,24 +209,16 @@ public sealed class BackupService : IBackupService
         return hashing.GetHashHex();
     }
 
-    private static async Task WriteDirectoryEntryAsync(TarWriter tar, ScanEntry entry, CancellationToken cancellationToken)
-    {
-        // The trailing slash is what every other tar implementation writes for a directory.
-        PaxTarEntry tarEntry = new(TarEntryType.Directory, entry.ArchivePath + '/')
-        {
-            ModificationTime = entry.LastWriteTime,
-        };
-
-        if (UnixPermissions.Read(entry.SourcePath) is UnixFileMode mode)
-        {
-            tarEntry.Mode = mode;
-        }
-
-        await tar.WriteEntryAsync(tarEntry, cancellationToken).ConfigureAwait(false);
-    }
+    /// <summary>Chooses what the entries are written into: a compressed tar stream, or a zip container.</summary>
+    /// <param name="compression">What the profile asked for.</param>
+    /// <param name="destination">The stream the archive is written to; the writer does not own it.</param>
+    private static IArchiveEntryWriter CreateEntryWriter(CompressionAlgorithm compression, Stream destination) =>
+        compression == CompressionAlgorithm.Zip
+            ? new ZipEntryWriter(destination)
+            : new TarEntryWriter(destination, compression);
 
     private static async Task WriteFileEntryAsync(
-        TarWriter tar,
+        IArchiveEntryWriter writer,
         ScanEntry entry,
         BackupProgressReporter reporter,
         ErrorDecisionPolicy policy,
@@ -236,20 +241,9 @@ public sealed class BackupService : IBackupService
 
             using FixedLengthReadStream data = new(source, length, reporter.AddBytes);
 
-            PaxTarEntry tarEntry = new(TarEntryType.RegularFile, entry.ArchivePath)
-            {
-                ModificationTime = entry.LastWriteTime,
-                DataStream = data,
-            };
-
-            if (UnixPermissions.Read(entry.SourcePath) is UnixFileMode mode)
-            {
-                tarEntry.Mode = mode;
-            }
-
             try
             {
-                await tar.WriteEntryAsync(tarEntry, cancellationToken).ConfigureAwait(false);
+                await writer.WriteFileAsync(entry, data, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {

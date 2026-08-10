@@ -18,7 +18,7 @@
 | - PHASE05    | Release readiness: 1.1.0                       | DONE        | (in FEATURE-17FE.md)      |
 | FEATURE-7F99 | Pattern inputs, zip format & 1.2.0             | IN PROGRESS | docs/plan/FEATURE-7F99.md |
 | - PHASE01    | Pattern inputs                                 | DONE        | (in FEATURE-7F99.md)      |
-| - PHASE02    | Zip archive format                             | TODO        | (in FEATURE-7F99.md)      |
+| - PHASE02    | Zip archive format                             | DONE        | (in FEATURE-7F99.md)      |
 | - PHASE03    | Restore & Verify relocation                    | TODO        | (in FEATURE-7F99.md)      |
 | - PHASE04    | Settings folder & About                        | TODO        | (in FEATURE-7F99.md)      |
 | - PHASE05    | Release readiness: 1.2.0                       | TODO        | (in FEATURE-7F99.md)      |

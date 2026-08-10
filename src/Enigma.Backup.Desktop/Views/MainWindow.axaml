@@ -382,11 +382,16 @@
               </ComboBox>
             </controls:SettingsCard>
 
+            <!-- The toggle, not the card, is what goes dead under a format that cannot be encrypted:
+                 the description has to stay readable to say why. -->
             <controls:SettingsCard Grid.Column="1"
                                    Header="Encrypt with a password"
-                                   Description="Asked for at the start of every run, and never stored."
+                                   Description="{Binding Editor.EncryptDescription}"
                                    IconData="{ei:IconGeometry LockKey}">
-              <ToggleSwitch IsChecked="{Binding Editor.Encrypt}" OnContent="On" OffContent="Off" />
+              <ToggleSwitch IsChecked="{Binding Editor.Encrypt}"
+                            IsEnabled="{Binding Editor.CanEncrypt}"
+                            OnContent="On"
+                            OffContent="Off" />
             </controls:SettingsCard>
 
           </Grid>

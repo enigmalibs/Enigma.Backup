@@ -21,6 +21,10 @@ public sealed record CompressionOption(CompressionAlgorithm Value, string Label,
             CompressionAlgorithm.Gzip,
             "Gzip (.tar.gz)",
             "Slower and larger, but every stock tool on both platforms opens it."),
+        new CompressionOption(
+            CompressionAlgorithm.Zip,
+            "Zip (.zip)",
+            "Opens anywhere without this app. Cannot be encrypted, and keeps no Unix modes."),
     ];
 
     /// <summary>Finds the entry for an algorithm, falling back to the first when it is not one this build offers.</summary>

@@ -116,10 +116,17 @@ internal static class ProfileSerializer
 
     /// <summary>
     /// The lowest format version that can express <paramref name="profile"/>: version 2 only once it
-    /// carries something version 1 has no field for.
+    /// carries something version 1 has no field for, or names a value version 1 never knew.
     /// </summary>
+    /// <remarks>
+    /// <c>Zip</c> is a version-2 value of a version-1 field: the builds that read version 1 only would
+    /// throw on the unknown enum name anyway, and saying 2 makes them refuse the file with the format
+    /// message instead of a JSON one.
+    /// </remarks>
     private static int RequiredFormatVersion(BackupProfile profile) =>
-        profile.PatternInputs is { Count: > 0 } ? ExtendedFormatVersion : BackupProfile.MinimumFormatVersion;
+        profile.PatternInputs is { Count: > 0 } || profile.Compression == CompressionAlgorithm.Zip
+            ? ExtendedFormatVersion
+            : BackupProfile.MinimumFormatVersion;
 
     /// <summary>Replaces the nulls a hand-edited file can smuggle past the non-nullable properties.</summary>
     private static BackupProfile Normalize(BackupProfile profile)
