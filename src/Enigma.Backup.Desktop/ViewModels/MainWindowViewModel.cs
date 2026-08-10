@@ -117,6 +117,7 @@ public sealed class MainWindowViewModel : ObservableObject
         ImportProfileCommand = new AsyncRelayCommand(OnImportProfileAsync, () => !IsBusy);
         ExportProfileCommand = new AsyncRelayCommand(OnExportProfileAsync, () => !IsBusy && HasSelectedProfile);
         OpenSettingsCommand = new AsyncRelayCommand(OnOpenSettingsAsync, () => !IsBusy);
+        AddPatternCommand = new AsyncRelayCommand(OnAddPatternAsync, () => !IsBusy);
 
         BackupCommand = new AsyncRelayCommand(OnBackupAsync, () => !IsBusy && Editor.CanRun);
         RestoreCommand = new AsyncRelayCommand(OnRestoreAsync, () => !IsBusy);
@@ -272,6 +273,12 @@ public sealed class MainWindowViewModel : ObservableObject
     /// simply the only bar the window has.
     /// </summary>
     public AsyncRelayCommand OpenSettingsCommand { get; }
+
+    /// <summary>
+    /// Adds a pattern input to the profile — the one input the editor cannot ask for on its own,
+    /// because it takes a dialog rather than a picker.
+    /// </summary>
+    public AsyncRelayCommand AddPatternCommand { get; }
 
     /// <summary>Runs a backup of what the editor holds.</summary>
     public AsyncRelayCommand BackupCommand { get; }
@@ -580,6 +587,23 @@ public sealed class MainWindowViewModel : ObservableObject
     // nothing for the window to do afterwards.
     private Task OnOpenSettingsAsync() => _dialogs.ShowSettingsAsync();
 
+    /// <summary>
+    /// Asks for a pattern and adds it to the profile. The prompt lives here rather than on the editor
+    /// because the editor asks the file system (through <see cref="IFilePicker"/>) and the window asks
+    /// the user (through <see cref="IDialogService"/>) — a pattern is the second kind of question.
+    /// </summary>
+    private async Task OnAddPatternAsync()
+    {
+        if (await _dialogs.RequestPatternInputAsync() is not PatternInput patternInput)
+        {
+            return;
+        }
+
+        StatusText = Editor.AddPatternInput(patternInput.BaseDirectory, patternInput.Pattern)
+            ? $"Added the pattern '{patternInput.Pattern}' under '{patternInput.BaseDirectory}'."
+            : "Nothing was added — that pattern is already in the profile.";
+    }
+
     private async Task<string?> AskForProfileNameAsync(string title, string prompt, string initialName, string? keepAvailable)
     {
         IReadOnlyCollection<string> taken = keepAvailable is null
@@ -876,6 +900,7 @@ public sealed class MainWindowViewModel : ObservableObject
         ImportProfileCommand.NotifyCanExecuteChanged();
         ExportProfileCommand.NotifyCanExecuteChanged();
         OpenSettingsCommand.NotifyCanExecuteChanged();
+        AddPatternCommand.NotifyCanExecuteChanged();
         BackupCommand.NotifyCanExecuteChanged();
         RestoreCommand.NotifyCanExecuteChanged();
         VerifyCommand.NotifyCanExecuteChanged();

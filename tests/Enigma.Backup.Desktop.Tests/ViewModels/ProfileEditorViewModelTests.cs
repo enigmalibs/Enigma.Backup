@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Desktop.Tests.TestSupport;
@@ -55,8 +57,9 @@ public sealed class ProfileEditorViewModelTests
         Assert.Equal(1, editor.AddInputs(["/home/jo/Documents"]));
         Assert.Equal(0, editor.AddInputs(["/home/jo/Documents"]));
 
-        string only = Assert.Single(editor.Inputs);
-        Assert.Equal("/home/jo/Documents", only);
+        InputItem only = Assert.Single(editor.Inputs);
+        Assert.Equal("/home/jo/Documents", only.Path);
+        Assert.False(only.IsPattern);
     }
 
     [Fact]
@@ -68,8 +71,8 @@ public sealed class ProfileEditorViewModelTests
         editor.AddInputs([folder + Path.DirectorySeparatorChar]);
         editor.AddInputs([folder]);
 
-        string only = Assert.Single(editor.Inputs);
-        Assert.Equal(folder, only);
+        InputItem only = Assert.Single(editor.Inputs);
+        Assert.Equal(folder, only.Path);
     }
 
     [Fact]
@@ -96,7 +99,7 @@ public sealed class ProfileEditorViewModelTests
         string[] expectedInputs = ["/a", "/b"];
         string[] expectedGlobs = ["*.log"];
 
-        Assert.Equal(expectedInputs, editor.Inputs);
+        Assert.Equal(expectedInputs, editor.Inputs.Select(static input => input.Path));
         Assert.Equal(expectedGlobs, editor.ExcludeGlobs);
         Assert.Equal("/backups", editor.OutputDirectory);
         Assert.Equal(CompressionAlgorithm.Gzip, editor.SelectedCompression.Value);
@@ -233,7 +236,7 @@ public sealed class ProfileEditorViewModelTests
         Assert.False(editor.RemoveInputCommand.CanExecute(null));
         Assert.False(editor.RemoveExcludeCommand.CanExecute(null));
 
-        editor.SelectedInput = "/a";
+        editor.SelectedInput = editor.Inputs[0];
         editor.SelectedExcludeGlob = "*.log";
 
         Assert.True(editor.RemoveInputCommand.CanExecute(null));
@@ -298,6 +301,178 @@ public sealed class ProfileEditorViewModelTests
         await editor.BrowseOutputCommand.ExecuteAsync(null);
 
         Assert.Equal("/backups", editor.OutputDirectory);
+    }
+
+    [Fact]
+    public void SelectingZip_TurnsEncryptionOffAndKeepsItOut()
+    {
+        ProfileEditorViewModel editor = Editor();
+        editor.Encrypt = true;
+
+        editor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Zip);
+
+        Assert.False(editor.CanEncrypt);
+        Assert.False(editor.Encrypt);
+        Assert.Contains("cannot be encrypted", editor.EncryptDescription, StringComparison.Ordinal);
+        Assert.False(editor.ToProfile("Shared").Encrypt);
+    }
+
+    /// <remarks>
+    /// Off, not "whatever it was": a format that forbade encryption is a poor reason to switch it back
+    /// on behind the user, and an archive quietly encrypted with a password nobody expected to be asked
+    /// for is worse than one they have to tick again.
+    /// </remarks>
+    [Fact]
+    public void SwitchingAwayFromZip_AllowsEncryptionAgainWithoutTurningItBackOn()
+    {
+        ProfileEditorViewModel editor = Editor();
+        editor.Encrypt = true;
+        editor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Zip);
+
+        editor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Zstd);
+
+        Assert.True(editor.CanEncrypt);
+        Assert.False(editor.Encrypt);
+        Assert.Contains("never stored", editor.EncryptDescription, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ZipRoundTripsThroughTheProfile()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        editor.LoadFrom(Harness.Profile(inputs: ["/a"], compression: CompressionAlgorithm.Zip));
+
+        Assert.Equal(CompressionAlgorithm.Zip, editor.SelectedCompression.Value);
+        Assert.False(editor.CanEncrypt);
+        Assert.Equal(CompressionAlgorithm.Zip, editor.ToProfile("Shared").Compression);
+        Assert.False(editor.IsDirty);
+    }
+
+    /// <remarks>
+    /// A profile only a hand edit can produce. It is shown as it is rather than quietly repaired —
+    /// silently dropping "encrypt this" is not a decision a backup tool gets to make on its own — and
+    /// the run refuses it with an error that says why.
+    /// </remarks>
+    [Fact]
+    public void LoadFrom_AProfileAskingForAnEncryptedZip_ShowsBothAsTheyAre()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        editor.LoadFrom(Harness.Profile(compression: CompressionAlgorithm.Zip, encrypt: true));
+
+        Assert.True(editor.Encrypt);
+        Assert.False(editor.CanEncrypt);
+        Assert.False(editor.IsDirty);
+    }
+
+    [Fact]
+    public void AddPatternInput_AddsARowThatReadsAsThePair()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        Assert.True(editor.AddPatternInput("/var/log", "*.log"));
+
+        InputItem only = Assert.Single(editor.Inputs);
+        Assert.True(only.IsPattern);
+        Assert.Equal("/var/log", only.Path);
+        Assert.Equal("*.log", only.Pattern);
+        Assert.Equal("/var/log ▸ *.log", only.Display);
+        Assert.Contains("*.log", only.Detail, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AddPatternInput_StoresTheGlobWithForwardSeparators()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        Assert.True(editor.AddPatternInput("/var/log", @"  sub\*.log  "));
+
+        Assert.Equal("sub/*.log", Assert.Single(editor.Inputs).Pattern);
+    }
+
+    [Fact]
+    public void AddPatternInput_IgnoresAPatternTheProfileAlreadyLists()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        Assert.True(editor.AddPatternInput("/var/log", "*.log"));
+        Assert.False(editor.AddPatternInput("/var/log/", @"*.log"));
+
+        // A different pattern over the same folder is a different rule, so it is a second row.
+        Assert.True(editor.AddPatternInput("/var/log", "*.txt"));
+
+        Assert.Equal(2, editor.Inputs.Count);
+    }
+
+    [Fact]
+    public void AddPatternInput_RefusesBlanks()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        Assert.False(editor.AddPatternInput("   ", "*.log"));
+        Assert.False(editor.AddPatternInput("/var/log", "   "));
+        Assert.Empty(editor.Inputs);
+    }
+
+    [Fact]
+    public void AFolderCanBeBothAPlainInputAndAPatternsBase()
+    {
+        ProfileEditorViewModel editor = Editor();
+
+        editor.AddInputs(["/var/log"]);
+        Assert.True(editor.AddPatternInput("/var/log", "*.log"));
+
+        // "All of it" and "the logs in it" are different requests; neither hides the other.
+        Assert.Equal(2, editor.Inputs.Count);
+        Assert.Equal(1, editor.AddInputs(["/var/log/archive"]));
+    }
+
+    [Fact]
+    public void CanRun_IsTrue_WithNothingButAPattern()
+    {
+        ProfileEditorViewModel editor = Editor();
+        editor.AddPatternInput("/var/log", "*.log");
+        editor.OutputDirectory = "/backups";
+
+        Assert.True(editor.CanRun);
+    }
+
+    [Fact]
+    public void ToProfile_SplitsThePathsFromThePatterns()
+    {
+        ProfileEditorViewModel editor = Editor();
+        editor.AddInputs(["/a", "/b"]);
+        editor.AddPatternInput("/var/log", "*.log");
+        editor.OutputDirectory = "/backups";
+
+        BackupProfile profile = editor.ToProfile("Mixed");
+
+        string[] expectedInputs = ["/a", "/b"];
+        Assert.Equal(expectedInputs, profile.Inputs);
+
+        PatternInput patternInput = Assert.Single(profile.PatternInputs);
+        Assert.Equal("/var/log", patternInput.BaseDirectory);
+        Assert.Equal("*.log", patternInput.Pattern);
+    }
+
+    [Fact]
+    public void LoadFrom_ShowsThePathsThenThePatterns_AndAMixedProfileRoundTrips()
+    {
+        ProfileEditorViewModel editor = Editor();
+        BackupProfile profile = Harness.Profile(inputs: ["/a", "/b"]);
+        profile.PatternInputs = [new PatternInput("/var/log", "*.log")];
+
+        editor.LoadFrom(profile);
+
+        string[] expectedRows = ["/a", "/b", "/var/log ▸ *.log"];
+        Assert.Equal(expectedRows, editor.Inputs.Select(static input => input.Display));
+        Assert.False(editor.IsDirty);
+
+        BackupProfile written = editor.ToProfile(profile.Name);
+
+        Assert.Equal(profile.Inputs, written.Inputs);
+        Assert.Equal(profile.PatternInputs, written.PatternInputs);
     }
 
     private static ProfileEditorViewModel Editor() => new(new FakeFilePicker());

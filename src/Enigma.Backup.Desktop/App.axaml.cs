@@ -51,6 +51,11 @@ public partial class App : Application
             services.GetRequiredService<IFileDialogService>().SetStorageProvider(window.StorageProvider);
             services.GetRequiredService<IFolderDialogService>().SetStorageProvider(window.StorageProvider);
 
+            // Ours, wired the same way and for the same reason: a launcher belongs to a window, and
+            // there is none until this point. Resolved as the concrete type, because the seam the view
+            // models see names no Avalonia type at all.
+            services.GetRequiredService<ShellLauncher>().SetTopLevel(window);
+
             // The stored theme, applied before the window is shown so the app never opens in one
             // variant and repaints into the other. A missing or unreadable settings file leaves the
             // ThemeVariant.Default that App.axaml starts on — which is "follow the OS".

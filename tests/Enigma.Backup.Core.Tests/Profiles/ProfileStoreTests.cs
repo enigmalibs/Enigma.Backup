@@ -40,13 +40,32 @@ public sealed class ProfileStoreTests
         await store.SaveAsync(saved, Token);
         BackupProfile loaded = await store.LoadAsync(saved.Name, Token);
 
-        Assert.Equal(BackupProfile.CurrentFormatVersion, loaded.FormatVersion);
+        // This profile uses nothing newer than version 1, so that is what it is written as — see
+        // ProfileSerializationTests for the rule and what makes it matter.
+        Assert.Equal(BackupProfile.MinimumFormatVersion, loaded.FormatVersion);
         Assert.Equal(saved.Name, loaded.Name);
         Assert.Equal(saved.Inputs, loaded.Inputs);
+        Assert.Empty(loaded.PatternInputs);
         Assert.Equal(saved.OutputDirectory, loaded.OutputDirectory);
         Assert.Equal(saved.Compression, loaded.Compression);
         Assert.Equal(saved.Encrypt, loaded.Encrypt);
         Assert.Equal(saved.ExcludeGlobs, loaded.ExcludeGlobs);
+    }
+
+    [Fact]
+    public async Task SaveAsync_ThenLoadAsync_RoundTripsPatternInputsAsVersion2()
+    {
+        using TempDirectory temp = new();
+        ProfileStore store = new(temp.FullPath);
+        BackupProfile saved = SampleProfile();
+        saved.PatternInputs = [new PatternInput("/var/log", "*.log"), new PatternInput("/data", "DirPrefix*")];
+
+        await store.SaveAsync(saved, Token);
+        BackupProfile loaded = await store.LoadAsync(saved.Name, Token);
+
+        Assert.Equal(BackupProfile.CurrentFormatVersion, loaded.FormatVersion);
+        Assert.Equal(saved.Inputs, loaded.Inputs);
+        Assert.Equal(saved.PatternInputs, loaded.PatternInputs);
     }
 
     [Fact]

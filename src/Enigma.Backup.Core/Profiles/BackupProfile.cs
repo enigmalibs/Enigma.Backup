@@ -8,12 +8,18 @@ namespace Enigma.Backup.Core.Profiles;
 /// </summary>
 public sealed class BackupProfile
 {
-    /// <summary>The profile format this build reads and writes.</summary>
-    public const int CurrentFormatVersion = 1;
+    /// <summary>The newest profile format this build reads and writes.</summary>
+    public const int CurrentFormatVersion = 2;
+
+    /// <summary>The oldest profile format this build still reads and writes.</summary>
+    public const int MinimumFormatVersion = 1;
 
     /// <summary>
-    /// Version of the JSON layout. A file declaring anything other than
-    /// <see cref="CurrentFormatVersion"/> is rejected rather than guessed at.
+    /// Version of the JSON layout. A file declaring anything outside
+    /// <see cref="MinimumFormatVersion"/>..<see cref="CurrentFormatVersion"/> is rejected rather than
+    /// guessed at. What is *written* is the lowest version that can express the profile, so one using
+    /// no version-2 feature stays readable by the builds that predate them — see
+    /// <c>ProfileSerializer</c>.
     /// </summary>
     public int FormatVersion { get; set; } = CurrentFormatVersion;
 
@@ -25,6 +31,12 @@ public sealed class BackupProfile
 
     /// <summary>The files and directories to back up, as absolute paths.</summary>
     public IList<string> Inputs { get; set; } = [];
+
+    /// <summary>
+    /// Inputs that are a rule rather than a path: a base folder plus a glob, re-resolved on every run.
+    /// Using one makes the profile version 2 (see <see cref="FormatVersion"/>).
+    /// </summary>
+    public IList<PatternInput> PatternInputs { get; set; } = [];
 
     /// <summary>The directory the timestamped archive and its <c>.sha256</c> sidecar are written to.</summary>
     public string OutputDirectory { get; set; } = string.Empty;

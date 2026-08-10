@@ -54,11 +54,11 @@ public sealed class ProfileEditorViewModel : ObservableObject
     /// <summary>Raised whenever anything in the profile changes, so the window can keep up.</summary>
     public event EventHandler? Changed;
 
-    /// <summary>The files and folders to back up.</summary>
-    public ObservableCollection<string> Inputs { get; } = [];
+    /// <summary>The files, folders and patterns to back up.</summary>
+    public ObservableCollection<InputItem> Inputs { get; } = [];
 
     /// <summary>The input the list has selected, or <see langword="null"/> when none is.</summary>
-    public string? SelectedInput
+    public InputItem? SelectedInput
     {
         get;
         set
@@ -124,6 +124,17 @@ public sealed class ProfileEditorViewModel : ObservableObject
         {
             if (SetProperty(ref field, value ?? CompressionOption.All[0]))
             {
+                OnPropertyChanged(nameof(CanEncrypt));
+                OnPropertyChanged(nameof(EncryptDescription));
+
+                // A format that cannot be encrypted turns the toggle off rather than leaving a promise
+                // the run would have to refuse. Switching back does not restore it: off is the honest
+                // default after a format that forbade it.
+                if (!CanEncrypt)
+                {
+                    Encrypt = false;
+                }
+
                 MarkChanged();
             }
         }
@@ -141,6 +152,21 @@ public sealed class ProfileEditorViewModel : ObservableObject
             }
         }
     }
+
+    /// <summary>
+    /// Whether the selected format can be encrypted at all. Zip cannot: <c>System.IO.Compression</c>
+    /// has no encryption, and every way of adding one would either stop a file manager opening the
+    /// archive or offer security it does not have.
+    /// </summary>
+    public bool CanEncrypt => SelectedCompression.Value != CompressionAlgorithm.Zip;
+
+    /// <summary>
+    /// What the encryption card says. This is where a disabled toggle explains itself — a control that
+    /// cannot be clicked and does not say why reads as a bug.
+    /// </summary>
+    public string EncryptDescription => CanEncrypt
+        ? "Asked for at the start of every run, and never stored."
+        : "A zip archive cannot be encrypted. Choose Zstandard or Gzip to protect one with a password.";
 
     /// <summary>Whether the profile has been edited since it was loaded or last saved.</summary>
     public bool IsDirty
@@ -185,10 +211,17 @@ public sealed class ProfileEditorViewModel : ObservableObject
         _loading = true;
         try
         {
+            // Paths first, then patterns: the profile keeps the two in separate lists, so that is the
+            // order a saved profile comes back in.
             Inputs.Clear();
             foreach (string input in profile.Inputs)
             {
-                Inputs.Add(input);
+                Inputs.Add(InputItem.ForPath(input));
+            }
+
+            foreach (PatternInput patternInput in profile.PatternInputs)
+            {
+                Inputs.Add(InputItem.ForPattern(patternInput.BaseDirectory, patternInput.Pattern));
             }
 
             ExcludeGlobs.Clear();
@@ -225,7 +258,13 @@ public sealed class ProfileEditorViewModel : ObservableObject
         new()
         {
             Name = name,
-            Inputs = [.. Inputs],
+            Inputs = [.. Inputs.Where(static input => !input.IsPattern).Select(static input => input.Path)],
+            PatternInputs =
+            [
+                .. Inputs
+                    .Where(static input => input.IsPattern)
+                    .Select(static input => new PatternInput(input.Path, input.Pattern!)),
+            ],
             OutputDirectory = OutputDirectory.Trim(),
             Compression = SelectedCompression.Value,
             Encrypt = Encrypt,
@@ -254,16 +293,51 @@ public sealed class ProfileEditorViewModel : ObservableObject
             }
 
             string normalized = Normalize(path);
-            if (Inputs.Any(existing => string.Equals(existing, normalized, PathComparison)))
+
+            // Only against the other *paths*: a folder listed as a pattern's base and the same folder
+            // listed outright say different things, so neither hides the other.
+            if (Inputs.Any(existing => !existing.IsPattern && string.Equals(existing.Path, normalized, PathComparison)))
             {
                 continue;
             }
 
-            Inputs.Add(normalized);
+            Inputs.Add(InputItem.ForPath(normalized));
             added++;
         }
 
         return added;
+    }
+
+    /// <summary>
+    /// Adds a pattern to the inputs, ignoring one the profile already lists — this is what the "Add
+    /// pattern…" prompt goes through.
+    /// </summary>
+    /// <param name="baseDirectory">The folder the pattern applies to.</param>
+    /// <param name="pattern">The glob matched inside it.</param>
+    /// <returns><see langword="true"/> when it was actually added.</returns>
+    public bool AddPatternInput(string baseDirectory, string pattern)
+    {
+        if (string.IsNullOrWhiteSpace(baseDirectory) || string.IsNullOrWhiteSpace(pattern))
+        {
+            return false;
+        }
+
+        string folder = Normalize(baseDirectory);
+
+        // Stored with '/' separators, which is the form a profile keeps and the matcher reads.
+        string glob = pattern.Trim().Replace('\\', '/');
+
+        // The pattern compares the way the matcher does, which on this platform is the way paths do.
+        if (Inputs.Any(existing => existing.IsPattern
+            && string.Equals(existing.Path, folder, PathComparison)
+            && string.Equals(existing.Pattern, glob, PathComparison)))
+        {
+            return false;
+        }
+
+        Inputs.Add(InputItem.ForPattern(folder, glob));
+
+        return true;
     }
 
     /// <summary>
@@ -311,7 +385,7 @@ public sealed class ProfileEditorViewModel : ObservableObject
 
     private void OnRemoveInput()
     {
-        if (SelectedInput is string input)
+        if (SelectedInput is InputItem input)
         {
             Inputs.Remove(input);
             SelectedInput = null;

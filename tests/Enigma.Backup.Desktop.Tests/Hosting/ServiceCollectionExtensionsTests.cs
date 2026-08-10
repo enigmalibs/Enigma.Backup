@@ -45,6 +45,22 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.IsType<ProgressOverlay>(provider.GetRequiredService<IProgressOverlay>());
         Assert.IsType<NotificationService>(provider.GetRequiredService<INotificationService>());
         Assert.IsType<ThemeSwitcher>(provider.GetRequiredService<IThemeSwitcher>());
+        Assert.IsType<ShellLauncher>(provider.GetRequiredService<IShellLauncher>());
+    }
+
+    /// <remarks>
+    /// <c>App</c> hands the launcher the window through its concrete type, because
+    /// <c>IShellLauncher</c> deliberately names no Avalonia type. That only works if both registrations
+    /// resolve to the same object — otherwise the one the Settings dialog calls is a second instance
+    /// nobody ever wired, and every click throws.
+    /// </remarks>
+    [Fact]
+    public void TheLauncherAppWiresIsTheLauncherTheDialogsCall()
+    {
+        using ServiceProvider provider = Build();
+
+        Assert.Same(provider.GetRequiredService<ShellLauncher>(), provider.GetRequiredService<IShellLauncher>());
+        Assert.Same(provider.GetRequiredService<IShellLauncher>(), provider.GetRequiredService<IShellLauncher>());
     }
 
     /// <remarks>

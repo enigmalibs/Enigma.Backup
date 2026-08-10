@@ -20,4 +20,11 @@ public enum ScanWarningKind
 
     /// <summary>An input's top-level name contained characters that are unusable on Windows and was adjusted.</summary>
     RootNameSanitized,
+
+    /// <summary>
+    /// A pattern input matched nothing under its base folder. A legitimate outcome — there may be no
+    /// log files today — but one worth saying out loud, because the alternative reading is a pattern
+    /// that does not mean what its author thought.
+    /// </summary>
+    PatternMatchedNothing,
 }

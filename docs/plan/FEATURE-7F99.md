@@ -1,6 +1,6 @@
 # FEATURE-7F99 — Pattern inputs, zip format & window polish — 1.2.0 release
 
-**Status:** TODO
+**Status:** DONE
 **Type:** multi-phase feature (5 phases)
 **Branches (created by `/build`, each from `HEAD`):** one per phase, see *Phases*
 
@@ -287,7 +287,7 @@ correct (both commands are `!IsBusy` anyway). The bottom `Border.panel` keeps on
 
 ## Phases
 
-### PHASE01 — Pattern inputs (TODO)
+### PHASE01 — Pattern inputs (DONE)
 
 Branch: `feature/feature-7f99-phase01-pattern-inputs`
 
@@ -314,7 +314,7 @@ and confirm the archive holds exactly the expected entries, the empty-match warn
 Last-run panel when nothing matches, and both variants render the new list items and dialog
 correctly (screenshots in the completion doc).
 
-### PHASE02 — Zip archive format (TODO)
+### PHASE02 — Zip archive format (DONE)
 
 Branch: `feature/feature-7f99-phase02-zip-format`
 
@@ -343,7 +343,7 @@ manually — an unencrypted zip backup of a nested tree restores byte-identicall
 extracts with a stock unzip tool; verify reports the checksum result; the Encrypt toggle is
 visibly disabled with its explanation under Zip (screenshots both variants).
 
-### PHASE03 — Restore & Verify relocation (TODO)
+### PHASE03 — Restore & Verify relocation (DONE)
 
 Branch: `feature/feature-7f99-phase03-action-buttons`
 
@@ -359,7 +359,7 @@ reads correctly at the default and the 960 px minimum width in both variants (sc
 two buttons still run their flows from the new position, and both are disabled while a run is
 active exactly as before.
 
-### PHASE04 — Settings folder & About (TODO)
+### PHASE04 — Settings folder & About (DONE)
 
 Branch: `feature/feature-7f99-phase04-settings-about`
 
@@ -382,7 +382,7 @@ Branch: `feature/feature-7f99-phase04-settings-about`
 config), the project link opens the browser, the About section shows "Version 1.2.0", the icon
 renders, and the grown dialog fits the 680×560 host cap in both variants (screenshots).
 
-### PHASE05 — Release readiness: 1.2.0 (TODO)
+### PHASE05 — Release readiness: 1.2.0 (DONE)
 
 Branch: `feature/feature-7f99-phase05-release`
 
