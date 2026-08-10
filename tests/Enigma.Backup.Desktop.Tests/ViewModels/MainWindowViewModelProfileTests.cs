@@ -50,7 +50,7 @@ public sealed class MainWindowViewModelProfileTests
 
         Assert.Equal(expected, harness.ViewModel.ProfileNames);
         Assert.Equal("Documents", harness.ViewModel.SelectedProfileName);
-        Assert.Equal("/docs", Assert.Single(harness.Editor.Inputs));
+        Assert.Equal("/docs", Assert.Single(harness.Editor.Inputs).Path);
         Assert.False(harness.Editor.IsDirty);
     }
 
@@ -94,7 +94,7 @@ public sealed class MainWindowViewModelProfileTests
         await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
         harness.ViewModel.SelectedProfileName = "Photos";
 
-        Assert.Equal("/pics", Assert.Single(harness.Editor.Inputs));
+        Assert.Equal("/pics", Assert.Single(harness.Editor.Inputs).Path);
         Assert.Equal(CompressionAlgorithm.Gzip, harness.Editor.SelectedCompression.Value);
         Assert.False(harness.Editor.IsDirty);
     }
@@ -251,7 +251,7 @@ public sealed class MainWindowViewModelProfileTests
 
         Assert.True(harness.Profiles.Contains("Photos"));
         Assert.Equal("Photos", harness.ViewModel.SelectedProfileName);
-        Assert.Equal("/pics", Assert.Single(harness.Editor.Inputs));
+        Assert.Equal("/pics", Assert.Single(harness.Editor.Inputs).Path);
     }
 
     [Fact]
@@ -326,5 +326,44 @@ public sealed class MainWindowViewModelProfileTests
 
         Assert.Equal(2, harness.Editor.Inputs.Count);
         Assert.Equal("Nothing was added — those paths are already in the profile.", harness.ViewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task AddPattern_AsksForOneAndPutsItInTheInputs()
+    {
+        Harness harness = new();
+        harness.Dialogs.Patterns.Enqueue(new PatternInput("/var/log", "*.log"));
+
+        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
+
+        InputItem only = Assert.Single(harness.Editor.Inputs);
+        Assert.True(only.IsPattern);
+        Assert.Equal("/var/log ▸ *.log", only.Display);
+        Assert.Equal("Added the pattern '*.log' under '/var/log'.", harness.ViewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task AddPattern_AddsNothingWhenThePromptIsCancelled()
+    {
+        Harness harness = new();
+
+        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, harness.Dialogs.PatternRequests);
+        Assert.Empty(harness.Editor.Inputs);
+    }
+
+    [Fact]
+    public async Task AddPattern_SaysSoWhenTheProfileAlreadyHasThatPattern()
+    {
+        Harness harness = new();
+        harness.Dialogs.Patterns.Enqueue(new PatternInput("/var/log", "*.log"));
+        harness.Dialogs.Patterns.Enqueue(new PatternInput("/var/log", "*.log"));
+
+        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
+        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
+
+        Assert.Single(harness.Editor.Inputs);
+        Assert.Equal("Nothing was added — that pattern is already in the profile.", harness.ViewModel.StatusText);
     }
 }

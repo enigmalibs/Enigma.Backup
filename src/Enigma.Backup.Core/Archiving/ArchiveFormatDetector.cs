@@ -21,6 +21,16 @@ internal static class ArchiveFormatDetector
     private static readonly byte[] ZstdMagic = [0x28, 0xB5, 0x2F, 0xFD];
     private static readonly byte[] Ebk1Magic = [(byte)'E', (byte)'B', (byte)'K', (byte)'1'];
 
+    /// <summary>A zip's first local file header — what every archive with at least one entry starts with.</summary>
+    private static readonly byte[] ZipLocalHeaderMagic = [(byte)'P', (byte)'K', 0x03, 0x04];
+
+    /// <summary>
+    /// A zip's end-of-central-directory record. An archive with no entries at all has no local file
+    /// header to start with, so this is its first four bytes — and an entry-less run is reachable, from
+    /// a profile whose every input was skipped.
+    /// </summary>
+    private static readonly byte[] ZipEndOfCentralDirectoryMagic = [(byte)'P', (byte)'K', 0x05, 0x06];
+
     /// <summary>Identifies the layer the leading bytes belong to.</summary>
     /// <param name="signature">The first <see cref="SignatureLength"/> bytes of the file.</param>
     /// <exception cref="ArchiveFormatException">The bytes match no known layer.</exception>
@@ -41,8 +51,13 @@ internal static class ArchiveFormatDetector
             return ArchiveLayer.Gzip;
         }
 
+        if (signature.StartsWith(ZipLocalHeaderMagic) || signature.StartsWith(ZipEndOfCentralDirectoryMagic))
+        {
+            return ArchiveLayer.Zip;
+        }
+
         throw new ArchiveFormatException(
-            "The file is not an Enigma.Backup archive: it is neither a zstd nor a gzip stream, nor an encrypted EBK1 container.");
+            "The file is not an Enigma.Backup archive: it is not a zip, a zstd or a gzip stream, nor an encrypted EBK1 container.");
     }
 
     /// <summary>

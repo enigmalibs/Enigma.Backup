@@ -34,6 +34,13 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton<INotificationService, NotificationService>();
             services.TryAddSingleton<IThemeSwitcher, ThemeSwitcher>();
 
+            // Registered under both its own type and the seam, because App has to hand it the window
+            // and IShellLauncher deliberately names no Avalonia type — a launcher a test fakes must
+            // not have a TopLevel on its interface. The factory keeps the two the same instance, so
+            // the one App wires is the one every dialog calls.
+            services.TryAddSingleton<ShellLauncher>();
+            services.TryAddSingleton<IShellLauncher>(static provider => provider.GetRequiredService<ShellLauncher>());
+
             // The app's own preferences — Desktop-owned, because a theme variant means nothing to a
             // command line. Registered through a factory because the store's second constructor (an
             // explicit file) exists for tests and cannot be resolved from the container. Its state is

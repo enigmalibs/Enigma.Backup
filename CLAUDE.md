@@ -33,9 +33,9 @@ properties in a `.csproj`.
 Two production projects (`src/`), both `net10.0` on purpose:
 
 - **`Enigma.Backup.Core`** — everything: profiles + JSON persistence, input scanning with glob
-  excludes, the streaming `scan → tar → compress → [encrypt] → file` pipeline, restore, and
-  verification. Targets `net10.0` rather than `netstandard2.0` because it is built on
-  `System.Formats.Tar` (see the csproj comment).
+  excludes and pattern inputs, the streaming `scan → tar → compress → [encrypt] → file` pipeline (or
+  `scan → zip → file`), restore, and verification. Targets `net10.0` rather than `netstandard2.0`
+  because it is built on `System.Formats.Tar` (see the csproj comment).
 - **`Enigma.Backup.Desktop`** — Avalonia 12 MVVM app, bootstrapped through
   `Microsoft.Extensions.Hosting` (`App.OnFrameworkInitializationCompleted` builds and starts the
   `IHost`, resolves `MainWindow` from DI, and stops the host on exit). The only project that touches
@@ -59,10 +59,14 @@ Invariants that are easy to violate and must be preserved:
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
 - **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run card, the
-  outcome banner, the theme variant and UI-thread marshaling enter through `IFilePicker` /
-  `IDialogService` / `IProgressOverlay` / `INotificationService` / `IThemeSwitcher` / `IUiDispatcher`
+  outcome banner, the theme variant, opening a folder or a link on the desktop, and UI-thread
+  marshaling enter through `IFilePicker` / `IDialogService` / `IProgressOverlay` /
+  `INotificationService` / `IThemeSwitcher` / `IShellLauncher` / `IUiDispatcher`
   (`Desktop/Services/`, with the Avalonia
   implementations beside them); only the Views, `App` and those implementations touch Avalonia types.
+  `IShellLauncher` is the one whose implementation is *also* registered under its concrete type, because
+  `App` has to hand `ShellLauncher` the window's `TopLevel` and the interface deliberately names no
+  Avalonia type — both registrations resolve to one instance, and a test pins that they do.
   This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the end-to-end test that drives
   the real pipeline through the real container, which therefore has to register fakes for the two seams
   whose real implementations reach for a host control.
@@ -107,7 +111,24 @@ Invariants that are easy to violate and must be preserved:
 - **Passwords are parameters, never state.** They cross the API as a parameter, are prompted per run,
   and are never persisted, logged, or cached.
 - **The pipeline is single-pass and streaming.** No temp files, constant memory regardless of archive
-  size; the SHA-256 sidecar is computed on the output bytes while writing.
+  size; the SHA-256 sidecar is computed on the output bytes while writing. The one documented
+  exception is zip's central directory, which is held until the archive closes — ~100 bytes per
+  *entry*, linear in entry count and still independent of archive size.
+- **`Zip` is a sibling of the container, not a change to it, and it is never encrypted.** It sits in
+  `CompressionAlgorithm` because the user's choice is "what kind of file do I get" — one control — but
+  a zip is an archive, not a stream codec, so it does **not** go through `CompressionStreams`:
+  `BackupService` writes through the internal `IArchiveEntryWriter` seam (`TarEntryWriter` /
+  `ZipEntryWriter`), and `RestoreService` branches to a zip reader that feeds the *same* traversal
+  check, conflict handler and progress. `VerificationService` needs no zip arm at all — it hashes
+  bytes against the sidecar. Two things are load-bearing: `HashingWriteStream.CanSeek` is `false`, which
+  is what makes `ZipArchive` write trailing data descriptors instead of seeking back to patch a header
+  the digest already covered; and `ZipEntryWriter` writes **local** wall-clock timestamps, because a DOS
+  date carries no zone and every tool — including `ZipArchiveEntry.LastWriteTime` on the way back in —
+  reads one as local. `Encrypt` + `Zip` is refused by `BackupService` before the output is named, and
+  the Desktop clears and disables the toggle (`ProfileEditorViewModel.CanEncrypt`), so `.zip.enc` is
+  unreachable rather than merely unwanted. `ArchiveFormatDetector` knows **two** zip signatures:
+  `PK\x03\x04`, and `PK\x05\x06` for an entry-less archive, which a run whose every input was skipped
+  really does produce.
 - **Composition roots are the two `AddEnigmaBackup*` extensions** (`Core/Hosting/`,
   `Desktop/Hosting/ServiceCollectionExtensions.cs`). Register services there; nothing news up a
   service.
@@ -123,6 +144,27 @@ Invariants that are easy to violate and must be preserved:
   out as breaking in `RELEASENOTES.md`. Every release since has carried the opposite claim — that the
   byte is unchanged and old archives still open — and `GoldenArchiveCompatibilityTests` is what backs
   it.
+- **A profile is written as the lowest format version that can express it.**
+  `BackupProfile.CurrentFormatVersion` is 2 and `MinimumFormatVersion` is 1; `ProfileSerializer` reads
+  both and writes **2 only when the profile carries something version 1 has no field for, or names a
+  value version 1 never knew** — today a `PatternInputs` entry, or `Compression: Zip` — and 1
+  otherwise, stamping the profile with what it wrote. That rule *is* the
+  compatibility claim in the release notes: a profile using no newer feature is still readable by
+  1.0.x/1.1.0, while one that does use a newer feature is refused loudly by those builds instead of
+  being read as less than it says. So a new feature extends `RequiredFormatVersion`, never the
+  unconditional write; a serializer test pins that a feature-free profile still writes 1. Reading is
+  the lenient half — a hand-edited version-1 file carrying a version-2 field is read rather than
+  refused, and the next save states 2, which is what the profile actually is.
+- **A pattern input is a rule, not a place, and it never merges.** `PatternInput` is a
+  *(base folder, glob)* pair re-resolved on every run, matched by `PatternMatcher` — the exclude
+  field's `Matcher` and `PathUtilities.Comparison`, in the include direction, plus one documented
+  extension: a pattern matching a *directory's* relative path takes that directory's whole subtree
+  (what `DirPrefix*` means). The scan resolves each pattern independently of the path-input
+  merge/overlap logic, so a base folder that is also a path input becomes a second top-level name via
+  `AllocateRootName`; excludes still win over a match; the base folder is emitted even when nothing
+  matched, and a match-free pattern is a `PatternMatchedNothing` **warning**, never an error — there
+  may be no logs today, and a pattern that quietly backs up nothing is the failure a backup tool must
+  not have.
 - **`tests/Enigma.Backup.Core.Tests/Fixtures/` is evidence, not test input — never regenerate it.**
   It holds a real encrypted archive written by the 1.0.0 build, and `GoldenArchiveCompatibilityTests`
   verifies and restores it on every run. That is the only check that can catch a behavioural change

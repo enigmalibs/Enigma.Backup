@@ -38,6 +38,10 @@ Run from the repository root, on the branch that will be merged:
       a dialog or a button has to move the check that presses it.
 - [ ] The `EBK1` container version byte is unchanged, or the change is called out as breaking in
       `RELEASENOTES.md` — archives written by earlier releases must stay readable.
+- [ ] The profile write rule still holds: a profile using no feature newer than `formatVersion` 1 is
+      still saved as 1 (a serializer test pins it), and any *new* feature that forces a higher version
+      is named in `RELEASENOTES.md` as refused by older builds — that refusal is by design, but it is
+      only honest if it is written down.
 
 ## 2. Build the release zips
 
@@ -90,8 +94,8 @@ git pull
 
 ## 5. Tag the release
 
-The convention is a **bare** `X.Y.Z` — `1.0.0` and `1.0.1` are the tags that exist. Run `git tag` to
-confirm before adding a new one. Tag the merge commit on `main` and push the tag:
+The convention is a **bare** `X.Y.Z` — `1.0.0`, `1.0.1` and `1.1.0` are the tags that exist. Run
+`git tag` to confirm before adding a new one. Tag the merge commit on `main` and push the tag:
 
 ```bash
 git tag X.Y.Z

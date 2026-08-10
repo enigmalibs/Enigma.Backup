@@ -57,6 +57,12 @@
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
+    <!-- The input actions wrap rather than overflow: five buttons do not fit the panel at the window's
+         minimum width, and a button pushed past the edge is a button nobody can press. -->
+    <Style Selector="WrapPanel.actions > Button">
+      <Setter Property="Margin" Value="0,0,6,4" />
+    </Style>
+
     <!-- The lists sit on their own surface inside the panel, so a long path reads as being *in* a box. -->
     <Style Selector="ListBox.framed">
       <Setter Property="Background" Value="{DynamicResource EnigmaSurfaceLowBrush}" />
@@ -87,7 +93,7 @@
       <!-- Profile bar: which profile is loaded, and everything that can be done to it. -->
       <Border Grid.Row="0" Classes="panel" IsEnabled="{Binding IsIdle}">
         <StackPanel Spacing="10">
-          <Grid ColumnDefinitions="Auto,280,*,Auto">
+          <Grid ColumnDefinitions="Auto,280,*,Auto,Auto">
             <StackPanel Grid.Column="0" Classes="glyphrow" Margin="0,0,10,0">
               <PathIcon Data="{ei:IconGeometry FileText}" />
               <TextBlock Text="Profile" Classes="section" />
@@ -97,17 +103,46 @@
                       SelectedItem="{Binding SelectedProfileName}"
                       PlaceholderText="No profile loaded"
                       HorizontalAlignment="Stretch" />
+            <!-- The lowest-value text in the row, and the only one that may truncate: it holds the
+                 star column so the action group beside it keeps its full width. -->
             <TextBlock Grid.Column="2"
                        Text="{Binding ProfileStatus}"
                        Classes="muted"
                        VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
                        Margin="12,0,0,0" />
+            <!-- Restore… and Verify… read nothing from the form below — both are picker-driven end to
+                 end — so they belong up here with the app's own actions, not in the bottom bar where
+                 their neighbour is the one button the form does feed. The separator keeps them from
+                 reading as part of the gear. -->
+            <StackPanel Grid.Column="3"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        VerticalAlignment="Center"
+                        Margin="12,0,0,0">
+              <Button Command="{Binding RestoreCommand}" MinWidth="130" Height="34">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry ArrowCounterClockwise}" />
+                  <TextBlock Text="Restore…" />
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding VerifyCommand}" MinWidth="130" Height="34">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry SealCheck}" />
+                  <TextBlock Text="Verify…" />
+                </StackPanel>
+              </Button>
+              <Border Width="1"
+                      Margin="4,3"
+                      Background="{DynamicResource EnigmaBorderSubtleBrush}" />
+            </StackPanel>
             <!-- The app's preferences, not the profile's: the gear sits at the far end of the bar
                  rather than among the profile buttons below it. -->
-            <Button Grid.Column="3"
+            <Button Grid.Column="4"
                     Command="{Binding OpenSettingsCommand}"
                     ToolTip.Tip="Settings"
                     VerticalAlignment="Center"
+                    Height="34"
                     Padding="8,5">
               <PathIcon Data="{ei:IconGeometry GearSix}" Width="15" Height="15" />
             </Button>
@@ -167,7 +202,7 @@
 
             <StackPanel Grid.Row="0" Classes="glyphrow">
               <PathIcon Data="{ei:IconGeometry Files}" />
-              <TextBlock Text="Files and folders to back up" Classes="section" />
+              <TextBlock Text="Files, folders and patterns to back up" Classes="section" />
             </StackPanel>
 
             <!-- No MinHeight: this row is the one that gives when the window is made small, and a list
@@ -177,13 +212,13 @@
                      ItemsSource="{Binding Editor.Inputs}"
                      SelectedItem="{Binding Editor.SelectedInput}">
               <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="sys:String">
-                  <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding}" />
+                <DataTemplate x:DataType="vm:InputItem">
+                  <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Detail}" />
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
+            <WrapPanel Grid.Row="2" Classes="actions">
               <Button Command="{Binding Editor.AddFilesCommand}">
                 <StackPanel Classes="glyphrow">
                   <PathIcon Data="{ei:IconGeometry FilePlus}" />
@@ -194,6 +229,14 @@
                 <StackPanel Classes="glyphrow">
                   <PathIcon Data="{ei:IconGeometry FolderPlus}" />
                   <TextBlock Text="Add folder…" />
+                </StackPanel>
+              </Button>
+              <!-- On the window, not the editor: a pattern is asked for with a dialog rather than a
+                   picker, and the window is what owns the app's questions. -->
+              <Button Command="{Binding AddPatternCommand}" ToolTip.Tip="A folder plus a pattern, re-read on every run">
+                <StackPanel Classes="glyphrow">
+                  <PathIcon Data="{ei:IconGeometry Asterisk}" />
+                  <TextBlock Text="Add pattern…" />
                 </StackPanel>
               </Button>
               <Button Command="{Binding Editor.RemoveInputCommand}">
@@ -208,7 +251,7 @@
                   <TextBlock Text="Remove all" />
                 </StackPanel>
               </Button>
-            </StackPanel>
+            </WrapPanel>
 
             <TextBlock Grid.Row="3"
                        Text="Anything dropped on this window is added here too."
@@ -368,11 +411,16 @@
               </ComboBox>
             </controls:SettingsCard>
 
+            <!-- The toggle, not the card, is what goes dead under a format that cannot be encrypted:
+                 the description has to stay readable to say why. -->
             <controls:SettingsCard Grid.Column="1"
                                    Header="Encrypt with a password"
-                                   Description="Asked for at the start of every run, and never stored."
+                                   Description="{Binding Editor.EncryptDescription}"
                                    IconData="{ei:IconGeometry LockKey}">
-              <ToggleSwitch IsChecked="{Binding Editor.Encrypt}" OnContent="On" OffContent="Off" />
+              <ToggleSwitch IsChecked="{Binding Editor.Encrypt}"
+                            IsEnabled="{Binding Editor.CanEncrypt}"
+                            OnContent="On"
+                            OffContent="Off" />
             </controls:SettingsCard>
 
           </Grid>
@@ -380,29 +428,21 @@
 
       </StackPanel>
 
-      <!-- What to do. How far it has got is on the run card, and so is Cancel: behind the scrim a
-           button in the window cannot be clicked. -->
+      <!-- What the form above is for, alone: everything between the profile bar and this button
+           describes the run it starts. Restore… and Verify… take no part in that and sit in the top
+           bar. How far a run has got is on the run card, and so is Cancel: behind the scrim a button
+           in the window cannot be clicked. -->
       <Border Grid.Row="3" Classes="panel">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Command="{Binding BackupCommand}" Classes="accent" MinWidth="140" Height="34">
-            <StackPanel Classes="glyphrow">
-              <PathIcon Data="{ei:IconGeometry Archive}" />
-              <TextBlock Text="Back up" />
-            </StackPanel>
-          </Button>
-          <Button Command="{Binding RestoreCommand}" MinWidth="130" Height="34">
-            <StackPanel Classes="glyphrow">
-              <PathIcon Data="{ei:IconGeometry ArrowCounterClockwise}" />
-              <TextBlock Text="Restore…" />
-            </StackPanel>
-          </Button>
-          <Button Command="{Binding VerifyCommand}" MinWidth="130" Height="34">
-            <StackPanel Classes="glyphrow">
-              <PathIcon Data="{ei:IconGeometry SealCheck}" />
-              <TextBlock Text="Verify…" />
-            </StackPanel>
-          </Button>
-        </StackPanel>
+        <Button Command="{Binding BackupCommand}"
+                Classes="accent"
+                HorizontalAlignment="Left"
+                MinWidth="140"
+                Height="34">
+          <StackPanel Classes="glyphrow">
+            <PathIcon Data="{ei:IconGeometry Archive}" />
+            <TextBlock Text="Back up" />
+          </StackPanel>
+        </Button>
       </Border>
 
     </Grid>

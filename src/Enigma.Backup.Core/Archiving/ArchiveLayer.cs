@@ -11,4 +11,9 @@ internal enum ArchiveLayer
 
     /// <summary>An <c>EBK1</c> container: the compressed tar stream is encrypted (PHASE04).</summary>
     Ebk1,
+
+    /// <summary>
+    /// A zip archive: the entries are the archive, so there is no tar stream and no encryption.
+    /// </summary>
+    Zip,
 }

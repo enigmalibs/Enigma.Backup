@@ -16,3 +16,9 @@
 | - PHASE03    | Main-window restyle                            | DONE        | (in FEATURE-17FE.md)      |
 | - PHASE04    | Theme preference & Settings dialog             | DONE        | (in FEATURE-17FE.md)      |
 | - PHASE05    | Release readiness: 1.1.0                       | DONE        | (in FEATURE-17FE.md)      |
+| FEATURE-7F99 | Pattern inputs, zip format & 1.2.0             | DONE        | docs/plan/FEATURE-7F99.md |
+| - PHASE01    | Pattern inputs                                 | DONE        | (in FEATURE-7F99.md)      |
+| - PHASE02    | Zip archive format                             | DONE        | (in FEATURE-7F99.md)      |
+| - PHASE03    | Restore & Verify relocation                    | DONE        | (in FEATURE-7F99.md)      |
+| - PHASE04    | Settings folder & About                        | DONE        | (in FEATURE-7F99.md)      |
+| - PHASE05    | Release readiness: 1.2.0                       | DONE        | (in FEATURE-7F99.md)      |

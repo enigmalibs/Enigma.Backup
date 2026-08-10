@@ -24,7 +24,11 @@ internal sealed class FakeAppSettingsStore : IAppSettingsStore
     public List<AppTheme> Saves { get; } = [];
 
     /// <inheritdoc />
-    public string FilePath => "/config/Enigma.Backup/settings.json";
+    /// <remarks>
+    /// Settable so a test that needs a folder behind it — the Open-folder button makes one — can point
+    /// this somewhere temporary instead of at a path that does not exist on the machine.
+    /// </remarks>
+    public string FilePath { get; init; } = "/config/Enigma.Backup/settings.json";
 
     /// <inheritdoc />
     public AppSettings Load()

@@ -14,7 +14,8 @@ newest release.
 
 | Version | Supported          |
 |---------|--------------------|
-| 1.1.x   | :white_check_mark: |
+| 1.2.x   | :white_check_mark: |
+| 1.1.x   | :x:                |
 | 1.0.x   | :x:                |
 
 ## Reporting a vulnerability
@@ -52,6 +53,14 @@ Because the cryptography is provided by [Enigma.Core](https://www.nuget.org/pack
 which in turn builds on BouncyCastle, an issue rooted in the AES-256-GCM or Argon2id primitives
 themselves should also be reported upstream to those projects. How Enigma.Backup *uses* them — the
 container framing, the nonce and AAD construction, the KDF parameters — is in scope here.
+
+**A `.zip` archive is never encrypted, and the app refuses to pretend otherwise.** Zip exists as a
+format that opens anywhere, which is incompatible with the protection this app offers: choosing it
+clears and disables the encryption toggle with the reason on the card, and a profile hand-edited to
+ask for both fails the run before a single byte is written. The BCL provides no zip encryption at all,
+ZipCrypto is broken, and WinZip-AES would not open in the very tools that make zip worth choosing — so
+the honest answer is no, rather than something that merely looks like a password. Encryption lives in
+the `EBK1` container: choose Zstandard or Gzip for a backup that needs it.
 
 Out of scope: the strength of a password you choose, and recovery of an archive whose password has
 been lost. There is deliberately no recovery path, and adding one would be the vulnerability.

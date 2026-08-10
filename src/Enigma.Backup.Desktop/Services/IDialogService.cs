@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Enigma.Backup.Core.Errors;
+using Enigma.Backup.Core.Profiles;
 using Enigma.Backup.Core.Restoring;
 
 namespace Enigma.Backup.Desktop.Services;
@@ -34,6 +35,11 @@ public interface IDialogService
     /// <param name="cancellationToken">Cancels waiting for the answer.</param>
     /// <returns>The name, or <see langword="null"/> when the prompt was cancelled.</returns>
     Task<string?> RequestProfileNameAsync(ProfileNameRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Asks for a pattern input: the folder it applies to, and the glob matched inside it.</summary>
+    /// <param name="cancellationToken">Cancels waiting for the answer.</param>
+    /// <returns>The pattern, or <see langword="null"/> when the prompt was cancelled.</returns>
+    Task<PatternInput?> RequestPatternInputAsync(CancellationToken cancellationToken = default);
 
     /// <summary>Asks what to do about a file a backup could not read.</summary>
     /// <param name="error">The failure to show.</param>

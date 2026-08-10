@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Enigma.Backup.Desktop;
 using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.Tests.TestSupport;
 using Enigma.Backup.Desktop.ViewModels;
@@ -8,11 +10,15 @@ using Xunit;
 
 namespace Enigma.Backup.Desktop.Tests.ViewModels;
 
-/// <summary>The Settings dialog: the theme it opens on, what a choice does, and the gear that raises it.</summary>
+/// <summary>
+/// The Settings dialog: the theme it opens on, what a choice does, where it says the app's files are,
+/// what it says this build is, and the gear that raises it.
+/// </summary>
 /// <remarks>
-/// A choice applies and persists in the same step, so the two seams are asserted together — a theme
-/// that was painted but not written is a preference that vanishes at the next start, and one that was
-/// written but not painted is a click that appears to do nothing.
+/// A theme choice applies and persists in the same step, so the two seams are asserted together — a
+/// theme that was painted but not written is a preference that vanishes at the next start, and one that
+/// was written but not painted is a click that appears to do nothing. The two buttons are asserted
+/// against the launcher for the same reason: neither has any other observable effect.
 /// </remarks>
 public sealed class SettingsDialogViewModelTests
 {
@@ -22,7 +28,7 @@ public sealed class SettingsDialogViewModelTests
         FakeAppSettingsStore store = new() { Stored = new AppSettings { Theme = AppTheme.Dark } };
         FakeThemeSwitcher themes = new();
 
-        SettingsDialogViewModel viewModel = new(store, themes);
+        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
 
         Assert.Equal(AppTheme.Dark, viewModel.SelectedTheme.Value);
         Assert.Equal(1, store.Loads);
@@ -36,7 +42,7 @@ public sealed class SettingsDialogViewModelTests
     [Fact]
     public void ItOpensOnTheSystemThemeWhenNothingIsStored()
     {
-        SettingsDialogViewModel viewModel = new(new FakeAppSettingsStore(), new FakeThemeSwitcher());
+        SettingsDialogViewModel viewModel = Build();
 
         Assert.Equal(AppTheme.System, viewModel.SelectedTheme.Value);
         Assert.Equal("System", viewModel.SelectedTheme.Label);
@@ -47,7 +53,7 @@ public sealed class SettingsDialogViewModelTests
     {
         FakeAppSettingsStore store = new();
         FakeThemeSwitcher themes = new();
-        SettingsDialogViewModel viewModel = new(store, themes);
+        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
 
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Light);
 
@@ -62,7 +68,7 @@ public sealed class SettingsDialogViewModelTests
     {
         FakeAppSettingsStore store = new() { Stored = new AppSettings { Theme = AppTheme.Dark } };
         FakeThemeSwitcher themes = new();
-        SettingsDialogViewModel viewModel = new(store, themes);
+        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
 
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Dark);
 
@@ -75,7 +81,7 @@ public sealed class SettingsDialogViewModelTests
     {
         FakeAppSettingsStore store = new();
         FakeThemeSwitcher themes = new();
-        SettingsDialogViewModel viewModel = new(store, themes);
+        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
 
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Dark);
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Light);
@@ -94,7 +100,7 @@ public sealed class SettingsDialogViewModelTests
     [Fact]
     public void TheDropDownOffersTheThreeThemesInOrder()
     {
-        SettingsDialogViewModel viewModel = new(new FakeAppSettingsStore(), new FakeThemeSwitcher());
+        SettingsDialogViewModel viewModel = Build();
 
         AppTheme[] expected = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
 
@@ -102,19 +108,91 @@ public sealed class SettingsDialogViewModelTests
         Assert.All(viewModel.ThemeOptions, static option => Assert.NotEmpty(option.Description));
     }
 
+    /// <remarks>
+    /// The folder, not the file: settings.json is not much use without the profiles beside it, and the
+    /// folder is what the Open button opens.
+    /// </remarks>
     [Fact]
-    public void ItNamesTheFileTheChoiceIsStoredIn()
+    public void ItNamesTheFolderTheAppsFilesAreKeptIn()
     {
         FakeAppSettingsStore store = new();
-        SettingsDialogViewModel viewModel = new(store, new FakeThemeSwitcher());
+        SettingsDialogViewModel viewModel = new(store, new FakeThemeSwitcher(), new FakeShellLauncher());
 
-        Assert.Contains(store.FilePath, viewModel.StorageNote, StringComparison.Ordinal);
+        Assert.Equal(Path.GetDirectoryName(store.FilePath), viewModel.StorageFolder);
+        Assert.Contains(viewModel.StorageFolder, viewModel.StorageDescription, StringComparison.Ordinal);
+
+        // The sentence the old note carried, kept: deleting that one file is the documented way back to
+        // "follow the system".
+        Assert.Contains("settings.json", viewModel.StorageDescription, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task OpenFolderShowsTheStorageFolderOnTheDesktop()
+    {
+        using TempDirectory temp = new();
+
+        string folder = temp.Combine("Enigma.Backup");
+        Directory.CreateDirectory(folder);
+
+        FakeShellLauncher launcher = new();
+        SettingsDialogViewModel viewModel = Build(launcher, Path.Combine(folder, "settings.json"));
+
+        await viewModel.OpenStorageFolderCommand.ExecuteAsync(null);
+
+        Assert.Equal(folder, Assert.Single(launcher.Folders));
+        Assert.Empty(launcher.Uris);
+    }
+
+    /// <remarks>
+    /// A fresh install has written neither a profile nor a preference, so the folder does not exist yet.
+    /// "Show me where my files go" is a reasonable thing to ask before there are any, so the button
+    /// makes the folder it promises rather than reporting that it is missing.
+    /// </remarks>
+    [Fact]
+    public async Task OpenFolderCreatesTheFolderWhenNothingHasBeenWrittenYet()
+    {
+        using TempDirectory temp = new();
+
+        string folder = temp.Combine("fresh", "Enigma.Backup");
+        Assert.False(Directory.Exists(folder));
+
+        FakeShellLauncher launcher = new();
+        SettingsDialogViewModel viewModel = Build(launcher, Path.Combine(folder, "settings.json"));
+
+        await viewModel.OpenStorageFolderCommand.ExecuteAsync(null);
+
+        Assert.True(Directory.Exists(folder));
+        Assert.Equal(folder, Assert.Single(launcher.Folders));
+    }
+
+    [Fact]
+    public async Task TheProjectLinkOpensTheRepository()
+    {
+        FakeShellLauncher launcher = new();
+        SettingsDialogViewModel viewModel = Build(launcher);
+
+        await viewModel.OpenProjectPageCommand.ExecuteAsync(null);
+
+        Assert.Equal(AppInfo.ProjectPage, Assert.Single(launcher.Uris));
+        Assert.Empty(launcher.Folders);
+    }
+
+    [Fact]
+    public void AboutSaysWhatThisBuildIs()
+    {
+        SettingsDialogViewModel viewModel = Build();
+
+        Assert.Equal("Enigma.Backup", viewModel.ApplicationName);
+        Assert.Equal($"Version {AppInfo.Version}", viewModel.VersionLabel);
+        Assert.DoesNotContain('+', viewModel.VersionLabel);
+        Assert.Equal(AppInfo.Copyright, viewModel.Copyright);
+        Assert.Equal("github.com/enigmalibs/Enigma.Backup", viewModel.ProjectPageLabel);
     }
 
     [Fact]
     public void CloseAsksTheDialogToClose()
     {
-        SettingsDialogViewModel viewModel = new(new FakeAppSettingsStore(), new FakeThemeSwitcher());
+        SettingsDialogViewModel viewModel = Build();
         int closes = 0;
 
         viewModel.CloseRequested += (_, _) => closes++;
@@ -138,4 +216,13 @@ public sealed class SettingsDialogViewModelTests
 
         Assert.Equal(1, harness.Dialogs.SettingsRequests);
     }
+
+    /// <summary>A view model over fakes, optionally pointed at a settings file of the test's choosing.</summary>
+    /// <param name="launcher">The launcher to record against, when the test cares.</param>
+    /// <param name="settingsFilePath">The store's file, when the test needs a real folder behind it.</param>
+    private static SettingsDialogViewModel Build(FakeShellLauncher? launcher = null, string? settingsFilePath = null) =>
+        new(
+            settingsFilePath is null ? new FakeAppSettingsStore() : new FakeAppSettingsStore { FilePath = settingsFilePath },
+            new FakeThemeSwitcher(),
+            launcher ?? new FakeShellLauncher());
 }

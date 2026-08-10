@@ -25,6 +25,7 @@ public sealed class RoundTripTests
     [Theory]
     [InlineData(CompressionAlgorithm.Zstd)]
     [InlineData(CompressionAlgorithm.Gzip)]
+    [InlineData(CompressionAlgorithm.Zip)]
     public async Task BackupVerifyRestore_ReproducesTheInputTree(CompressionAlgorithm compression)
     {
         using TempDirectory temp = new();
