@@ -316,6 +316,10 @@ public sealed class WindowEndToEndTests
             services.AddSingleton<INotificationService>(Notifications);
             services.AddSingleton<IUiDispatcher>(new ImmediateUiDispatcher());
 
+            // Nothing in these flows opens a folder or a link, but the real launcher is one more seam
+            // that needs a window it will never be handed here.
+            services.AddSingleton<IShellLauncher>(Launcher);
+
             // Argon2id at its shipped cost would add most of a second to every encrypted case here;
             // the container format does not change with the parameters, and the header carries them.
             services.AddSingleton(new Ebk1Options { MemoryKiB = 8, Iterations = 1, Parallelism = 1 });
@@ -339,6 +343,8 @@ public sealed class WindowEndToEndTests
         public FakeProgressOverlay Overlay { get; } = new();
 
         public FakeNotificationService Notifications { get; } = new();
+
+        public FakeShellLauncher Launcher { get; } = new();
 
         public MainWindowViewModel ViewModel { get; }
 

@@ -30,7 +30,8 @@ and verifies what it wrote.
 - **Glob excludes**, live progress with cancel, and a per-error Skip / Retry / Abort policy with an
   end-of-run summary of everything skipped.
 - **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
-  bar), applied the moment you pick it and remembered afterwards.
+  bar), applied the moment you pick it and remembered afterwards. The same dialog opens the folder
+  your profiles and preferences live in, and says which version you are running.
 
 ## Installing
 
@@ -55,8 +56,9 @@ The app is a single window, top to bottom:
 1. **Profile** — pick a saved profile from the drop-down, or start from `New`. A profile is just the
    settings below, under a name; `Save`, `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…`
    are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
-   discards them. The gear at the right-hand end of the bar opens **Settings**, which is where the
-   theme lives.
+   discards them. The gear at the right-hand end of the bar opens **Settings**: the theme, an
+   `Open folder` button on the folder your profiles and preferences are kept in, and an About section
+   with the version and a link to the project page.
 2. **Files, folders and patterns to back up** — `Add files…`, `Add folder…`, or drop them anywhere on
    the window. Overlapping entries are merged automatically when the backup runs. `Add pattern…` adds
    a rule instead of a path: pick the folder it applies to, type the glob, and the row reads
@@ -81,9 +83,10 @@ If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort
 half-written backup is never left behind.
 
 Profiles live in `%APPDATA%\Enigma.Backup\profiles` on Windows and
-`~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile. The app's own preferences —
-currently just the theme — sit in `settings.json` beside that folder. It appears the first time you
-change one, and deleting it simply returns the app to following the system.
+`~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile. The app's own preferences
+sit in `settings.json` beside that folder. It appears the first time you change one, and deleting it
+simply returns the app to following the system. `Settings` names that folder and has an `Open folder`
+button that shows it in your file manager — making it first if you have not saved anything yet.
 
 ## What a backup run writes
 

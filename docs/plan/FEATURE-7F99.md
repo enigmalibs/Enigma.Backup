@@ -359,7 +359,7 @@ reads correctly at the default and the 960 px minimum width in both variants (sc
 two buttons still run their flows from the new position, and both are disabled while a run is
 active exactly as before.
 
-### PHASE04 — Settings folder & About (TODO)
+### PHASE04 — Settings folder & About (DONE)
 
 Branch: `feature/feature-7f99-phase04-settings-about`
 

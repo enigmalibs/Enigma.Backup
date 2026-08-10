@@ -46,6 +46,7 @@ public sealed class DialogService : IDialogService
     private readonly IFilePicker _filePicker;
     private readonly IAppSettingsStore _settings;
     private readonly IThemeSwitcher _themes;
+    private readonly IShellLauncher _launcher;
 
     /// <summary>Creates a dialog service.</summary>
     /// <param name="dialogs">The library's dialog host, registered by <see cref="App"/> at startup.</param>
@@ -59,24 +60,28 @@ public sealed class DialogService : IDialogService
     /// questions' data is: this is where each dialog's view model is built.
     /// </param>
     /// <param name="themes">Applies the theme the Settings dialog chooses.</param>
+    /// <param name="launcher">Opens the storage folder and the project page the Settings dialog offers.</param>
     public DialogService(
         IContentDialogService dialogs,
         IUiDispatcher dispatcher,
         IFilePicker filePicker,
         IAppSettingsStore settings,
-        IThemeSwitcher themes)
+        IThemeSwitcher themes,
+        IShellLauncher launcher)
     {
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(filePicker);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(themes);
+        ArgumentNullException.ThrowIfNull(launcher);
 
         _dialogs = dialogs;
         _dispatcher = dispatcher;
         _filePicker = filePicker;
         _settings = settings;
         _themes = themes;
+        _launcher = launcher;
     }
 
     /// <inheritdoc />
@@ -204,7 +209,7 @@ public sealed class DialogService : IDialogService
     /// <inheritdoc />
     public async Task ShowSettingsAsync(CancellationToken cancellationToken = default) =>
         await ShowAsync(
-            new SettingsDialogViewModel(_settings, _themes),
+            new SettingsDialogViewModel(_settings, _themes, _launcher),
             static viewModel => new SettingsDialog(viewModel),
             static (_, dialog, _) =>
             {

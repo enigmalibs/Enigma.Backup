@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using Enigma.Backup.Desktop.Services;
 using Enigma.Backup.Desktop.Settings;
 
 namespace Enigma.Backup.Desktop.ViewModels;
 
-/// <summary>The Settings dialog: the app's own preferences, which today is the theme.</summary>
+/// <summary>The Settings dialog: the app's own preferences, where they live, and what this build is.</summary>
 /// <remarks>
 /// <para>
 /// A choice applies the moment it is made rather than on an OK button — a theme is judged by looking
@@ -16,14 +18,15 @@ namespace Enigma.Backup.Desktop.ViewModels;
 /// <para>
 /// Applying and persisting are two calls on two seams and this view model makes both, so a change is
 /// on screen and on disk in the same step. Nothing here names Avalonia: the variant is assigned
-/// through <see cref="IThemeSwitcher"/> and the file is written through
-/// <see cref="IAppSettingsStore"/>.
+/// through <see cref="IThemeSwitcher"/>, the file is written through <see cref="IAppSettingsStore"/>,
+/// and the folder and the project page are opened through <see cref="IShellLauncher"/>.
 /// </para>
 /// </remarks>
 public sealed class SettingsDialogViewModel : DialogViewModel
 {
     private readonly IAppSettingsStore _store;
     private readonly IThemeSwitcher _themes;
+    private readonly IShellLauncher _launcher;
 
     /// <summary>
     /// What is on disk, read once when the dialog opens and updated in step with every change that is
@@ -34,26 +37,61 @@ public sealed class SettingsDialogViewModel : DialogViewModel
     /// <summary>Creates the dialog's view model over the stored preferences.</summary>
     /// <param name="store">Where the preferences are read from and written back to.</param>
     /// <param name="themes">Applies a chosen theme to the running app.</param>
-    public SettingsDialogViewModel(IAppSettingsStore store, IThemeSwitcher themes)
+    /// <param name="launcher">Opens the storage folder and the project page on the desktop.</param>
+    public SettingsDialogViewModel(IAppSettingsStore store, IThemeSwitcher themes, IShellLauncher launcher)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(themes);
+        ArgumentNullException.ThrowIfNull(launcher);
 
         _store = store;
         _themes = themes;
+        _launcher = launcher;
+
+        StorageFolder = ResolveStorageFolder(store.FilePath);
 
         // Read here rather than injected: reopening the dialog should show what is on disk, including
         // an edit made to the file by hand.
         _stored = store.Load();
 
         CloseCommand = new RelayCommand(RequestClose);
+        OpenStorageFolderCommand = new AsyncRelayCommand(OnOpenStorageFolderAsync);
+        OpenProjectPageCommand = new AsyncRelayCommand(OnOpenProjectPageAsync);
 
         SelectedTheme = ThemeOption.For(_stored.Theme);
     }
 
-    /// <summary>Where the preferences are stored, said in full so the file can be found.</summary>
-    public string StorageNote =>
-        $"Stored in {_store.FilePath}. Delete that file and the app goes back to following the system.";
+    /// <summary>
+    /// The folder holding <c>settings.json</c> and the <c>profiles</c> directory — the one thing worth
+    /// opening, since neither file is much use without the other.
+    /// </summary>
+    /// <remarks>
+    /// Derived from the store's own file rather than from the store type's static default, so it is
+    /// whatever this instance actually reads and writes.
+    /// </remarks>
+    public string StorageFolder { get; }
+
+    /// <summary>Where the app's files are, and the one of them that is safe to delete.</summary>
+    public string StorageDescription =>
+        $"Your profiles and preferences are kept in {StorageFolder}. Delete settings.json from there and the app goes back to following the system.";
+
+    /// <summary>What the app calls itself, for the About section.</summary>
+    public string ApplicationName => AppInfo.Name;
+
+    /// <summary>This build's version, as the About section says it.</summary>
+    public string VersionLabel => $"Version {AppInfo.Version}";
+
+    /// <summary>This build's copyright line.</summary>
+    public string Copyright => AppInfo.Copyright;
+
+    /// <summary>The project page, shown as the link's own text.</summary>
+    public string ProjectPageLabel => AppInfo.ProjectPage.Host + AppInfo.ProjectPage.AbsolutePath;
+
+    /// <summary>Opens the folder the app's files live in, creating it if this is a fresh install.</summary>
+    public AsyncRelayCommand OpenStorageFolderCommand { get; }
+
+    /// <summary>Opens the project page in the desktop's browser.</summary>
+    public AsyncRelayCommand OpenProjectPageCommand { get; }
 
     /// <summary>Every theme the drop-down offers.</summary>
     public IReadOnlyList<ThemeOption> ThemeOptions { get; } = ThemeOption.All;
@@ -88,4 +126,39 @@ public sealed class SettingsDialogViewModel : DialogViewModel
 
     /// <summary>Closes the dialog. There is nothing to accept: every choice has already applied.</summary>
     public RelayCommand CloseCommand { get; }
+
+    /// <summary>The folder a settings file sits in, which is also where the profiles are.</summary>
+    /// <param name="settingsFilePath">The store's own file.</param>
+    /// <returns>The parent folder, or the path itself when it has no parent to name.</returns>
+    /// <remarks>
+    /// The fallback is unreachable through <c>AppSettingsStore</c>, which always composes
+    /// <c>&lt;config&gt;/Enigma.Backup/settings.json</c> — but a path with no parent must not turn into
+    /// a null the button then tries to open.
+    /// </remarks>
+    private static string ResolveStorageFolder(string settingsFilePath) =>
+        Path.GetDirectoryName(settingsFilePath) is { Length: > 0 } folder ? folder : settingsFilePath;
+
+    /// <summary>Opens the storage folder, making it first if nothing has been written there yet.</summary>
+    /// <remarks>
+    /// A fresh install has no folder at all: the first profile and the first preference both create it,
+    /// and neither has happened. Refusing to open it — or opening an error dialog about it — would be
+    /// an odd answer to "show me where my files go", so the button makes the folder it promises.
+    /// </remarks>
+    private Task OnOpenStorageFolderAsync()
+    {
+        try
+        {
+            Directory.CreateDirectory(StorageFolder);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // A folder that cannot be made is one the launcher will decline to open, and the launcher
+            // is what says so. There is nothing to add here, and nothing worth a dialog.
+        }
+
+        return _launcher.OpenFolderAsync(StorageFolder);
+    }
+
+    /// <summary>Opens the project page.</summary>
+    private Task OnOpenProjectPageAsync() => _launcher.OpenUriAsync(AppInfo.ProjectPage);
 }
