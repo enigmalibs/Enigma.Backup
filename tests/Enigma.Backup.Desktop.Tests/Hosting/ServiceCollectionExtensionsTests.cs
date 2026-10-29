@@ -155,6 +155,20 @@ public sealed class ServiceCollectionExtensionsTests
             descriptor => descriptor.ServiceType.Name.Contains("MainWindowProvider", StringComparison.Ordinal));
     }
 
+    /// <remarks>
+    /// <c>App</c> hands the reporter to the process-wide hooks once, and the reporter remembers which
+    /// errors it has already shown — so a second instance would be one that forgets.
+    /// </remarks>
+    [Fact]
+    public void TheSafetyNetIsOneInstance()
+    {
+        using ServiceProvider provider = Build();
+
+        Assert.IsType<UnhandledErrorReporter>(provider.GetRequiredService<IUnhandledErrorReporter>());
+        Assert.Same(provider.GetRequiredService<IUnhandledErrorReporter>(), provider.GetRequiredService<IUnhandledErrorReporter>());
+        Assert.Same(TimeProvider.System, provider.GetRequiredService<TimeProvider>());
+    }
+
     [Fact]
     public void ViewsAndViewModelsArePerConsumer()
     {

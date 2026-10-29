@@ -22,6 +22,10 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // The dispatcher exists from here on, and a command that throws reaches it: hooked before
+        // anything else this method does, so nothing it does can fail unseen.
+        UnhandledExceptionHooks.InstallDispatcher();
+
         HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
         // Console + debug sinks only: this app has no file or remote logging.
@@ -62,8 +66,20 @@ public partial class App : Application
             AppSettings settings = services.GetRequiredService<IAppSettingsStore>().Load();
             services.GetRequiredService<IThemeSwitcher>().Apply(settings.Theme);
 
+            // The safety net is attached once the window is on screen: what failed before that was
+            // kept by the hooks, and is handed over here.
+            IUnhandledErrorReporter reporter = services.GetRequiredService<IUnhandledErrorReporter>();
+            window.Opened += (_, _) => UnhandledExceptionHooks.Attach(reporter);
+            desktop.ShutdownRequested += (_, _) => reporter.ShutdownStarted();
+
             desktop.MainWindow = window;
-            desktop.Exit += (_, _) => _host?.StopAsync().GetAwaiter().GetResult();
+            desktop.Exit += (_, _) =>
+            {
+                // Detached before the host stops, so a late report is traced rather than logged
+                // through a logger that is shutting down.
+                UnhandledExceptionHooks.Detach();
+                _host?.StopAsync().GetAwaiter().GetResult();
+            };
         }
 
         base.OnFrameworkInitializationCompleted();
