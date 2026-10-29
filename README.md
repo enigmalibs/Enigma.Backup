@@ -53,6 +53,23 @@ executable and its `app.ico` and — if you want your profiles gone too — the 
 If the Linux binary is not executable after unpacking (some archivers drop the permission bit),
 `chmod +x Enigma.Backup.Desktop`.
 
+### Linux: into your application launcher
+
+From a clone of this repository, `packaging/linux/install.sh` builds the app and installs it for you
+alone — no root, nothing outside your home directory — with a launcher entry, its icon, and an
+`enigma-backup` command in `~/.local/bin`. Run it again to upgrade in place.
+
+```bash
+./packaging/linux/install.sh                        # build with the .NET runtime bundled, then install
+./packaging/linux/install.sh --framework-dependent  # smaller; needs an installed .NET 10 runtime
+./packaging/linux/install.sh --from <dir>           # install a directory you already published
+./packaging/linux/uninstall.sh                      # remove exactly what install.sh wrote
+```
+
+Building needs the .NET 10 SDK; `--from` needs nothing but the published folder (for instance an
+unpacked release zip). Neither script ever touches `~/.config/Enigma.Backup` — your profiles and
+preferences survive an uninstall — nor any backup you wrote.
+
 ## Using it
 
 The app is a single window, top to bottom:
@@ -160,6 +177,7 @@ src/Enigma.Backup.Core       net10.0 library — profiles, scanning, archive pip
 src/Enigma.Backup.Desktop    net10.0 Avalonia 12 desktop app — MVVM layer over the core
 tests/Enigma.Backup.Core.Tests
 tests/Enigma.Backup.Desktop.Tests
+packaging/linux              the per-user install.sh / uninstall.sh with the launcher entry and icons
 docs/                        roadmap, per-item plans, completion records, release runbook
 ```
 
