@@ -56,8 +56,9 @@ Each runtime is published self-contained and single-file into `artifacts/publish
 to `artifacts/Enigma.Backup-X.Y.Z-<rid>.zip`. Confirm:
 
 - [ ] Both zips exist and their filenames carry `X.Y.Z`.
-- [ ] Each staging directory holds **exactly one file** — the executable. Anything else (notably the
-      Skia/HarfBuzz native `.pdb`s) means the publish-time filter in
+- [ ] Each staging directory holds **exactly two files** — the executable and `app.ico`, the icon
+      shortcuts and launchers point at (kept out of the single-file bundle on purpose). Anything else
+      (notably the Skia/HarfBuzz native `.pdb`s) means the publish-time filter in
       `src/Enigma.Backup.Desktop/Enigma.Backup.Desktop.csproj` has stopped working.
 - [ ] The **linux-x64 zip was built from Linux**. PowerShell's `Compress-Archive` records no Unix
       file mode, so a Linux zip built on Windows extracts without its executable bit.
