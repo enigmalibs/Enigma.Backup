@@ -28,7 +28,7 @@
 | FEATURE-5D75 | App icon in the output directory             | DONE        | docs/plan/FEATURE-5D75.md |
 | FEATURE-AD48 | Catch unhandled exceptions                   | IN PROGRESS | docs/plan/FEATURE-AD48.md |
 | - PHASE01    | Hooks, policy and logging                    | DONE        | (in FEATURE-AD48.md)      |
-| - PHASE02    | The error dialog                             | TODO        | (in FEATURE-AD48.md)      |
+| - PHASE02    | The error dialog                             | DONE        | (in FEATURE-AD48.md)      |
 | - PHASE03    | Startup failure window                       | TODO        | (in FEATURE-AD48.md)      |
 | FEATURE-61C4 | Linux install and uninstall scripts          | TODO        | docs/plan/FEATURE-61C4.md |
 | FEATURE-251A | Publish scripts for Windows and Linux        | TODO        | docs/plan/FEATURE-251A.md |

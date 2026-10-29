@@ -74,6 +74,14 @@ public interface IDialogService
     /// <param name="cancellationToken">Closes the dialog without waiting for the user.</param>
     Task ShowAboutAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Says that something nothing else caught went wrong, and that the app is still running — the
+    /// safety net's dialog. Nothing comes back: there is nothing to decide.
+    /// </summary>
+    /// <param name="errors">The errors to show; one counted into it while the dialog is open shows at once.</param>
+    /// <param name="cancellationToken">Closes the dialog without waiting for the user.</param>
+    Task ShowUnhandledErrorAsync(UnhandledErrorBatch errors, CancellationToken cancellationToken = default);
+
     /// <summary>Asks the user to confirm something before it happens.</summary>
     /// <param name="title">The dialog's title.</param>
     /// <param name="message">What is about to happen.</param>

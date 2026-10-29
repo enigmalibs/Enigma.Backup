@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             x:Class="Enigma.Backup.Desktop.Views.UnhandledErrorDialog"
+             x:DataType="vm:UnhandledErrorDialogViewModel"
+             MinWidth="480"
+             Focusable="True">
+
+  <!-- Every Enigma app's safety-net dialog (Enigma.GitClient's UnhandledErrorView), at the same size and
+       in the same style: change it there and here together, or not at all. -->
+
+  <!-- Enter closes it, as Escape does: the dialog asks nothing. -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding CloseCommand}" />
+  </UserControl.KeyBindings>
+
+  <StackPanel Spacing="12">
+
+    <TextBlock Name="LeadText"
+               Text="{Binding Lead}"
+               TextWrapping="Wrap"
+               MaxWidth="560"
+               HorizontalAlignment="Left"
+               Foreground="{DynamicResource EnigmaForegroundBrush}" />
+
+    <TextBlock Name="MessageText"
+               Text="{Binding Message}"
+               TextWrapping="Wrap"
+               MaxWidth="560"
+               HorizontalAlignment="Left"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource EnigmaForegroundBrush}" />
+
+    <TextBlock Name="MoreText"
+               Text="{Binding MoreText}"
+               IsVisible="{Binding HasMore}"
+               TextWrapping="Wrap"
+               MaxWidth="560"
+               HorizontalAlignment="Left"
+               Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" />
+
+    <!-- Collapsed: the details are for a bug report, not for reading. Selectable, so a part of them can
+         be copied too, and bounded, so a long stack scrolls inside the dialog. -->
+    <Expander Name="DetailsExpander"
+              Header="Details"
+              IsExpanded="False"
+              HorizontalAlignment="Stretch"
+              AutomationProperties.Name="Details of the error">
+      <StackPanel Spacing="8">
+        <TextBox Name="DetailsText"
+                 Text="{Binding Details, Mode=OneWay}"
+                 IsReadOnly="True"
+                 TextWrapping="NoWrap"
+                 AcceptsReturn="True"
+                 MaxHeight="220"
+                 MaxWidth="560"
+                 FontSize="12"
+                 FontFamily="monospace"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 AutomationProperties.Name="The details of the error" />
+        <Button Name="CopyDetailsButton"
+                HorizontalAlignment="Left"
+                Click="OnCopyDetailsClick"
+                ToolTip.Tip="Copy the details, to paste them into a bug report"
+                AutomationProperties.Name="Copy details">
+          <TextBlock Text="Copy details" />
+        </Button>
+      </StackPanel>
+    </Expander>
+  </StackPanel>
+</UserControl>

@@ -123,7 +123,7 @@ with no credentials.
 
 ## PHASE02 — The error dialog
 
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 
