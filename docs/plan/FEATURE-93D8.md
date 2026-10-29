@@ -1,6 +1,6 @@
 # FEATURE-93D8 — Release 1.3.0
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-93d8-release-1-3-0`
 **Run:** feature/2026-10-29-uniform-enigma-apps

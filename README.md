@@ -6,11 +6,11 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.2.0** — an input can be a **pattern** now (a folder plus a glob, worked out again
-> on every run), a backup can be written as a plain **`.zip`** that any file manager opens, `Restore…`
-> and `Verify…` moved up beside the settings gear, and `Settings` opens the folder your profiles live in
-> and says which version you are running. The archive container, the file names and every existing
-> profile are untouched, so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
+> **What's new in 1.3.0** — the final app icon, the **About** dialog every Enigma app shares (the ⓘ
+> beside the settings gear), and a **Something went wrong** dialog instead of a silent exit when an
+> unexpected error happens. Linux gets a per-user `install.sh` / `uninstall.sh`, and both platforms a
+> plain publish script. The archive container, the file names and every existing profile are untouched,
+> so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
 
 ## Capabilities
 
@@ -34,7 +34,9 @@ and verifies what it wrote.
   end-of-run summary of everything skipped.
 - **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
   bar), applied the moment you pick it and remembered afterwards. The same dialog opens the folder
-  your profiles and preferences live in, and says which version you are running.
+  your profiles and preferences live in; the ⓘ beside the gear says which version you are running.
+- **A safety net** — an unexpected error is shown in a dialog that says the app is still running, with
+  the details one click away for a bug report, instead of the app vanishing.
 
 ## Installing
 
@@ -44,8 +46,8 @@ It is self-contained — **no .NET runtime needs to be installed.**
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.2.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.2.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.3.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.3.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 There is no installer and nothing is written outside your home directory. To uninstall, delete the
 executable and its `app.ico` and — if you want your profiles gone too — the config folder listed below.

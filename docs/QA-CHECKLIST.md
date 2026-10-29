@@ -35,6 +35,11 @@ the settings gear; the bottom bar holds the accent **Back up** alone. Wherever �
 a restore" or "start a verify", that is where the button is now. Two new capabilities have sections of
 their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 
+**Since 1.3.0 About is a dialog of its own**, opened by the ⓘ right of the gear; Settings holds the
+theme and the storage folder only (§8). An unexpected error opens a **Something went wrong** dialog
+instead of ending the app (§7, 7.9–7.12 — these need a throwing build), and the zip carries `app.ico`
+beside the executable (§1).
+
 ## 1. The artifact itself
 
 | # | Check | L | W |
@@ -193,6 +198,32 @@ plus the usual `.sha256`, and it can never be encrypted.
 | 10.9 | Linux only: a restored executable has **lost** its executable bit — zip carries no Unix modes, and this is the documented cost | ☐ | — |
 | 10.10 | A profile hand-edited to `"compression": "Zip"` **and** `"encrypt": true` fails the run with a message naming the problem, and writes no archive | ☐ | ☐ |
 | 10.11 | A profile using Zip is saved as `"formatVersion": 2` | ☐ | ☐ |
+
+---
+
+## What was verified for 1.3.0
+
+**Against the Windows x64 zip** (`Enigma.Backup-1.3.0-win-x64.zip`, built here with `./publish.ps1 -Rid
+win-x64` and extracted to a scratch folder). The workstation session was locked for most of the run, so
+the checks below were driven and read through **UI Automation** rather than by eye, against the user's
+real (unmodified) profiles folder; nothing was clicked that writes.
+
+| # | Check | Result |
+|---|-------|--------|
+| 1.1 | The zip extracts to exactly two files, the executable and `app.ico` | Pass — `Enigma.Backup.Desktop.exe` (54,609,469 bytes) and `app.ico` (15,514 bytes, identical to the asset) |
+| 1.3 | It launches | Pass, **on a machine that has .NET installed** — the extracted exe starts and shows the main window. A runtime-free machine was not available, so "self-contained" is still the maintainer's check |
+| 1.4 | The window carries the title `Enigma.Backup` | Pass — read through UIA; the new icon was seen in the title bar of a Release build earlier in the run (FEATURE-9755) |
+| 3.10 | ⓘ sits right of the gear | Pass **by automation** — both buttons found by name (`Settings`, `About Enigma.Backup`) |
+| 8.13 | About shows `Enigma.Backup`, `Version 1.3.0`, a `Build` line and `Close` | Pass **by automation** — every one found by name in the open dialog; the exe's product version is `1.3.0+<sha>`. Seen by eye on a Release build of the same markup earlier in the run (FEATURE-4573), both variants |
+| 8.15 | Settings holds Theme and Storage only | Pass **by automation** — `Open folder` present, no project-page link |
+| 7.9–7.12 | The safety net and the startup window | Pass **by automation, on throwing builds that were not shipped** — see `docs/done/FEATURE-AD48-PHASE0{1,2,3}.md` |
+
+**What was *not* exercised.** The **Linux x64 zip** — `docs/RELEASE.md` requires it to be built on Linux,
+and this host is Windows — and with it every **L** column, `packaging/linux/install.sh` on a real desktop
+(its round trip ran in Git Bash against a scratch XDG tree, see `docs/done/FEATURE-61C4.md`), and the
+visual half of the new dialogs (7.9–7.12 and 8.13 by eye, in both variants). §§2–6, 9 and 10 were not
+re-run: nothing in this release touches profiles, the pipeline, restore, verify, patterns or zip, and
+the full automated suite (549 tests) is green.
 
 ---
 
