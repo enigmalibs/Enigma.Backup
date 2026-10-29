@@ -1,6 +1,6 @@
 # FEATURE-AD48 — Catch unhandled exceptions
 
-**Status:** TODO
+**Status:** IN PROGRESS
 **Type:** FEATURE (multi-phase — 3 phases)
 **Branch (per phase, at build time):** `feature/feature-ad48-phaseNN-<slug>`, one branch per phase, cut from the run-branch tip.
 **Run:** feature/2026-10-29-uniform-enigma-apps
@@ -71,7 +71,7 @@ with no credentials.
 
 ## PHASE01 — Hooks, policy and logging
 
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 
