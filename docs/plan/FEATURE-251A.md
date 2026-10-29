@@ -1,6 +1,6 @@
 # FEATURE-251A — Publish scripts for Windows and Linux
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-251a-publish-scripts`
 **Run:** feature/2026-10-29-uniform-enigma-apps
