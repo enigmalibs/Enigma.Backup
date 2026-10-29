@@ -39,7 +39,8 @@ and verifies what it wrote.
 ## Installing
 
 Download the zip for your platform from the release, unpack it anywhere, and run the single
-executable inside. It is self-contained — **no .NET runtime needs to be installed.**
+executable inside — `app.ico` beside it is the app's icon, for a shortcut or a launcher to point at.
+It is self-contained — **no .NET runtime needs to be installed.**
 
 | Platform | Zip | Run |
 |----------|-----|-----|
@@ -47,7 +48,7 @@ executable inside. It is self-contained — **no .NET runtime needs to be instal
 | Linux x64 | `Enigma.Backup-1.2.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 There is no installer and nothing is written outside your home directory. To uninstall, delete the
-executable and — if you want your profiles gone too — the config folder listed below.
+executable and its `app.ico` and — if you want your profiles gone too — the config folder listed below.
 
 If the Linux binary is not executable after unpacking (some archivers drop the permission bit),
 `chmod +x Enigma.Backup.Desktop`.

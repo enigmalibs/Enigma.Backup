@@ -39,7 +39,7 @@ their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 
 | # | Check | L | W |
 |---|-------|---|---|
-| 1.1 | The zip extracts to **exactly one file**, the executable | ☐ | ☐ |
+| 1.1 | The zip extracts to **exactly two files**: the executable and `app.ico` (the app's icon, identical to the one the window shows) | ☐ | ☐ |
 | 1.2 | Linux only: the extracted binary has its executable bit (`-rwxr-xr-x`) | ☐ | — |
 | 1.3 | It launches on a machine with **no .NET runtime installed** | ☐ | ☐ |
 | 1.4 | The window opens with the app icon and the title `Enigma.Backup` | ☐ | ☐ |
