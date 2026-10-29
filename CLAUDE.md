@@ -99,6 +99,19 @@ Invariants that are easy to violate and must be preserved:
   because the content is attached while the host is still collapsed). Without it the keys reach the
   window *behind* the scrim. Note also that the dialog's own buttons ignore a command's `CanExecute`,
   so a question that validates input drives `IsPrimaryButtonEnabled` from its view model.
+- **The dialogs take turns.** `DialogService` holds a one-slot gate from the moment a dialog is raised
+  until it has closed, because the one host replaces whatever it holds: a dialog asked for while another
+  is open waits. So never show a dialog from inside another dialog's handler — it would wait on itself
+  forever — and never put content on `IContentDialogService` around `DialogService`, which would bypass
+  the gate.
+- **Unhandled exceptions end in the safety net, which waits its turn.** `UnhandledExceptionHooks`
+  (static: `Install` is `Main`'s first line, `InstallDispatcher` the first line of `App`'s composition)
+  hands every exception nothing else caught to `UnhandledErrorReporter`. The reporter logs it at once,
+  then shows it through `IDialogService.ShowUnhandledErrorAsync`, behind any open question. It is
+  attached on the window's `Opened` — reports before that are buffered — and detached on `Exit` before
+  the host stops. `UnhandledErrorPolicy` decides what is shown: one dialog at a time, later errors counted
+  into it, the same error again within a minute only logged, requested cancellations never. It is a
+  safety net, not error handling: a failure the app expects is still said where it happens.
 - **The app's own preferences are Desktop-owned, and losing them is never fatal.** The theme variant
   (`System` / `Light` / `Dark`, default `System`) lives in `Desktop/Settings/` and is written to
   `<config>/Enigma.Backup/settings.json`, beside the `profiles/` folder — deliberately *not* in Core: a

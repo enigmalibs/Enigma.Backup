@@ -3,8 +3,8 @@ using System;
 namespace Enigma.Backup.Desktop.Services;
 
 /// <summary>
-/// The safety net: every exception nothing else caught ends up here, and is logged with where it was
-/// caught.
+/// The safety net: every exception nothing else caught ends up here, is logged, and is shown in a
+/// dialog that says the app is still running.
 /// </summary>
 /// <remarks>
 /// A safety net, not the error handling. A failure the app knows about is said where it happens, in
@@ -13,7 +13,7 @@ namespace Enigma.Backup.Desktop.Services;
 /// </remarks>
 public interface IUnhandledErrorReporter
 {
-    /// <summary>Logs an exception, from any thread.</summary>
+    /// <summary>Logs an exception and shows it, from any thread.</summary>
     /// <param name="exception">The exception.</param>
     /// <param name="source">Where it was caught.</param>
     void Report(Exception exception, UnhandledErrorSource source);

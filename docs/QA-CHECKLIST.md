@@ -126,6 +126,9 @@ their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 | 7.6 | `Cancel` **on the run card** stops the backup and deletes the partial archive | ☐ | ☐ |
 | 7.7 | Dismissing a decision dialog with **Escape**, or by clicking the dimmed area, aborts (it never silently skips) | ☐ | ☐ |
 | 7.8 | After an abort, a cancel and a failure alike, the card is gone and the window is clickable again | ☐ | ☐ |
+| 7.9 | An unexpected error (needs a throwing build — e.g. a temporary `throw` in a command) shows **Something went wrong** with the warning icon, its message and a single `Close`; the app keeps running afterwards | ☐ | ☐ |
+| 7.10 | A second error while that dialog is open adds "1 more error occurred." to it rather than opening another; *Details* expands to the type, message and stack, and **Copy details** puts them on the clipboard | ☐ | ☐ |
+| 7.11 | An unexpected error while another dialog is open (e.g. Settings) waits for that dialog to close, then appears — it never replaces it | ☐ | ☐ |
 
 ## 8. Settings: theme and storage; About
 

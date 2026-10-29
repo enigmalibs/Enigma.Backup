@@ -90,6 +90,10 @@ If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort
 *apply to all further errors* option. Aborting — like cancelling — deletes the partial archive, so a
 half-written backup is never left behind.
 
+If something goes wrong that the app did not see coming, it does not just close: a **Something went
+wrong** dialog says what happened and that the app is still running, with the technical details behind a
+*Details* expander and a **Copy details** button for a bug report.
+
 Profiles live in `%APPDATA%\Enigma.Backup\profiles` on Windows and
 `~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile. The app's own preferences
 sit in `settings.json` beside that folder. It appears the first time you change one, and deleting it
