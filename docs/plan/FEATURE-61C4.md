@@ -1,6 +1,6 @@
 # FEATURE-61C4 — Linux install and uninstall scripts
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-61c4-linux-install-scripts`
 **Run:** feature/2026-10-29-uniform-enigma-apps

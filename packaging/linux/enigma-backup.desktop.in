@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Enigma.Backup
+GenericName=Backup Tool
+Comment=Pack files and folders into one compressed, optionally encrypted archive — and restore and verify it
+Exec=@EXEC@
+Icon=enigma-backup
+Terminal=false
+Categories=Utility;Archiving;
+Keywords=backup;archive;restore;verify;compression;encryption;zip;tar;
+StartupNotify=true
+StartupWMClass=Enigma.Backup.Desktop
