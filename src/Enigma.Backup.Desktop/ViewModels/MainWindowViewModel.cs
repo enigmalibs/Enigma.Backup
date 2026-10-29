@@ -117,6 +117,7 @@ public sealed class MainWindowViewModel : ObservableObject
         ImportProfileCommand = new AsyncRelayCommand(OnImportProfileAsync, () => !IsBusy);
         ExportProfileCommand = new AsyncRelayCommand(OnExportProfileAsync, () => !IsBusy && HasSelectedProfile);
         OpenSettingsCommand = new AsyncRelayCommand(OnOpenSettingsAsync, () => !IsBusy);
+        OpenAboutCommand = new AsyncRelayCommand(OnOpenAboutAsync, () => !IsBusy);
         AddPatternCommand = new AsyncRelayCommand(OnAddPatternAsync, () => !IsBusy);
 
         BackupCommand = new AsyncRelayCommand(OnBackupAsync, () => !IsBusy && Editor.CanRun);
@@ -273,6 +274,12 @@ public sealed class MainWindowViewModel : ObservableObject
     /// simply the only bar the window has.
     /// </summary>
     public AsyncRelayCommand OpenSettingsCommand { get; }
+
+    /// <summary>
+    /// Says what this app is and which build is running — the About dialog every Enigma app shows,
+    /// from the button beside the gear.
+    /// </summary>
+    public AsyncRelayCommand OpenAboutCommand { get; }
 
     /// <summary>
     /// Adds a pattern input to the profile — the one input the editor cannot ask for on its own,
@@ -587,6 +594,8 @@ public sealed class MainWindowViewModel : ObservableObject
     // nothing for the window to do afterwards.
     private Task OnOpenSettingsAsync() => _dialogs.ShowSettingsAsync();
 
+    private Task OnOpenAboutAsync() => _dialogs.ShowAboutAsync();
+
     /// <summary>
     /// Asks for a pattern and adds it to the profile. The prompt lives here rather than on the editor
     /// because the editor asks the file system (through <see cref="IFilePicker"/>) and the window asks
@@ -900,6 +909,7 @@ public sealed class MainWindowViewModel : ObservableObject
         ImportProfileCommand.NotifyCanExecuteChanged();
         ExportProfileCommand.NotifyCanExecuteChanged();
         OpenSettingsCommand.NotifyCanExecuteChanged();
+        OpenAboutCommand.NotifyCanExecuteChanged();
         AddPatternCommand.NotifyCanExecuteChanged();
         BackupCommand.NotifyCanExecuteChanged();
         RestoreCommand.NotifyCanExecuteChanged();

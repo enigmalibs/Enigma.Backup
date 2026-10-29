@@ -35,11 +35,16 @@ the settings gear; the bottom bar holds the accent **Back up** alone. Wherever �
 a restore" or "start a verify", that is where the button is now. Two new capabilities have sections of
 their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 
+**Since 1.3.0 About is a dialog of its own**, opened by the ⓘ right of the gear; Settings holds the
+theme and the storage folder only (§8). An unexpected error opens a **Something went wrong** dialog
+instead of ending the app (§7, 7.9–7.12 — these need a throwing build), and the zip carries `app.ico`
+beside the executable (§1).
+
 ## 1. The artifact itself
 
 | # | Check | L | W |
 |---|-------|---|---|
-| 1.1 | The zip extracts to **exactly one file**, the executable | ☐ | ☐ |
+| 1.1 | The zip extracts to **exactly two files**: the executable and `app.ico` (the app's icon, identical to the one the window shows) | ☐ | ☐ |
 | 1.2 | Linux only: the extracted binary has its executable bit (`-rwxr-xr-x`) | ☐ | — |
 | 1.3 | It launches on a machine with **no .NET runtime installed** | ☐ | ☐ |
 | 1.4 | The window opens with the app icon and the title `Enigma.Backup` | ☐ | ☐ |
@@ -74,8 +79,8 @@ their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 | 3.7 | *Archive options* shows **Compression** and **Encrypt with a password** as two cards; the compression text under the card changes with the choice | ☐ | ☐ |
 | 3.8 | At the window's **minimum size** nothing overlaps — the headings stay above their lists and the action row stays visible | ☐ | ☐ |
 | 3.9 | `Add pattern…` sits beside `Add files…` and `Add folder…`; at the minimum width the five buttons wrap to two rows and all stay pressable (the rule itself is §9) | ☐ | ☐ |
-| 3.10 | The top bar reads `Profile │ combo │ status │ Restore… │ Verify… │ ▏ │ ⚙` and the bottom bar holds **Back up** alone; all three top-bar controls are the same height | ☐ | ☐ |
-| 3.11 | All of `Restore…`, `Verify…` and the gear grey out while a run is in progress, and come back when it ends | ☐ | ☐ |
+| 3.10 | The top bar reads `Profile │ combo │ status │ Restore… │ Verify… │ ▏ │ ⚙ │ ⓘ` and the bottom bar holds **Back up** alone; all four top-bar controls are the same height | ☐ | ☐ |
+| 3.11 | All of `Restore…`, `Verify…`, the gear and ⓘ grey out while a run is in progress, and come back when it ends | ☐ | ☐ |
 
 ## 4. Backup
 
@@ -126,12 +131,16 @@ their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 | 7.6 | `Cancel` **on the run card** stops the backup and deletes the partial archive | ☐ | ☐ |
 | 7.7 | Dismissing a decision dialog with **Escape**, or by clicking the dimmed area, aborts (it never silently skips) | ☐ | ☐ |
 | 7.8 | After an abort, a cancel and a failure alike, the card is gone and the window is clickable again | ☐ | ☐ |
+| 7.9 | An unexpected error (needs a throwing build — e.g. a temporary `throw` in a command) shows **Something went wrong** with the warning icon, its message and a single `Close`; the app keeps running afterwards | ☐ | ☐ |
+| 7.10 | A second error while that dialog is open adds "1 more error occurred." to it rather than opening another; *Details* expands to the type, message and stack, and **Copy details** puts them on the clipboard | ☐ | ☐ |
+| 7.11 | An unexpected error while another dialog is open (e.g. Settings) waits for that dialog to close, then appears — it never replaces it | ☐ | ☐ |
+| 7.12 | A failure during start-up (needs a throwing build — a temporary `throw` in `App.Compose`) opens a small `Enigma.Backup` window with the same dialog, saying the app could not start; `Close` ends the process | ☐ | ☐ |
 
-## 8. Settings: theme, storage and About
+## 8. Settings: theme and storage; About
 
 The theme preference (1.1.0) lives in `settings.json` **beside** the `profiles/` folder —
 `%APPDATA%\Enigma.Backup\settings.json` / `~/.config/Enigma.Backup/settings.json`. The Storage card
-and the About section (1.2.0) store nothing of their own; they read what is already there.
+(1.2.0) and the About dialog (1.3.0) store nothing of their own; they read what is already there.
 
 | # | Check | L | W |
 |---|-------|---|---|
@@ -147,9 +156,9 @@ and the About section (1.2.0) store nothing of their own; they read what is alre
 | 8.10 | A **Storage** card names the config folder and carries an **Open folder** button | ☐ | ☐ |
 | 8.11 | `Open folder` shows that folder in the desktop's file manager, with `settings.json` and `profiles/` in it | ☐ | ☐ |
 | 8.12 | On a fresh config — nothing written yet — `Open folder` **creates** the folder and opens it rather than reporting an error | ☐ | ☐ |
-| 8.13 | The **About** section shows the app icon, `Enigma.Backup`, `Version 1.2.0` and the copyright line | ☐ | ☐ |
-| 8.14 | The project-page link opens `github.com/enigmalibs/Enigma.Backup` in the browser, and its colour follows the theme | ☐ | ☐ |
-| 8.15 | The whole dialog fits its host — nothing scrolls and nothing is clipped, in both variants | ☐ | ☐ |
+| 8.13 | The ⓘ beside the gear opens **About**, with no title bar text and no header icon: the app icon, `Enigma.Backup`, `Version 1.3.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
+| 8.14 | About's only button is `Close`; Escape and Enter close it too, and the build sha can be selected and copied | ☐ | ☐ |
+| 8.15 | Settings and About each fit their host — nothing scrolls and nothing is clipped, in both variants; Settings holds Theme and Storage only | ☐ | ☐ |
 
 ## 9. Pattern inputs
 
@@ -189,6 +198,32 @@ plus the usual `.sha256`, and it can never be encrypted.
 | 10.9 | Linux only: a restored executable has **lost** its executable bit — zip carries no Unix modes, and this is the documented cost | ☐ | — |
 | 10.10 | A profile hand-edited to `"compression": "Zip"` **and** `"encrypt": true` fails the run with a message naming the problem, and writes no archive | ☐ | ☐ |
 | 10.11 | A profile using Zip is saved as `"formatVersion": 2` | ☐ | ☐ |
+
+---
+
+## What was verified for 1.3.0
+
+**Against the Windows x64 zip** (`Enigma.Backup-1.3.0-win-x64.zip`, built here with `./publish.ps1 -Rid
+win-x64` and extracted to a scratch folder). The workstation session was locked for most of the run, so
+the checks below were driven and read through **UI Automation** rather than by eye, against the user's
+real (unmodified) profiles folder; nothing was clicked that writes.
+
+| # | Check | Result |
+|---|-------|--------|
+| 1.1 | The zip extracts to exactly two files, the executable and `app.ico` | Pass — `Enigma.Backup.Desktop.exe` (54,609,469 bytes) and `app.ico` (15,514 bytes, identical to the asset) |
+| 1.3 | It launches | Pass, **on a machine that has .NET installed** — the extracted exe starts and shows the main window. A runtime-free machine was not available, so "self-contained" is still the maintainer's check |
+| 1.4 | The window carries the title `Enigma.Backup` | Pass — read through UIA; the new icon was seen in the title bar of a Release build earlier in the run (FEATURE-9755) |
+| 3.10 | ⓘ sits right of the gear | Pass **by automation** — both buttons found by name (`Settings`, `About Enigma.Backup`) |
+| 8.13 | About shows `Enigma.Backup`, `Version 1.3.0`, a `Build` line and `Close` | Pass **by automation** — every one found by name in the open dialog; the exe's product version is `1.3.0+<sha>`. Seen by eye on a Release build of the same markup earlier in the run (FEATURE-4573), both variants |
+| 8.15 | Settings holds Theme and Storage only | Pass **by automation** — `Open folder` present, no project-page link |
+| 7.9–7.12 | The safety net and the startup window | Pass **by automation, on throwing builds that were not shipped** — see `docs/done/FEATURE-AD48-PHASE0{1,2,3}.md` |
+
+**What was *not* exercised.** The **Linux x64 zip** — `docs/RELEASE.md` requires it to be built on Linux,
+and this host is Windows — and with it every **L** column, `packaging/linux/install.sh` on a real desktop
+(its round trip ran in Git Bash against a scratch XDG tree, see `docs/done/FEATURE-61C4.md`), and the
+visual half of the new dialogs (7.9–7.12 and 8.13 by eye, in both variants). §§2–6, 9 and 10 were not
+re-run: nothing in this release touches profiles, the pipeline, restore, verify, patterns or zip, and
+the full automated suite (549 tests) is green.
 
 ---
 

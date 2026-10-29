@@ -17,11 +17,16 @@ dotnet build Enigma.Backup.slnx -c Release      # also check Release: Diagnostic
 dotnet run --project src/Enigma.Backup.Desktop  # run the desktop app
 dotnet test --solution Enigma.Backup.slnx       # xUnit v3 on MTP — note: --solution, not a positional arg
 ./publish.sh                                    # release zips for win-x64 + linux-x64 (publish.ps1 on Windows)
+./packaging/linux/publish.sh                    # plain ReadyToRun publish into bin/ (windows/publish.ps1|.bat)
+./packaging/linux/install.sh                    # per-user Linux install; uninstall.sh removes it
 ```
 
 `publish.sh` / `publish.ps1` build self-contained single-file apps into `artifacts/publish/<rid>/`
 and zip them; `<Version>` in `Directory.Build.props` names the zips. Build the **linux-x64** zip from
-Linux — `Compress-Archive` records no Unix file mode. Full procedure: `docs/RELEASE.md`.
+Linux — `Compress-Archive` records no Unix file mode. Full procedure: `docs/RELEASE.md`. The
+`packaging/` scripts are the plain publish and the Linux installer every Enigma app has, not the release:
+keep `packaging/linux/*.sh` at mode `100755` (`git update-index --chmod=+x` when adding one from Windows)
+and `publish.bat` CRLF (`.gitattributes` does the latter).
 
 **Warnings are build errors solution-wide** (`TreatWarningsAsErrors`), and the root `.editorconfig`
 is enforced at build time (`EnforceCodeStyleInBuild`) — a style rule at `warning` severity fails the
@@ -59,7 +64,7 @@ Invariants that are easy to violate and must be preserved:
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
 - **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run card, the
-  outcome banner, the theme variant, opening a folder or a link on the desktop, and UI-thread
+  outcome banner, the theme variant, opening a folder on the desktop, and UI-thread
   marshaling enter through `IFilePicker` / `IDialogService` / `IProgressOverlay` /
   `INotificationService` / `IThemeSwitcher` / `IShellLauncher` / `IUiDispatcher`
   (`Desktop/Services/`, with the Avalonia
@@ -99,6 +104,23 @@ Invariants that are easy to violate and must be preserved:
   because the content is attached while the host is still collapsed). Without it the keys reach the
   window *behind* the scrim. Note also that the dialog's own buttons ignore a command's `CanExecute`,
   so a question that validates input drives `IsPrimaryButtonEnabled` from its view model.
+- **The dialogs take turns.** `DialogService` holds a one-slot gate from the moment a dialog is raised
+  until it has closed, because the one host replaces whatever it holds: a dialog asked for while another
+  is open waits. So never show a dialog from inside another dialog's handler — it would wait on itself
+  forever — and never put content on `IContentDialogService` around `DialogService`, which would bypass
+  the gate.
+- **Unhandled exceptions end in the safety net, which waits its turn.** `UnhandledExceptionHooks`
+  (static: `Install` is `Main`'s first line, `InstallDispatcher` the first line of `App`'s composition)
+  hands every exception nothing else caught to `UnhandledErrorReporter`. The reporter logs it at once,
+  then shows it through `IDialogService.ShowUnhandledErrorAsync`, behind any open question. It is
+  attached on the window's `Opened` — reports before that are buffered — and detached on `Exit` before
+  the host stops. `UnhandledErrorPolicy` decides what is shown: one dialog at a time, later errors counted
+  into it, the same error again within a minute only logged, requested cancellations never. It is a
+  safety net, not error handling: a failure the app expects is still said where it happens. A failure
+  inside `App.Compose` — before there is a container or a main window — is caught in
+  `OnFrameworkInitializationCompleted`, which disposes the half-built host and makes a
+  `StartupErrorWindow` the main window instead: the same dialog on a host of its own, configured by hand
+  because `DialogService` may be what failed. Closing it ends the app.
 - **The app's own preferences are Desktop-owned, and losing them is never fatal.** The theme variant
   (`System` / `Light` / `Dark`, default `System`) lives in `Desktop/Settings/` and is written to
   `<config>/Enigma.Backup/settings.json`, beside the `profiles/` folder — deliberately *not* in Core: a
@@ -188,9 +210,9 @@ Invariants that are easy to violate and must be preserved:
 - **UI strings are hardcoded English** — an explicit decision for this app; no `.resx`.
 - **Central Package Management**: versions live only in `Directory.Packages.props`; `.csproj` files
   reference packages without a `Version`. The Avalonia set is version-coupled — bump it as a unit, and
-  `Enigma.Avalonia.Desktop` belongs to it (it pins Avalonia 12.1.1 itself, so it moves with the set or
-  not at all). `Enigma.Core` arrives both from Core's own 1.1.0 pin and transitively from
-  `Enigma.Avalonia.Desktop` at 1.0.0; the higher version wins, and
+  `Enigma.Avalonia.Desktop` belongs to it (it pins Avalonia 12.1.4 itself, so it moves with the set or
+  not at all). `Enigma.Core` arrives both from Core's own 2.0.0 pin and transitively from
+  `Enigma.Avalonia.Desktop` as a 1.0.0 floor; the higher version wins, and
   `GoldenArchiveCompatibilityTests` is what guards that resolution.
 - **New extension methods use C# 14 `extension(...)` blocks**, not the legacy `this`-parameter form
   (the sibling repos Draw/HardCopy still use the old form — don't copy it across).
@@ -212,5 +234,7 @@ commit), so there is no base branch to fork later phases from other than the cur
   screenshotting it (e.g. `spectacle -b -n -f -o out.png`) works, so verify UI changes for real.
   Kill the process by PID afterwards — a `pkill -f` pattern that matches the launching shell will
   kill the shell too.
-- The app icon `src/Enigma.Backup.Desktop/Assets/enigma-backup.ico` is placeholder art
-  (16/32/48/256 px); final art comes from the user.
+- The app icon `src/Enigma.Backup.Desktop/Assets/enigma-backup.ico` (ten PNG frames, 16–256 px) and
+  `enigma-backup.png` (its 256-px frame) are the final art, copied byte for byte from the user's
+  `Branding/Apps/final/backup` set, whose SVG masters live outside this repository. Replace them from
+  there, never by re-rendering here.

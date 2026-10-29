@@ -12,13 +12,13 @@ namespace Enigma.Backup.Desktop.Tests.ViewModels;
 
 /// <summary>
 /// The Settings dialog: the theme it opens on, what a choice does, where it says the app's files are,
-/// what it says this build is, and the gear that raises it.
+/// and the gear that raises it.
 /// </summary>
 /// <remarks>
 /// A theme choice applies and persists in the same step, so the two seams are asserted together — a
 /// theme that was painted but not written is a preference that vanishes at the next start, and one that
-/// was written but not painted is a click that appears to do nothing. The two buttons are asserted
-/// against the launcher for the same reason: neither has any other observable effect.
+/// was written but not painted is a click that appears to do nothing. The folder button is asserted
+/// against the launcher for the same reason: it has no other observable effect.
 /// </remarks>
 public sealed class SettingsDialogViewModelTests
 {
@@ -140,7 +140,6 @@ public sealed class SettingsDialogViewModelTests
         await viewModel.OpenStorageFolderCommand.ExecuteAsync(null);
 
         Assert.Equal(folder, Assert.Single(launcher.Folders));
-        Assert.Empty(launcher.Uris);
     }
 
     /// <remarks>
@@ -163,30 +162,6 @@ public sealed class SettingsDialogViewModelTests
 
         Assert.True(Directory.Exists(folder));
         Assert.Equal(folder, Assert.Single(launcher.Folders));
-    }
-
-    [Fact]
-    public async Task TheProjectLinkOpensTheRepository()
-    {
-        FakeShellLauncher launcher = new();
-        SettingsDialogViewModel viewModel = Build(launcher);
-
-        await viewModel.OpenProjectPageCommand.ExecuteAsync(null);
-
-        Assert.Equal(AppInfo.ProjectPage, Assert.Single(launcher.Uris));
-        Assert.Empty(launcher.Folders);
-    }
-
-    [Fact]
-    public void AboutSaysWhatThisBuildIs()
-    {
-        SettingsDialogViewModel viewModel = Build();
-
-        Assert.Equal("Enigma.Backup", viewModel.ApplicationName);
-        Assert.Equal($"Version {AppInfo.Version}", viewModel.VersionLabel);
-        Assert.DoesNotContain('+', viewModel.VersionLabel);
-        Assert.Equal(AppInfo.Copyright, viewModel.Copyright);
-        Assert.Equal("github.com/enigmalibs/Enigma.Backup", viewModel.ProjectPageLabel);
     }
 
     [Fact]

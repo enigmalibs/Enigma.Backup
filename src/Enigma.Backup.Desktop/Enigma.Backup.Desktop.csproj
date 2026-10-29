@@ -35,6 +35,14 @@
     <AvaloniaResource Include="Assets/**" />
   </ItemGroup>
 
+  <!-- The icon as a file too, beside the executable in the build output and the publish folder, for
+       shortcuts, launchers and installers to point at. `app.ico` is the name every Enigma app uses.
+       Excluded from the single-file bundle the release zips are built as: bundled, it would be inside
+       the executable again, which is the one place a shortcut cannot point. -->
+  <ItemGroup>
+    <None Include="Assets/enigma-backup.ico" CopyToOutputDirectory="PreserveNewest" TargetPath="app.ico" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
   <!--
     Skia and HarfBuzz (Avalonia's rendering stack) ship native .pdb symbol files beside their
     runtime libraries — 105 MB of them on win-x64, more than the app itself. They arrive as

@@ -1,3 +1,98 @@
+# Enigma.Backup v1.3.0 Release Notes
+
+Enigma.Backup joins the baseline every Enigma app now shares. It wears its **final icon**, opens the
+**same About dialog** as its siblings, and no longer just disappears when something goes wrong that
+nobody saw coming — it says so in a **Something went wrong** dialog and keeps running. Around the app,
+the icon is now written **beside the executable** for shortcuts to point at, Linux gets a per-user
+**install and uninstall** pair, and both platforms get the plain **publish scripts** every Enigma app
+has.
+
+Nothing about a backup changed. The `EBK1` container version byte has not moved, profiles are written
+exactly as 1.2.0 wrote them, and the real 1.0.0 archive checked into the test suite is still verified
+and restored byte-for-byte on every build — now on top of Enigma.Core 2.0.0.
+
+## What is new
+
+- **The final app icon.** The placeholder art is gone: the window, the taskbar, the executable and the
+  About dialog all show the new icon — a page with a zip down its spine.
+- **About is a dialog of its own, and the same one every Enigma app shows.** The ⓘ beside the settings
+  gear opens it: the icon, `Enigma.Backup`, the version, the build it was cut from (selectable, for a
+  bug report) and the copyright — the layout, sizes and colours of Enigma.GitClient's About, element
+  for element. **Settings** now holds just the two things that are settings: the theme and the storage
+  folder. The project-page link that sat in the old About section is gone with it.
+- **A safety net for the unexpected.** An error the app did not see coming used to end it on the spot.
+  Now it is logged and shown in a **Something went wrong** dialog that says the app is still running,
+  with the message up front and the type, message and stack behind a *Details* expander and a
+  **Copy details** button. Errors that keep coming are counted into the dialog already open ("2 more
+  errors occurred.") instead of stacking up; the same error again within a minute is only logged; a
+  cancellation you asked for is never an error. The dialog waits its turn: an error during a question
+  — a password, a restore conflict — appears once that question is answered, never in its place.
+- **A failed start says so.** If the app fails while it is still starting, the same dialog appears in a
+  small window of its own, and closing it ends the app — rather than nothing appearing at all.
+- **`app.ico` beside the executable.** The build output, every publish and the release zips carry the
+  app's icon as a file next to the executable, so a shortcut or a launcher can point at it.
+- **Linux: into your application launcher.** `packaging/linux/install.sh` builds the app — or takes a
+  folder you already published, with `--from` — and installs it for you alone: no root, nothing outside
+  your home directory, a launcher entry with the icon at eight sizes, and an `enigma-backup` command.
+  Run it again to upgrade in place; `uninstall.sh` removes exactly what it wrote. Neither ever touches
+  `~/.config/Enigma.Backup` or a backup you made.
+- **A plain publish on both platforms.** `packaging/windows/publish.ps1` (or `publish.bat` from cmd) and
+  `packaging/linux/publish.sh` run a Release, ReadyToRun publish for `win-x64` / `linux-x64` from any
+  directory. The release zips are still built by the scripts at the repository root.
+
+## Files
+
+- **Nothing new is stored, and nothing stored changed.** Profiles are written exactly as 1.2.0 wrote
+  them — `formatVersion` 1 unless a pattern input or Zip asks for 2 — and `settings.json` still holds
+  the theme and nothing else.
+- **The release zip holds two files now**: the executable and `app.ico`.
+- **Errors are logged, not filed.** The safety net writes through the app's existing console and debug
+  logging; there is still no log file, and nothing is sent anywhere. **Copy details** is how an error
+  reaches a bug report.
+
+## Dependencies
+
+Every package is on its latest stable release:
+
+- **Enigma.Core 1.1.0 → 2.0.0** — a major release of the library under the `EBK1` container. Its breaking
+  changes are confined to the RSA and X.509 API, which Enigma.Backup never calls; AES-256-GCM and
+  Argon2id are untouched, and the golden 1.0.0 archive in the test suite proves it on every build.
+  BouncyCastle.Cryptography stays at **2.7.0**.
+- **The coupled Avalonia set 12.1.1 → 12.1.4** — `Avalonia`, `Avalonia.Desktop`,
+  `Avalonia.Themes.Fluent` and `Avalonia.Fonts.Inter` — moved as a unit with **Enigma.Avalonia.Desktop
+  1.0.0 → 1.3.0**, which is built against 12.1.4 and backward compatible with 1.0.0 (new theme keys and
+  options only). `AvaloniaUI.DiagnosticsSupport` stays at 2.2.3, its latest.
+- **Microsoft.Extensions** (Hosting, DependencyInjection, DependencyInjection.Abstractions,
+  FileSystemGlobbing, Logging.Abstractions) **10.0.10 → 10.0.14**.
+- **xunit.v3 3.2.2 → 4.0.2** (tests only).
+- Unchanged, already the latest: CommunityToolkit.Mvvm 8.4.2, ZstdSharp.Port 0.8.8, Enigma.Icons /
+  Enigma.Icons.Phosphor / Enigma.Icons.Avalonia 1.0.0.
+- `dotnet list package --outdated` reports no update available for any of the four projects, and
+  `--vulnerable --include-transitive` reports no known vulnerability.
+
+## Compatibility
+
+- **The `EBK1` container version byte is unchanged.** Every encrypted archive written by 1.0.0 through
+  1.2.0 opens, verifies and restores here. A real 1.0.0 archive is checked into the test suite and is
+  verified and restored byte-for-byte on every build — the check that matters most with Enigma.Core
+  moving a major version underneath.
+- **Profiles are unchanged in both directions**: everything 1.2.0 wrote opens here, and everything this
+  build writes opens in 1.2.0. The `formatVersion` 1 / 2 rule from 1.2.0 holds as it was.
+- **Archive naming, the `.sha256` sidecar format and the `.zip` format are unchanged.**
+- **Removed:** the project-page link in Settings — the uniform About dialog carries no link.
+- **Windows x64** and **Linux x64**, still shipped as self-contained single-file zips that need no
+  installed .NET runtime.
+
+## Version
+
+- Minor release: **1.3.0**. User-visible functionality is added — the About dialog, the safety net,
+  the icon file, the Linux installer and the publish scripts — and nothing already released breaks: the
+  `EBK1` byte, archive naming, the sidecar format and both profile versions are untouched. A major
+  version of a *dependency* is not a break of this app's own contract, and the golden archive is the
+  evidence that it did not become one.
+
+---
+
 # Enigma.Backup v1.2.0 Release Notes
 
 Two additions to what a backup can *be*, and two corrections to where the app keeps things. An input

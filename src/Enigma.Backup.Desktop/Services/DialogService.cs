@@ -35,12 +35,21 @@ namespace Enigma.Backup.Desktop.Services;
 /// through <see cref="IUiDispatcher"/>; callers never have to know where they are.
 /// </para>
 /// <para>
+/// There is one host for the whole app, and showing a dialog on it replaces whatever it held. So the
+/// dialogs take turns: one asked for while another is open waits for it to close. Nothing in the
+/// workflow asks two questions at once; the safety net's dialog is what can arrive in the middle of
+/// one, and it must wait rather than take the question's place.
+/// </para>
+/// <para>
 /// This is one of the two places allowed to name the control library's services — the view models
 /// see only <see cref="IDialogService"/>, which is what keeps them testable without a UI.
 /// </para>
 /// </remarks>
 public sealed class DialogService : IDialogService
 {
+    /// <summary>The host's turn: held from the moment a dialog is raised until it has closed.</summary>
+    private readonly SemaphoreSlim _turn = new(1, 1);
+
     private readonly IContentDialogService _dialogs;
     private readonly IUiDispatcher _dispatcher;
     private readonly IFilePicker _filePicker;
@@ -60,7 +69,7 @@ public sealed class DialogService : IDialogService
     /// questions' data is: this is where each dialog's view model is built.
     /// </param>
     /// <param name="themes">Applies the theme the Settings dialog chooses.</param>
-    /// <param name="launcher">Opens the storage folder and the project page the Settings dialog offers.</param>
+    /// <param name="launcher">Opens the storage folder the Settings dialog offers.</param>
     public DialogService(
         IContentDialogService dialogs,
         IUiDispatcher dispatcher,
@@ -226,6 +235,47 @@ public sealed class DialogService : IDialogService
             cancellationToken);
 
     /// <inheritdoc />
+    public async Task ShowAboutAsync(CancellationToken cancellationToken = default) =>
+        await ShowAsync(
+            new AboutDialogViewModel(),
+            static viewModel => new AboutDialog(viewModel),
+            static (_, dialog, _) =>
+            {
+                // No title and no icon: the card draws them as a column beside the content, and the
+                // content already shows the app's own icon and name above everything else.
+                dialog.Title = null;
+
+                // One button, and it only dismisses: the dialog asks nothing.
+                dialog.CloseButtonText = "Close";
+                dialog.DefaultButton = DefaultButton.Close;
+            },
+            static _ => true,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public async Task ShowUnhandledErrorAsync(UnhandledErrorBatch errors, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(errors);
+
+        await ShowAsync(
+            new UnhandledErrorDialogViewModel(errors),
+            static viewModel => new UnhandledErrorDialog(viewModel),
+            static (_, dialog, _) =>
+            {
+                dialog.Title = "Something went wrong";
+                dialog.IconData = Glyph(PhosphorIcon.Warning);
+                dialog.IconBrush = Brush("EnigmaWarningBrush");
+
+                // One button, and it only dismisses: the app is still running, and there is nothing to
+                // decide.
+                dialog.CloseButtonText = "Close";
+                dialog.DefaultButton = DefaultButton.Close;
+            },
+            static _ => true,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task ShowMessageAsync(string title, string message, MessageSeverity severity, CancellationToken cancellationToken = default) =>
         await ShowMessageAsync(new MessageDialogViewModel(title, message, severity), cancellationToken);
 
@@ -321,75 +371,114 @@ public sealed class DialogService : IDialogService
                 return readResult(viewModel);
             }
 
-            bool closed = false;
-            bool closingItself = false;
-
-            // The dialog closes itself right after running the command bound to one of its buttons.
-            // Closing it a second time from here would hand the *next* dialog this one's result, so
-            // this acts only on an answer that arrived another way — the content's Enter binding.
-            void OnCloseRequested(object? sender, EventArgs e)
+            // Wait for the host: a dialog already open keeps it until it closes. A run stopped while its
+            // question waits here gets the same answer as one stopped before asking.
+            try
             {
-                if (!closingItself && !closed)
-                {
-                    _ = _dialogs.HideAsync();
-                }
+                await _turn.WaitAsync(cancellationToken);
             }
-
-            ICommand Button(ICommand inner) => new RelayCommand(() =>
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                closingItself = true;
-
-                // The dialog's buttons do not consult CanExecute, so a still-invalid answer has to be
-                // refused here. The dialog closes regardless, and an unanswered view model reads as
-                // a dismissal — which is why the button is also greyed out (see isPrimaryEnabled).
-                if (inner.CanExecute(null))
-                {
-                    inner.Execute(null);
-                }
-            });
-
-            PropertyChangedEventHandler? onViewModelChanged = null;
-
-            viewModel.CloseRequested += OnCloseRequested;
-
-            // A run stopped while its question is on screen takes the question with it. The callback
-            // is posted, so it is guarded on `closed` as well: there is one dialog host for the whole
-            // app, and a late registration would otherwise close whatever had been asked since.
-            await using CancellationTokenRegistration registration = cancellationToken.Register(
-                () => _dispatcher.Post(() =>
-                {
-                    if (!closed)
-                    {
-                        _ = _dialogs.HideAsync();
-                    }
-                }));
+                return readResult(viewModel);
+            }
 
             try
             {
-                await _dialogs.ShowAsync(dialog =>
-                {
-                    dialog.Content = createContent(viewModel);
-                    configure(viewModel, dialog, Button);
-
-                    if (isPrimaryEnabled is not null)
-                    {
-                        dialog.IsPrimaryButtonEnabled = isPrimaryEnabled(viewModel);
-                        onViewModelChanged = (_, _) => dialog.IsPrimaryButtonEnabled = isPrimaryEnabled(viewModel);
-                        viewModel.PropertyChanged += onViewModelChanged;
-                    }
-                });
+                return await ShowOnHostAsync(viewModel, createContent, configure, readResult, cancellationToken, isPrimaryEnabled);
             }
             finally
             {
-                closed = true;
-                viewModel.CloseRequested -= OnCloseRequested;
-
-                if (onViewModelChanged is not null)
-                {
-                    viewModel.PropertyChanged -= onViewModelChanged;
-                }
+                _turn.Release();
             }
-
-            return readResult(viewModel);
         });
+
+    /// <summary>Raises one dialog on the host, which the caller holds the turn for, and reads its answer back.</summary>
+    /// <typeparam name="TViewModel">The dialog's view model.</typeparam>
+    /// <typeparam name="TResult">What the answer is.</typeparam>
+    /// <param name="viewModel">The view model, already built with the question.</param>
+    /// <param name="createContent">Builds the control that shows it.</param>
+    /// <param name="configure">Titles the dialog and maps the question's answers onto its buttons.</param>
+    /// <param name="readResult">Reads the answer once the dialog has closed.</param>
+    /// <param name="cancellationToken">Closes the dialog if the run it belongs to is stopped.</param>
+    /// <param name="isPrimaryEnabled">Whether the primary button can be pressed.</param>
+    private async Task<TResult> ShowOnHostAsync<TViewModel, TResult>(
+        TViewModel viewModel,
+        Func<TViewModel, Control> createContent,
+        Action<TViewModel, ContentDialog, Func<ICommand, ICommand>> configure,
+        Func<TViewModel, TResult> readResult,
+        CancellationToken cancellationToken,
+        Func<TViewModel, bool>? isPrimaryEnabled)
+        where TViewModel : DialogViewModel
+    {
+        bool closed = false;
+        bool closingItself = false;
+
+        // The dialog closes itself right after running the command bound to one of its buttons.
+        // Closing it a second time from here would hand the *next* dialog this one's result, so
+        // this acts only on an answer that arrived another way — the content's Enter binding.
+        void OnCloseRequested(object? sender, EventArgs e)
+        {
+            if (!closingItself && !closed)
+            {
+                _ = _dialogs.HideAsync();
+            }
+        }
+
+        ICommand Button(ICommand inner) => new RelayCommand(() =>
+        {
+            closingItself = true;
+
+            // The dialog's buttons do not consult CanExecute, so a still-invalid answer has to be
+            // refused here. The dialog closes regardless, and an unanswered view model reads as
+            // a dismissal — which is why the button is also greyed out (see isPrimaryEnabled).
+            if (inner.CanExecute(null))
+            {
+                inner.Execute(null);
+            }
+        });
+
+        PropertyChangedEventHandler? onViewModelChanged = null;
+
+        viewModel.CloseRequested += OnCloseRequested;
+
+        // A run stopped while its question is on screen takes the question with it. The callback
+        // is posted, so it is guarded on `closed` as well: there is one dialog host for the whole
+        // app, and a late registration would otherwise close whatever had been asked since.
+        await using CancellationTokenRegistration registration = cancellationToken.Register(
+            () => _dispatcher.Post(() =>
+            {
+                if (!closed)
+                {
+                    _ = _dialogs.HideAsync();
+                }
+            }));
+
+        try
+        {
+            await _dialogs.ShowAsync(dialog =>
+            {
+                dialog.Content = createContent(viewModel);
+                configure(viewModel, dialog, Button);
+
+                if (isPrimaryEnabled is not null)
+                {
+                    dialog.IsPrimaryButtonEnabled = isPrimaryEnabled(viewModel);
+                    onViewModelChanged = (_, _) => dialog.IsPrimaryButtonEnabled = isPrimaryEnabled(viewModel);
+                    viewModel.PropertyChanged += onViewModelChanged;
+                }
+            });
+        }
+        finally
+        {
+            closed = true;
+            viewModel.CloseRequested -= OnCloseRequested;
+
+            if (onViewModelChanged is not null)
+            {
+                viewModel.PropertyChanged -= onViewModelChanged;
+            }
+        }
+
+        return readResult(viewModel);
+    }
 }
