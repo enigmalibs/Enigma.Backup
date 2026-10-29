@@ -45,6 +45,10 @@ Run from the repository root, on the branch that will be merged:
 
 ## 2. Build the release zips
 
+These are the **root** `publish.sh` / `publish.ps1`. The scripts under `packaging/` (`windows/publish.ps1`,
+`windows/publish.bat`, `linux/publish.sh`) are a different thing — a plain framework-dependent ReadyToRun
+publish into `bin/`, for local use — and produce nothing a release ships.
+
 ```bash
 ./publish.sh                    # Linux and macOS hosts
 ```

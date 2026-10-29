@@ -17,11 +17,16 @@ dotnet build Enigma.Backup.slnx -c Release      # also check Release: Diagnostic
 dotnet run --project src/Enigma.Backup.Desktop  # run the desktop app
 dotnet test --solution Enigma.Backup.slnx       # xUnit v3 on MTP — note: --solution, not a positional arg
 ./publish.sh                                    # release zips for win-x64 + linux-x64 (publish.ps1 on Windows)
+./packaging/linux/publish.sh                    # plain ReadyToRun publish into bin/ (windows/publish.ps1|.bat)
+./packaging/linux/install.sh                    # per-user Linux install; uninstall.sh removes it
 ```
 
 `publish.sh` / `publish.ps1` build self-contained single-file apps into `artifacts/publish/<rid>/`
 and zip them; `<Version>` in `Directory.Build.props` names the zips. Build the **linux-x64** zip from
-Linux — `Compress-Archive` records no Unix file mode. Full procedure: `docs/RELEASE.md`.
+Linux — `Compress-Archive` records no Unix file mode. Full procedure: `docs/RELEASE.md`. The
+`packaging/` scripts are the plain publish and the Linux installer every Enigma app has, not the release:
+keep `packaging/linux/*.sh` at mode `100755` (`git update-index --chmod=+x` when adding one from Windows)
+and `publish.bat` CRLF (`.gitattributes` does the latter).
 
 **Warnings are build errors solution-wide** (`TreatWarningsAsErrors`), and the root `.editorconfig`
 is enforced at build time (`EnforceCodeStyleInBuild`) — a style rule at `warning` severity fails the

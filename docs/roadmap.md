@@ -31,5 +31,5 @@
 | - PHASE02    | The error dialog                             | DONE   | (in FEATURE-AD48.md)      |
 | - PHASE03    | Startup failure window                       | DONE   | (in FEATURE-AD48.md)      |
 | FEATURE-61C4 | Linux install and uninstall scripts          | DONE   | docs/plan/FEATURE-61C4.md |
-| FEATURE-251A | Publish scripts for Windows and Linux        | TODO   | docs/plan/FEATURE-251A.md |
+| FEATURE-251A | Publish scripts for Windows and Linux        | DONE   | docs/plan/FEATURE-251A.md |
 | FEATURE-93D8 | Release 1.3.0                                | TODO   | docs/plan/FEATURE-93D8.md |

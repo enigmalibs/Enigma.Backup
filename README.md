@@ -177,7 +177,8 @@ src/Enigma.Backup.Core       net10.0 library — profiles, scanning, archive pip
 src/Enigma.Backup.Desktop    net10.0 Avalonia 12 desktop app — MVVM layer over the core
 tests/Enigma.Backup.Core.Tests
 tests/Enigma.Backup.Desktop.Tests
-packaging/linux              the per-user install.sh / uninstall.sh with the launcher entry and icons
+packaging/windows            publish.ps1 / publish.bat — a plain ReadyToRun publish
+packaging/linux              publish.sh, and the per-user install.sh / uninstall.sh with the launcher entry and icons
 docs/                        roadmap, per-item plans, completion records, release runbook
 ```
 
@@ -229,6 +230,23 @@ PowerShell's `Compress-Archive` stores no Unix file mode and the extracted binar
 executable bit.
 
 The full release procedure is in [docs/RELEASE.md](docs/RELEASE.md).
+
+### A plain publish
+
+`packaging/` holds the publish every Enigma app has: a Release build compiled ReadyToRun, which starts
+faster and runs on an installed .NET 10 runtime. Each script runs from any directory and exits with
+`dotnet`'s exit code.
+
+```powershell
+.\packaging\windows\publish.ps1     # or packaging\windows\publish.bat from cmd
+```
+```bash
+./packaging/linux/publish.sh
+```
+
+They run `dotnet publish src/Enigma.Backup.Desktop -c Release -r <win-x64|linux-x64> -p:PublishReadyToRun=true`,
+and the result lands in `src/Enigma.Backup.Desktop/bin/Release/net10.0/<rid>/publish/`, with `app.ico`
+beside the executable. The release zips above are something else: self-contained and single-file.
 
 ## Security
 
