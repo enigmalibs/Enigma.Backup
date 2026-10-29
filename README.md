@@ -59,9 +59,9 @@ The app is a single window, top to bottom:
 1. **Profile** — pick a saved profile from the drop-down, or start from `New`. A profile is just the
    settings below, under a name; `Save`, `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…`
    are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
-   discards them. The gear at the right-hand end of the bar opens **Settings**: the theme, an
-   `Open folder` button on the folder your profiles and preferences are kept in, and an About section
-   with the version and a link to the project page.
+   discards them. The gear at the right-hand end of the bar opens **Settings**: the theme, and an
+   `Open folder` button on the folder your profiles and preferences are kept in. The ⓘ beside it opens
+   **About**: the version, the build it was cut from, and the copyright.
 2. **Files, folders and patterns to back up** — `Add files…`, `Add folder…`, or drop them anywhere on
    the window. Overlapping entries are merged automatically when the backup runs. `Add pattern…` adds
    a rule instead of a path: pick the folder it applies to, type the glob, and the row reads

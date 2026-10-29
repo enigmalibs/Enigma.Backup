@@ -13,40 +13,6 @@
     <KeyBinding Gesture="Enter" Command="{Binding CloseCommand}" />
   </UserControl.KeyBindings>
 
-  <UserControl.Styles>
-    <!-- A link, drawn as one: the project page is a place to go, not a command to run, and a full
-         button beside a copyright line would read as the loudest thing in the section. The theme
-         ships no link style, so it is one of ours — and every colour is a DynamicResource, or it
-         would stop following a theme switch made two cards above it.
-
-         Each state is written against the template's ContentPresenter rather than the Button, because
-         that is where FluentTheme's own Button style puts its background, border and foreground: set
-         only on the Button and the hover state repaints over this one. -->
-    <Style Selector="Button.link">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="MinWidth" Value="0" />
-      <Setter Property="MinHeight" Value="0" />
-      <Setter Property="Cursor" Value="Hand" />
-    </Style>
-    <Style Selector="Button.link /template/ ContentPresenter">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="Foreground" Value="{DynamicResource EnigmaAccentBrush}" />
-    </Style>
-    <Style Selector="Button.link:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="Foreground" Value="{DynamicResource EnigmaAccentHoverBrush}" />
-    </Style>
-    <Style Selector="Button.link:pressed /template/ ContentPresenter">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="Foreground" Value="{DynamicResource EnigmaAccentHoverBrush}" />
-    </Style>
-  </UserControl.Styles>
-
   <StackPanel Spacing="12">
 
     <!-- The description is the selected theme's own sentence, so the card says what the choice means
@@ -82,42 +48,6 @@
         </StackPanel>
       </Button>
     </controls:SettingsCard>
-
-    <!-- About: not a preference, so not a card. A rule separates it from the two that are. -->
-    <Border BorderBrush="{DynamicResource EnigmaBorderSubtleBrush}"
-            BorderThickness="0,1,0,0"
-            Margin="0,4,0,0"
-            Padding="0,16,0,0">
-      <StackPanel Orientation="Horizontal" Spacing="14">
-
-        <Image Source="/Assets/enigma-backup.png"
-               Width="48"
-               Height="48"
-               VerticalAlignment="Top" />
-
-        <StackPanel Spacing="2" VerticalAlignment="Center">
-          <TextBlock Text="{Binding ApplicationName}" FontWeight="SemiBold" />
-
-          <!-- Selectable: a version and a copyright line are things people quote back in bug reports. -->
-          <SelectableTextBlock Text="{Binding VersionLabel}"
-                               Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}"
-                               FontSize="12" />
-          <SelectableTextBlock Text="{Binding Copyright}"
-                               Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}"
-                               FontSize="12" />
-
-          <Button Classes="link"
-                  Command="{Binding OpenProjectPageCommand}"
-                  HorizontalAlignment="Left"
-                  Margin="0,4,0,0">
-            <TextBlock Text="{Binding ProjectPageLabel}"
-                       FontSize="12"
-                       TextDecorations="Underline" />
-          </Button>
-        </StackPanel>
-
-      </StackPanel>
-    </Border>
 
   </StackPanel>
 

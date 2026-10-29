@@ -93,7 +93,7 @@
       <!-- Profile bar: which profile is loaded, and everything that can be done to it. -->
       <Border Grid.Row="0" Classes="panel" IsEnabled="{Binding IsIdle}">
         <StackPanel Spacing="10">
-          <Grid ColumnDefinitions="Auto,280,*,Auto,Auto">
+          <Grid ColumnDefinitions="Auto,280,*,Auto,Auto,Auto">
             <StackPanel Grid.Column="0" Classes="glyphrow" Margin="0,0,10,0">
               <PathIcon Data="{ei:IconGeometry FileText}" />
               <TextBlock Text="Profile" Classes="section" />
@@ -141,10 +141,23 @@
             <Button Grid.Column="4"
                     Command="{Binding OpenSettingsCommand}"
                     ToolTip.Tip="Settings"
+                    AutomationProperties.Name="Settings"
                     VerticalAlignment="Center"
                     Height="34"
                     Padding="8,5">
               <PathIcon Data="{ei:IconGeometry GearSix}" Width="15" Height="15" />
+            </Button>
+            <!-- About sits beside the gear, not inside it: the Settings dialog is itself on the one
+                 dialog host, so it cannot open a second dialog without replacing itself. -->
+            <Button Grid.Column="5"
+                    Command="{Binding OpenAboutCommand}"
+                    ToolTip.Tip="About"
+                    AutomationProperties.Name="About Enigma.Backup"
+                    VerticalAlignment="Center"
+                    Margin="6,0,0,0"
+                    Height="34"
+                    Padding="8,5">
+              <PathIcon Data="{ei:IconGeometry Info}" Width="15" Height="15" />
             </Button>
           </Grid>
           <StackPanel Orientation="Horizontal" Spacing="6">

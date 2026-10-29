@@ -24,7 +24,7 @@
 | - PHASE05    | Release readiness: 1.2.0                     | DONE   | (in FEATURE-7F99.md)      |
 | FEATURE-0725 | Update NuGet packages to latest              | DONE   | docs/plan/FEATURE-0725.md |
 | FEATURE-9755 | New app icons                                | DONE   | docs/plan/FEATURE-9755.md |
-| FEATURE-4573 | Uniform About dialog                         | TODO   | docs/plan/FEATURE-4573.md |
+| FEATURE-4573 | Uniform About dialog                         | DONE   | docs/plan/FEATURE-4573.md |
 | FEATURE-5D75 | App icon in the output directory             | TODO   | docs/plan/FEATURE-5D75.md |
 | FEATURE-AD48 | Catch unhandled exceptions                   | TODO   | docs/plan/FEATURE-AD48.md |
 | - PHASE01    | Hooks, policy and logging                    | TODO   | (in FEATURE-AD48.md)      |

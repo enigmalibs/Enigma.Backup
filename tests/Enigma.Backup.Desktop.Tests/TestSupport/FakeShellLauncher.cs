@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Enigma.Backup.Desktop.Services;
@@ -15,21 +14,10 @@ internal sealed class FakeShellLauncher : IShellLauncher
     /// <summary>Every folder it was asked to open, in order.</summary>
     public List<string> Folders { get; } = [];
 
-    /// <summary>Every link it was asked to open, in order.</summary>
-    public List<Uri> Uris { get; } = [];
-
     /// <inheritdoc />
     public Task OpenFolderAsync(string path)
     {
         Folders.Add(path);
-
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public Task OpenUriAsync(Uri uri)
-    {
-        Uris.Add(uri);
 
         return Task.CompletedTask;
     }

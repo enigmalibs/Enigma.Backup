@@ -59,7 +59,7 @@ Invariants that are easy to violate and must be preserved:
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
 - **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run card, the
-  outcome banner, the theme variant, opening a folder or a link on the desktop, and UI-thread
+  outcome banner, the theme variant, opening a folder on the desktop, and UI-thread
   marshaling enter through `IFilePicker` / `IDialogService` / `IProgressOverlay` /
   `INotificationService` / `IThemeSwitcher` / `IShellLauncher` / `IUiDispatcher`
   (`Desktop/Services/`, with the Avalonia
