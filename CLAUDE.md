@@ -212,5 +212,7 @@ commit), so there is no base branch to fork later phases from other than the cur
   screenshotting it (e.g. `spectacle -b -n -f -o out.png`) works, so verify UI changes for real.
   Kill the process by PID afterwards — a `pkill -f` pattern that matches the launching shell will
   kill the shell too.
-- The app icon `src/Enigma.Backup.Desktop/Assets/enigma-backup.ico` is placeholder art
-  (16/32/48/256 px); final art comes from the user.
+- The app icon `src/Enigma.Backup.Desktop/Assets/enigma-backup.ico` (ten PNG frames, 16–256 px) and
+  `enigma-backup.png` (its 256-px frame) are the final art, copied byte for byte from the user's
+  `Branding/Apps/final/backup` set, whose SVG masters live outside this repository. Replace them from
+  there, never by re-rendering here.
