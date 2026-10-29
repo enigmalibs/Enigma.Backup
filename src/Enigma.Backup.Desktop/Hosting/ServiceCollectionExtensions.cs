@@ -1,3 +1,4 @@
+using System;
 using Enigma.Backup.Desktop.Services;
 using Enigma.Backup.Desktop.Settings;
 using Enigma.Backup.Desktop.ViewModels;
@@ -51,6 +52,12 @@ public static class ServiceCollectionExtensions
             // Singleton because it holds the card it is currently showing: a second instance would be
             // one whose Update calls draw on nothing.
             services.TryAddSingleton<IProgressOverlay, ProgressOverlay>();
+
+            // The safety net for exceptions nothing else caught. One instance, because App hands it to
+            // the process-wide hooks once and it remembers what it has already seen. TimeProvider is
+            // also the core's; TryAdd keeps whichever came first.
+            services.TryAddSingleton(TimeProvider.System);
+            services.TryAddSingleton<IUnhandledErrorReporter, UnhandledErrorReporter>();
 
             // Transient: views and view models are cheap and per-consumer (see dotnet-di-design).
             services.AddTransient<ProfileEditorViewModel>();

@@ -6,11 +6,11 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.2.0** — an input can be a **pattern** now (a folder plus a glob, worked out again
-> on every run), a backup can be written as a plain **`.zip`** that any file manager opens, `Restore…`
-> and `Verify…` moved up beside the settings gear, and `Settings` opens the folder your profiles live in
-> and says which version you are running. The archive container, the file names and every existing
-> profile are untouched, so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
+> **What's new in 1.3.0** — the final app icon, the **About** dialog every Enigma app shares (the ⓘ
+> beside the settings gear), and a **Something went wrong** dialog instead of a silent exit when an
+> unexpected error happens. Linux gets a per-user `install.sh` / `uninstall.sh`, and both platforms a
+> plain publish script. The archive container, the file names and every existing profile are untouched,
+> so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
 
 ## Capabilities
 
@@ -34,23 +34,43 @@ and verifies what it wrote.
   end-of-run summary of everything skipped.
 - **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
   bar), applied the moment you pick it and remembered afterwards. The same dialog opens the folder
-  your profiles and preferences live in, and says which version you are running.
+  your profiles and preferences live in; the ⓘ beside the gear says which version you are running.
+- **A safety net** — an unexpected error is shown in a dialog that says the app is still running, with
+  the details one click away for a bug report, instead of the app vanishing.
 
 ## Installing
 
 Download the zip for your platform from the release, unpack it anywhere, and run the single
-executable inside. It is self-contained — **no .NET runtime needs to be installed.**
+executable inside — `app.ico` beside it is the app's icon, for a shortcut or a launcher to point at.
+It is self-contained — **no .NET runtime needs to be installed.**
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.2.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.2.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.3.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.3.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 There is no installer and nothing is written outside your home directory. To uninstall, delete the
-executable and — if you want your profiles gone too — the config folder listed below.
+executable and its `app.ico` and — if you want your profiles gone too — the config folder listed below.
 
 If the Linux binary is not executable after unpacking (some archivers drop the permission bit),
 `chmod +x Enigma.Backup.Desktop`.
+
+### Linux: into your application launcher
+
+From a clone of this repository, `packaging/linux/install.sh` builds the app and installs it for you
+alone — no root, nothing outside your home directory — with a launcher entry, its icon, and an
+`enigma-backup` command in `~/.local/bin`. Run it again to upgrade in place.
+
+```bash
+./packaging/linux/install.sh                        # build with the .NET runtime bundled, then install
+./packaging/linux/install.sh --framework-dependent  # smaller; needs an installed .NET 10 runtime
+./packaging/linux/install.sh --from <dir>           # install a directory you already published
+./packaging/linux/uninstall.sh                      # remove exactly what install.sh wrote
+```
+
+Building needs the .NET 10 SDK; `--from` needs nothing but the published folder (for instance an
+unpacked release zip). Neither script ever touches `~/.config/Enigma.Backup` — your profiles and
+preferences survive an uninstall — nor any backup you wrote.
 
 ## Using it
 
@@ -59,9 +79,9 @@ The app is a single window, top to bottom:
 1. **Profile** — pick a saved profile from the drop-down, or start from `New`. A profile is just the
    settings below, under a name; `Save`, `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…`
    are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
-   discards them. The gear at the right-hand end of the bar opens **Settings**: the theme, an
-   `Open folder` button on the folder your profiles and preferences are kept in, and an About section
-   with the version and a link to the project page.
+   discards them. The gear at the right-hand end of the bar opens **Settings**: the theme, and an
+   `Open folder` button on the folder your profiles and preferences are kept in. The ⓘ beside it opens
+   **About**: the version, the build it was cut from, and the copyright.
 2. **Files, folders and patterns to back up** — `Add files…`, `Add folder…`, or drop them anywhere on
    the window. Overlapping entries are merged automatically when the backup runs. `Add pattern…` adds
    a rule instead of a path: pick the folder it applies to, type the glob, and the row reads
@@ -88,6 +108,11 @@ The app is a single window, top to bottom:
 If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort**, with an
 *apply to all further errors* option. Aborting — like cancelling — deletes the partial archive, so a
 half-written backup is never left behind.
+
+If something goes wrong that the app did not see coming, it does not just close: a **Something went
+wrong** dialog says what happened and that the app is still running, with the technical details behind a
+*Details* expander and a **Copy details** button for a bug report. If the app fails while it is still
+starting, the same dialog appears in a small window of its own, and closing it ends the app.
 
 Profiles live in `%APPDATA%\Enigma.Backup\profiles` on Windows and
 `~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile. The app's own preferences
@@ -154,6 +179,8 @@ src/Enigma.Backup.Core       net10.0 library — profiles, scanning, archive pip
 src/Enigma.Backup.Desktop    net10.0 Avalonia 12 desktop app — MVVM layer over the core
 tests/Enigma.Backup.Core.Tests
 tests/Enigma.Backup.Desktop.Tests
+packaging/windows            publish.ps1 / publish.bat — a plain ReadyToRun publish
+packaging/linux              publish.sh, and the per-user install.sh / uninstall.sh with the launcher entry and icons
 docs/                        roadmap, per-item plans, completion records, release runbook
 ```
 
@@ -205,6 +232,23 @@ PowerShell's `Compress-Archive` stores no Unix file mode and the extracted binar
 executable bit.
 
 The full release procedure is in [docs/RELEASE.md](docs/RELEASE.md).
+
+### A plain publish
+
+`packaging/` holds the publish every Enigma app has: a Release build compiled ReadyToRun, which starts
+faster and runs on an installed .NET 10 runtime. Each script runs from any directory and exits with
+`dotnet`'s exit code.
+
+```powershell
+.\packaging\windows\publish.ps1     # or packaging\windows\publish.bat from cmd
+```
+```bash
+./packaging/linux/publish.sh
+```
+
+They run `dotnet publish src/Enigma.Backup.Desktop -c Release -r <win-x64|linux-x64> -p:PublishReadyToRun=true`,
+and the result lands in `src/Enigma.Backup.Desktop/bin/Release/net10.0/<rid>/publish/`, with `app.ico`
+beside the executable. The release zips above are something else: self-contained and single-file.
 
 ## Security
 

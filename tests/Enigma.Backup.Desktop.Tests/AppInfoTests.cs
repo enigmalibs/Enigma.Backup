@@ -3,12 +3,12 @@ using Xunit;
 
 namespace Enigma.Backup.Desktop.Tests;
 
-/// <summary>What the About section reads off the assembly.</summary>
+/// <summary>What the About dialog reads off the assembly.</summary>
 /// <remarks>
 /// The version cannot be asserted as a literal — it is whatever <c>Directory.Build.props</c> says at
 /// the moment of the build, and pinning it here would mean a failing test every release. What is
 /// pinned instead is the shape: the build metadata the SDK appends is gone, and nothing here throws
-/// when an attribute is missing, because the About section is shown while a dialog is opening.
+/// when an attribute is missing, because the About dialog reads it while it is opening.
 /// </remarks>
 public sealed class AppInfoTests
 {
@@ -56,12 +56,38 @@ public sealed class AppInfoTests
         Assert.Contains("Copyright", AppInfo.Copyright, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("1.3.0+0f6b505aa50d88f4f7483125569bcb9da7d79afd", "0f6b505")]
+    [InlineData("1.3.0-rc.1+abc123", "abc123")]
+    [InlineData("1.3.0+ 0f6b505aa ", "0f6b505")]
+    public void TheBuildShaIsTheRevisionAbbreviatedToSevenCharacters(string informationalVersion, string expected) =>
+        Assert.Equal(expected, AppInfo.ShortBuildSha(informationalVersion));
+
+    /// <remarks>
+    /// A build from a source drop has no revision to stamp, and the About dialog then shows no build line
+    /// at all — which is what <see langword="null"/>, rather than an empty string, tells it.
+    /// </remarks>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("1.3.0")]
+    [InlineData("1.3.0+")]
+    [InlineData("1.3.0+   ")]
+    public void ABuildWithNoRevisionHasNoBuildSha(string? informationalVersion) =>
+        Assert.Null(AppInfo.ShortBuildSha(informationalVersion));
+
+    /// <remarks>
+    /// The SDK stamps the commit in a repository checkout, which is where this suite runs, so the
+    /// running build does carry one — and it never carries the full forty characters.
+    /// </remarks>
     [Fact]
-    public void TheProjectPageIsTheRepository()
+    public void TheRunningBuildsShaIsShort()
     {
-        Assert.Equal(Uri.UriSchemeHttps, AppInfo.ProjectPage.Scheme);
-        Assert.Equal("github.com", AppInfo.ProjectPage.Host);
-        Assert.Equal("/enigmalibs/Enigma.Backup", AppInfo.ProjectPage.AbsolutePath);
+        if (AppInfo.BuildSha is { } sha)
+        {
+            Assert.InRange(sha.Length, 1, 7);
+        }
     }
 
     [Fact]

@@ -8,7 +8,7 @@ using Enigma.Backup.Desktop.Settings;
 
 namespace Enigma.Backup.Desktop.ViewModels;
 
-/// <summary>The Settings dialog: the app's own preferences, where they live, and what this build is.</summary>
+/// <summary>The Settings dialog: the app's own preferences, and where they live.</summary>
 /// <remarks>
 /// <para>
 /// A choice applies the moment it is made rather than on an OK button — a theme is judged by looking
@@ -19,7 +19,7 @@ namespace Enigma.Backup.Desktop.ViewModels;
 /// Applying and persisting are two calls on two seams and this view model makes both, so a change is
 /// on screen and on disk in the same step. Nothing here names Avalonia: the variant is assigned
 /// through <see cref="IThemeSwitcher"/>, the file is written through <see cref="IAppSettingsStore"/>,
-/// and the folder and the project page are opened through <see cref="IShellLauncher"/>.
+/// and the folder is opened through <see cref="IShellLauncher"/>.
 /// </para>
 /// </remarks>
 public sealed class SettingsDialogViewModel : DialogViewModel
@@ -37,7 +37,7 @@ public sealed class SettingsDialogViewModel : DialogViewModel
     /// <summary>Creates the dialog's view model over the stored preferences.</summary>
     /// <param name="store">Where the preferences are read from and written back to.</param>
     /// <param name="themes">Applies a chosen theme to the running app.</param>
-    /// <param name="launcher">Opens the storage folder and the project page on the desktop.</param>
+    /// <param name="launcher">Opens the storage folder on the desktop.</param>
     public SettingsDialogViewModel(IAppSettingsStore store, IThemeSwitcher themes, IShellLauncher launcher)
     {
         ArgumentNullException.ThrowIfNull(store);
@@ -56,7 +56,6 @@ public sealed class SettingsDialogViewModel : DialogViewModel
 
         CloseCommand = new RelayCommand(RequestClose);
         OpenStorageFolderCommand = new AsyncRelayCommand(OnOpenStorageFolderAsync);
-        OpenProjectPageCommand = new AsyncRelayCommand(OnOpenProjectPageAsync);
 
         SelectedTheme = ThemeOption.For(_stored.Theme);
     }
@@ -75,23 +74,8 @@ public sealed class SettingsDialogViewModel : DialogViewModel
     public string StorageDescription =>
         $"Your profiles and preferences are kept in {StorageFolder}. Delete settings.json from there and the app goes back to following the system.";
 
-    /// <summary>What the app calls itself, for the About section.</summary>
-    public string ApplicationName => AppInfo.Name;
-
-    /// <summary>This build's version, as the About section says it.</summary>
-    public string VersionLabel => $"Version {AppInfo.Version}";
-
-    /// <summary>This build's copyright line.</summary>
-    public string Copyright => AppInfo.Copyright;
-
-    /// <summary>The project page, shown as the link's own text.</summary>
-    public string ProjectPageLabel => AppInfo.ProjectPage.Host + AppInfo.ProjectPage.AbsolutePath;
-
     /// <summary>Opens the folder the app's files live in, creating it if this is a fresh install.</summary>
     public AsyncRelayCommand OpenStorageFolderCommand { get; }
-
-    /// <summary>Opens the project page in the desktop's browser.</summary>
-    public AsyncRelayCommand OpenProjectPageCommand { get; }
 
     /// <summary>Every theme the drop-down offers.</summary>
     public IReadOnlyList<ThemeOption> ThemeOptions { get; } = ThemeOption.All;
@@ -158,7 +142,4 @@ public sealed class SettingsDialogViewModel : DialogViewModel
 
         return _launcher.OpenFolderAsync(StorageFolder);
     }
-
-    /// <summary>Opens the project page.</summary>
-    private Task OnOpenProjectPageAsync() => _launcher.OpenUriAsync(AppInfo.ProjectPage);
 }

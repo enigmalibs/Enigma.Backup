@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,6 +61,18 @@ internal sealed class FakeDialogService : IDialogService
     /// <summary>How many times the preferences were opened. There is nothing to answer.</summary>
     public int SettingsRequests { get; private set; }
 
+    /// <summary>How many times the About dialog was opened. There is nothing to answer.</summary>
+    public int AboutRequests { get; private set; }
+
+    /// <summary>Every batch the safety net showed, in order.</summary>
+    public List<UnhandledErrorBatch> UnhandledErrors { get; } = [];
+
+    /// <summary>
+    /// What showing the safety net's dialog does — by default it closes at once. A test that needs the
+    /// dialog to stay open returns a task it completes later; one that needs it to fail throws.
+    /// </summary>
+    public Func<UnhandledErrorBatch, Task> UnhandledErrorBehaviour { get; set; } = static _ => Task.CompletedTask;
+
     /// <inheritdoc />
     public Task<string?> RequestPasswordAsync(PasswordPurpose purpose, string subject, CancellationToken cancellationToken = default)
     {
@@ -114,6 +127,22 @@ internal sealed class FakeDialogService : IDialogService
         SettingsRequests++;
 
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task ShowAboutAsync(CancellationToken cancellationToken = default)
+    {
+        AboutRequests++;
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task ShowUnhandledErrorAsync(UnhandledErrorBatch errors, CancellationToken cancellationToken = default)
+    {
+        UnhandledErrors.Add(errors);
+
+        return UnhandledErrorBehaviour(errors);
     }
 
     /// <inheritdoc />
