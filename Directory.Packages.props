@@ -15,34 +15,35 @@
        from the house library template is deliberately absent. -->
   <ItemGroup>
     <!-- AES-256-GCM + Argon2id primitives for the EBK1 container (PHASE04). -->
-    <PackageVersion Include="Enigma.Core" Version="1.1.0" />
+    <PackageVersion Include="Enigma.Core" Version="2.0.0" />
     <!-- Zstandard compression (managed port); Gzip comes from the BCL (PHASE03). -->
     <PackageVersion Include="ZstdSharp.Port" Version="0.8.8" />
     <!-- Glob exclusion patterns applied during the input scan (PHASE02). -->
-    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.14" />
     <!-- DI + logging seams only: the core takes abstractions, never a container or a sink. -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
   </ItemGroup>
 
   <!-- Desktop (Avalonia) — this is a version-coupled ecosystem: bump Avalonia and the
        Fluent/theme/font packages TOGETHER, never one package at a time. Mixing versions within
        the set breaks the build, so the whole group is held back until it moves as a unit. -->
   <ItemGroup>
-    <PackageVersion Include="Avalonia" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageVersion Include="Avalonia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.4" />
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
     <!-- The house control library: its Fluent theme, ContentDialog / Overlay / InfoBar hosts, the
          picker services, the SettingsCard family and the typed editors (FEATURE-17FE). It pins
-         Avalonia 12.1.1 itself, so it belongs to the coupled set above and moves with it. It also
+         Avalonia 12.1.4 itself, so it belongs to the coupled set above and moves with it. It also
          brings Avalonia.Themes.Fluent, CommunityToolkit.Mvvm and Enigma.Core transitively; those
          stay pinned above so the versions are documented here rather than inherited. Its own
-         Enigma.Core dependency is 1.0.0 and loses to the 1.1.0 pinned in the Core group. -->
-    <PackageVersion Include="Enigma.Avalonia.Desktop" Version="1.0.0" />
+         Enigma.Core dependency is a 1.0.0 floor and resolves to the 2.0.0 pinned in the Core group;
+         it uses only Enigma.Core.Encoding, which 2.0.0 did not change. -->
+    <PackageVersion Include="Enigma.Avalonia.Desktop" Version="1.3.0" />
     <!-- Icons: every IconData slot in the library above is a Geometry? that draws nothing when left
          null, so the restyle needs a glyph set. Enigma.Icons.Avalonia would pull the other two
          transitively; all three are pinned so a bump is a visible, deliberate edit. -->
@@ -53,9 +54,9 @@
 
   <!-- Tests (MTP-native: xunit.v3 only). No Microsoft.NET.Test.Sdk. -->
   <ItemGroup>
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <!-- Concrete ServiceCollection for the DI-registration tests (the core only takes abstractions). -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
   </ItemGroup>
 
 </Project>
