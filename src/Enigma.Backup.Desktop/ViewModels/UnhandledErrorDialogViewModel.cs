@@ -20,16 +20,25 @@ public sealed class UnhandledErrorDialogViewModel : DialogViewModel
         "Something went wrong, but the application is still running. You can carry on, or close it and "
         + "start it again if something looks wrong.";
 
+    private const string StartupLead =
+        "Something went wrong while the application was starting, so it cannot open. Closing this "
+        + "message ends it; the details below say what failed.";
+
     private readonly UnhandledErrorBatch _batch;
 
-    /// <summary>Creates the view model over the errors to show.</summary>
+    /// <summary>Creates the view model over the errors to show, in an app that is still running.</summary>
     /// <param name="batch">The errors.</param>
     public UnhandledErrorDialogViewModel(UnhandledErrorBatch batch)
+        : this(batch, RunningLead)
+    {
+    }
+
+    private UnhandledErrorDialogViewModel(UnhandledErrorBatch batch, string lead)
     {
         ArgumentNullException.ThrowIfNull(batch);
 
         _batch = batch;
-        Lead = RunningLead;
+        Lead = lead;
         CloseCommand = new RelayCommand(RequestClose);
 
         batch.Changed += OnBatchChanged;
@@ -55,6 +64,19 @@ public sealed class UnhandledErrorDialogViewModel : DialogViewModel
 
     /// <summary>Closes the dialog. It asks nothing, so there is nothing to accept.</summary>
     public RelayCommand CloseCommand { get; }
+
+    /// <summary>
+    /// The dialog for a start that failed before the main window could open: the same dialog, except
+    /// that it does not claim the app is still running — it is not, and closing it ends the process.
+    /// </summary>
+    /// <param name="exception">What failed.</param>
+    /// <returns>The view model.</returns>
+    public static UnhandledErrorDialogViewModel ForStartupFailure(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+
+        return new UnhandledErrorDialogViewModel(new UnhandledErrorBatch(exception), StartupLead);
+    }
 
     private void OnBatchChanged(object? sender, EventArgs e)
     {

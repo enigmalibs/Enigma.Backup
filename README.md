@@ -92,7 +92,8 @@ half-written backup is never left behind.
 
 If something goes wrong that the app did not see coming, it does not just close: a **Something went
 wrong** dialog says what happened and that the app is still running, with the technical details behind a
-*Details* expander and a **Copy details** button for a bug report.
+*Details* expander and a **Copy details** button for a bug report. If the app fails while it is still
+starting, the same dialog appears in a small window of its own, and closing it ends the app.
 
 Profiles live in `%APPDATA%\Enigma.Backup\profiles` on Windows and
 `~/.config/Enigma.Backup/profiles` on Linux, one `.json` file per profile. The app's own preferences

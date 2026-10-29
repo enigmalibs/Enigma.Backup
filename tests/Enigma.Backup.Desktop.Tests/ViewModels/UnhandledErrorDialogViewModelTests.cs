@@ -53,6 +53,23 @@ public sealed class UnhandledErrorDialogViewModelTests
         Assert.Contains("second", viewModel.Details, StringComparison.Ordinal);
     }
 
+    /// <remarks>
+    /// A start that failed has no app left running, so the dialog must not say there is: closing it ends
+    /// the process.
+    /// </remarks>
+    [Fact]
+    public void AFailedStartIsNotCalledARunningApp()
+    {
+        UnhandledErrorDialogViewModel viewModel =
+            UnhandledErrorDialogViewModel.ForStartupFailure(Thrown.Error("The container could not be built."));
+
+        Assert.DoesNotContain("still running", viewModel.Lead, StringComparison.Ordinal);
+        Assert.Contains("starting", viewModel.Lead, StringComparison.Ordinal);
+        Assert.Equal("The container could not be built.", viewModel.Message);
+        Assert.False(viewModel.HasMore);
+        Assert.Contains("The container could not be built.", viewModel.Details, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void CloseAsksTheDialogToClose()
     {
