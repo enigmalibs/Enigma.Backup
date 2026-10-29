@@ -111,7 +111,11 @@ Invariants that are easy to violate and must be preserved:
   attached on the window's `Opened` — reports before that are buffered — and detached on `Exit` before
   the host stops. `UnhandledErrorPolicy` decides what is shown: one dialog at a time, later errors counted
   into it, the same error again within a minute only logged, requested cancellations never. It is a
-  safety net, not error handling: a failure the app expects is still said where it happens.
+  safety net, not error handling: a failure the app expects is still said where it happens. A failure
+  inside `App.Compose` — before there is a container or a main window — is caught in
+  `OnFrameworkInitializationCompleted`, which disposes the half-built host and makes a
+  `StartupErrorWindow` the main window instead: the same dialog on a host of its own, configured by hand
+  because `DialogService` may be what failed. Closing it ends the app.
 - **The app's own preferences are Desktop-owned, and losing them is never fatal.** The theme variant
   (`System` / `Light` / `Dark`, default `System`) lives in `Desktop/Settings/` and is written to
   `<config>/Enigma.Backup/settings.json`, beside the `profiles/` folder — deliberately *not* in Core: a

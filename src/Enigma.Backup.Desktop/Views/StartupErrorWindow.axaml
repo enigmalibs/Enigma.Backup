@@ -1,0 +1,20 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:contentDialog="using:Enigma.Avalonia.Desktop.Controls.ContentDialog"
+        x:Class="Enigma.Backup.Desktop.Views.StartupErrorWindow"
+        Title="Enigma.Backup"
+        Icon="/Assets/enigma-backup.ico"
+        Width="720" Height="560"
+        MinWidth="560" MinHeight="420"
+        Background="{DynamicResource EnigmaBackgroundBrush}"
+        WindowStartupLocation="CenterScreen">
+
+  <!-- What is shown when the start fails before the main window exists: a window with nothing in it but
+       a dialog host, so the failure is said in the same dialog every other unexpected error uses. The
+       host's bounds are the main window's. -->
+  <contentDialog:ContentDialog x:Name="HostDialog"
+                               DialogMinWidth="420"
+                               DialogMaxWidth="680"
+                               DialogMaxHeight="560" />
+
+</Window>

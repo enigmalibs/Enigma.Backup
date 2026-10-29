@@ -26,6 +26,31 @@ public partial class App : Application
         // anything else this method does, so nothing it does can fail unseen.
         UnhandledExceptionHooks.InstallDispatcher();
 
+        try
+        {
+            Compose();
+        }
+        catch (Exception exception) when (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            // The start failed before the main window could be shown. It is said in the same dialog
+            // every other unexpected error uses, on a window of its own — there is no main window to
+            // put it on — and closing that window ends the app. The safety net is not attached yet, so
+            // the hooks trace the report and keep it; the window shows it itself.
+            UnhandledExceptionHooks.Report(exception, UnhandledErrorSource.Startup);
+
+            IHost? host = _host;
+            _host = null;
+            host?.Dispose();
+
+            desktop.MainWindow = new StartupErrorWindow(exception);
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>Builds and starts the host, wires the main window to it, and shows it.</summary>
+    private void Compose()
+    {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
         // Console + debug sinks only: this app has no file or remote logging.
@@ -81,7 +106,5 @@ public partial class App : Application
                 _host?.StopAsync().GetAwaiter().GetResult();
             };
         }
-
-        base.OnFrameworkInitializationCompleted();
     }
 }
