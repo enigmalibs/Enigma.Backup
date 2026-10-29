@@ -188,9 +188,9 @@ Invariants that are easy to violate and must be preserved:
 - **UI strings are hardcoded English** — an explicit decision for this app; no `.resx`.
 - **Central Package Management**: versions live only in `Directory.Packages.props`; `.csproj` files
   reference packages without a `Version`. The Avalonia set is version-coupled — bump it as a unit, and
-  `Enigma.Avalonia.Desktop` belongs to it (it pins Avalonia 12.1.1 itself, so it moves with the set or
-  not at all). `Enigma.Core` arrives both from Core's own 1.1.0 pin and transitively from
-  `Enigma.Avalonia.Desktop` at 1.0.0; the higher version wins, and
+  `Enigma.Avalonia.Desktop` belongs to it (it pins Avalonia 12.1.4 itself, so it moves with the set or
+  not at all). `Enigma.Core` arrives both from Core's own 2.0.0 pin and transitively from
+  `Enigma.Avalonia.Desktop` as a 1.0.0 floor; the higher version wins, and
   `GoldenArchiveCompatibilityTests` is what guards that resolution.
 - **New extension methods use C# 14 `extension(...)` blocks**, not the legacy `this`-parameter form
   (the sibling repos Draw/HardCopy still use the old form — don't copy it across).
