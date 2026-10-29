@@ -60,7 +60,7 @@ public sealed class DialogService : IDialogService
     /// questions' data is: this is where each dialog's view model is built.
     /// </param>
     /// <param name="themes">Applies the theme the Settings dialog chooses.</param>
-    /// <param name="launcher">Opens the storage folder and the project page the Settings dialog offers.</param>
+    /// <param name="launcher">Opens the storage folder the Settings dialog offers.</param>
     public DialogService(
         IContentDialogService dialogs,
         IUiDispatcher dispatcher,
@@ -222,6 +222,24 @@ public sealed class DialogService : IDialogService
             },
 
             // No answer to read: the dialog's own state is the answer, and it is already on disk.
+            static _ => true,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public async Task ShowAboutAsync(CancellationToken cancellationToken = default) =>
+        await ShowAsync(
+            new AboutDialogViewModel(),
+            static viewModel => new AboutDialog(viewModel),
+            static (_, dialog, _) =>
+            {
+                // No title and no icon: the card draws them as a column beside the content, and the
+                // content already shows the app's own icon and name above everything else.
+                dialog.Title = null;
+
+                // One button, and it only dismisses: the dialog asks nothing.
+                dialog.CloseButtonText = "Close";
+                dialog.DefaultButton = DefaultButton.Close;
+            },
             static _ => true,
             cancellationToken);
 

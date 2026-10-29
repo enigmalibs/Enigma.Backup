@@ -67,6 +67,13 @@ public interface IDialogService
     /// <param name="cancellationToken">Closes the dialog without waiting for the user.</param>
     Task ShowSettingsAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Says what this app is and which build of it is running — the About dialog every Enigma app
+    /// shows. Nothing comes back: it asks nothing.
+    /// </summary>
+    /// <param name="cancellationToken">Closes the dialog without waiting for the user.</param>
+    Task ShowAboutAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Asks the user to confirm something before it happens.</summary>
     /// <param name="title">The dialog's title.</param>
     /// <param name="message">What is about to happen.</param>

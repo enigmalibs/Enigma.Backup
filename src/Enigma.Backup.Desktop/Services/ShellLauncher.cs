@@ -18,7 +18,7 @@ namespace Enigma.Backup.Desktop.Services;
 /// every fake.
 /// </para>
 /// <para>
-/// Both calls answer with a <see cref="bool"/> the platform decides, and either can throw for reasons
+/// The call answers with a <see cref="bool"/> the platform decides, and it can throw for reasons
 /// this app has no answer to — no file manager, a sandbox, a portal that timed out. All of it ends in
 /// a log line: a preference dialog's convenience button is not worth an exception escaping into a
 /// click handler.
@@ -54,14 +54,6 @@ public sealed class ShellLauncher : IShellLauncher
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
         return LaunchAsync(launcher => launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path)), path);
-    }
-
-    /// <inheritdoc />
-    public Task OpenUriAsync(Uri uri)
-    {
-        ArgumentNullException.ThrowIfNull(uri);
-
-        return LaunchAsync(launcher => launcher.LaunchUriAsync(uri), uri.ToString());
     }
 
     /// <summary>Runs one launch and turns everything that can go wrong into a log line.</summary>

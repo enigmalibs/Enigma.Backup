@@ -74,8 +74,8 @@ their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 | 3.7 | *Archive options* shows **Compression** and **Encrypt with a password** as two cards; the compression text under the card changes with the choice | ☐ | ☐ |
 | 3.8 | At the window's **minimum size** nothing overlaps — the headings stay above their lists and the action row stays visible | ☐ | ☐ |
 | 3.9 | `Add pattern…` sits beside `Add files…` and `Add folder…`; at the minimum width the five buttons wrap to two rows and all stay pressable (the rule itself is §9) | ☐ | ☐ |
-| 3.10 | The top bar reads `Profile │ combo │ status │ Restore… │ Verify… │ ▏ │ ⚙` and the bottom bar holds **Back up** alone; all three top-bar controls are the same height | ☐ | ☐ |
-| 3.11 | All of `Restore…`, `Verify…` and the gear grey out while a run is in progress, and come back when it ends | ☐ | ☐ |
+| 3.10 | The top bar reads `Profile │ combo │ status │ Restore… │ Verify… │ ▏ │ ⚙ │ ⓘ` and the bottom bar holds **Back up** alone; all four top-bar controls are the same height | ☐ | ☐ |
+| 3.11 | All of `Restore…`, `Verify…`, the gear and ⓘ grey out while a run is in progress, and come back when it ends | ☐ | ☐ |
 
 ## 4. Backup
 
@@ -127,11 +127,11 @@ their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 | 7.7 | Dismissing a decision dialog with **Escape**, or by clicking the dimmed area, aborts (it never silently skips) | ☐ | ☐ |
 | 7.8 | After an abort, a cancel and a failure alike, the card is gone and the window is clickable again | ☐ | ☐ |
 
-## 8. Settings: theme, storage and About
+## 8. Settings: theme and storage; About
 
 The theme preference (1.1.0) lives in `settings.json` **beside** the `profiles/` folder —
 `%APPDATA%\Enigma.Backup\settings.json` / `~/.config/Enigma.Backup/settings.json`. The Storage card
-and the About section (1.2.0) store nothing of their own; they read what is already there.
+(1.2.0) and the About dialog (1.3.0) store nothing of their own; they read what is already there.
 
 | # | Check | L | W |
 |---|-------|---|---|
@@ -147,9 +147,9 @@ and the About section (1.2.0) store nothing of their own; they read what is alre
 | 8.10 | A **Storage** card names the config folder and carries an **Open folder** button | ☐ | ☐ |
 | 8.11 | `Open folder` shows that folder in the desktop's file manager, with `settings.json` and `profiles/` in it | ☐ | ☐ |
 | 8.12 | On a fresh config — nothing written yet — `Open folder` **creates** the folder and opens it rather than reporting an error | ☐ | ☐ |
-| 8.13 | The **About** section shows the app icon, `Enigma.Backup`, `Version 1.2.0` and the copyright line | ☐ | ☐ |
-| 8.14 | The project-page link opens `github.com/enigmalibs/Enigma.Backup` in the browser, and its colour follows the theme | ☐ | ☐ |
-| 8.15 | The whole dialog fits its host — nothing scrolls and nothing is clipped, in both variants | ☐ | ☐ |
+| 8.13 | The ⓘ beside the gear opens **About**, with no title bar text and no header icon: the app icon, `Enigma.Backup`, `Version 1.3.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
+| 8.14 | About's only button is `Close`; Escape and Enter close it too, and the build sha can be selected and copied | ☐ | ☐ |
+| 8.15 | Settings and About each fit their host — nothing scrolls and nothing is clipped, in both variants; Settings holds Theme and Storage only | ☐ | ☐ |
 
 ## 9. Pattern inputs
 

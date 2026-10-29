@@ -60,6 +60,9 @@ internal sealed class FakeDialogService : IDialogService
     /// <summary>How many times the preferences were opened. There is nothing to answer.</summary>
     public int SettingsRequests { get; private set; }
 
+    /// <summary>How many times the About dialog was opened. There is nothing to answer.</summary>
+    public int AboutRequests { get; private set; }
+
     /// <inheritdoc />
     public Task<string?> RequestPasswordAsync(PasswordPurpose purpose, string subject, CancellationToken cancellationToken = default)
     {
@@ -112,6 +115,14 @@ internal sealed class FakeDialogService : IDialogService
     public Task ShowSettingsAsync(CancellationToken cancellationToken = default)
     {
         SettingsRequests++;
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task ShowAboutAsync(CancellationToken cancellationToken = default)
+    {
+        AboutRequests++;
 
         return Task.CompletedTask;
     }
