@@ -40,6 +40,10 @@ theme and the storage folder only (§8). An unexpected error opens a **Something
 instead of ending the app (§7, 7.9–7.12 — these need a throwing build), and the zip carries `app.ico`
 beside the executable (§1).
 
+**Since 1.4.0 the icon has no tile**: the same page and zip on a transparent background, wherever
+§1.1, §1.4 and 8.13 look at it. A release may also ship a **Windows MSI**, built with
+`packaging\windows\buildmsi.ps1`; §11 covers it, on a Windows machine with the .NET 10 runtime.
+
 ## 1. The artifact itself
 
 | # | Check | L | W |
@@ -156,7 +160,7 @@ The theme preference (1.1.0) lives in `settings.json` **beside** the `profiles/`
 | 8.10 | A **Storage** card names the config folder and carries an **Open folder** button | ☐ | ☐ |
 | 8.11 | `Open folder` shows that folder in the desktop's file manager, with `settings.json` and `profiles/` in it | ☐ | ☐ |
 | 8.12 | On a fresh config — nothing written yet — `Open folder` **creates** the folder and opens it rather than reporting an error | ☐ | ☐ |
-| 8.13 | The ⓘ beside the gear opens **About**, with no title bar text and no header icon: the app icon, `Enigma.Backup`, `Version 1.3.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
+| 8.13 | The ⓘ beside the gear opens **About**, with no title bar text and no header icon: the app icon, `Enigma.Backup`, `Version 1.4.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
 | 8.14 | About's only button is `Close`; Escape and Enter close it too, and the build sha can be selected and copied | ☐ | ☐ |
 | 8.15 | Settings and About each fit their host — nothing scrolls and nothing is clipped, in both variants; Settings holds Theme and Storage only | ☐ | ☐ |
 
@@ -198,6 +202,42 @@ plus the usual `.sha256`, and it can never be encrypted.
 | 10.9 | Linux only: a restored executable has **lost** its executable bit — zip carries no Unix modes, and this is the documented cost | ☐ | — |
 | 10.10 | A profile hand-edited to `"compression": "Zip"` **and** `"encrypt": true` fails the run with a message naming the problem, and writes no archive | ☐ | ☐ |
 | 10.11 | A profile using Zip is saved as `"formatVersion": 2` | ☐ | ☐ |
+
+## 11. Windows installer
+
+New in 1.4.0, Windows only, and only when the release ships `Enigma.Backup.X.Y.Z.msi`. Install it on a
+machine that has the **.NET 10 runtime** (the MSI is the framework-dependent publish, unlike the zip).
+
+| # | Check | L | W |
+|---|-------|---|---|
+| 11.1 | The MSI installs after the UAC prompt, into `Program Files (x86)\Enigma Backup` on 64-bit Windows | — | ☐ |
+| 11.2 | An **Enigma Backup** shortcut with the app icon is on the desktop and in the Start menu, and each starts the app | — | ☐ |
+| 11.3 | *Apps & features* lists **Enigma Backup**, version `X.Y.Z`, publisher `Josué Clément`, with the app icon | — | ☐ |
+| 11.4 | Installing a later MSI over an earlier one replaces it: *Apps & features* lists one **Enigma Backup**, at the new version | — | ☐ |
+| 11.5 | Uninstalling removes the folder and both shortcuts, and leaves `%APPDATA%\Enigma.Backup` (profiles and preferences) as it was | — | ☐ |
+
+---
+
+## What was verified for 1.4.0
+
+**Against the Windows x64 zip** (`Enigma.Backup-1.4.0-win-x64.zip`, built here with `./publish.ps1 -Rid
+win-x64` and extracted to a scratch folder), and against an MSI built with `buildmsi.bat` in a scratch
+clone of the release branch. The app was driven through **UI Automation** and screenshotted; nothing was
+clicked that writes, and the MSI was not installed.
+
+| # | Check | Result |
+|---|-------|--------|
+| 1.1 | The zip extracts to exactly two files, the executable and `app.ico` | Pass — `Enigma.Backup.Desktop.exe` (54,572,609 bytes) and `app.ico` (8,058 bytes, identical to the new asset) |
+| 1.3 | It launches | Pass, **on a machine that has .NET installed**. A runtime-free machine was not available, so "self-contained" is still the maintainer's check |
+| 1.4 | The window opens with the app icon and the title `Enigma.Backup` | Pass — the title read through UIA; the tile-less icon seen in the title bar of a Release build (FEATURE-F207) |
+| 8.13 | About shows the icon, `Enigma.Backup`, `Version 1.4.0`, a `Build` line and the copyright | Pass **by eye** (dark variant) — screenshot of the extracted exe: the tile-less icon, `Version 1.4.0`, `Build 9f3c163` |
+| 11.x | The MSI's identity | Pass **by its tables**, not installed — `Enigma.Backup.1.4.0.msi` (70.5 MB): `ProductName` Enigma Backup, `ProductVersion` 1.4.0, `UpgradeCode` `{D60F30D6-…-F98EB9731A91}`, two shortcuts on `[INSTALLDIR]\Enigma.Backup.Desktop.exe` (see `docs/done/FEATURE-A834-PHASE02.md`) |
+
+**What was *not* exercised.** The **Linux x64 zip** (`docs/RELEASE.md` requires it to be built on Linux,
+and this host is Windows), and with it every **L** column and the new icon in a Linux launcher; §11.1–11.5
+(installing, upgrading and uninstalling the MSI is the maintainer's); the light variant of 8.13. §§2–10
+were not re-run: nothing in this release touches profiles, the pipeline, restore, verify, patterns, zip,
+errors or settings, and the full automated suite (552 tests) is green.
 
 ---
 
