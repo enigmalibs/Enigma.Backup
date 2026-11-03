@@ -25,8 +25,9 @@ failed (every reason is printed); `2` bad arguments or an unreadable profile. En
 | WixSharp | `WixSharp_wix4` 2.14.2 |
 | Left out | `*.pdb`, `Enigma.Msi.xml`, `.wixsharp/` |
 
-The files are the build output unchanged. Enigma.GitClient carries the same 20 files in its own
-`packaging/windows/Enigma.Msi.Worker/`.
+The files are the build output unchanged, except `Enigma.Msi.Worker.exe.config`. Git stores that file
+with LF line endings (`.gitattributes`); the build writes CRLF. Enigma.GitClient carries the same 20
+files in its own `packaging/windows/Enigma.Msi.Worker/`.
 
 ## Requirements
 

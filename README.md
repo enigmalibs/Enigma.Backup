@@ -49,8 +49,9 @@ It is self-contained — **no .NET runtime needs to be installed.**
 | Windows x64 | `Enigma.Backup-1.3.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
 | Linux x64 | `Enigma.Backup-1.3.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
-There is no installer and nothing is written outside your home directory. To uninstall, delete the
+The zip needs no installer and writes nothing outside your home directory. To uninstall, delete the
 executable and its `app.ico` and — if you want your profiles gone too — the config folder listed below.
+On Windows you can also build an MSI from a clone of this repository (see *Windows installer* below).
 
 If the Linux binary is not executable after unpacking (some archivers drop the permission bit),
 `chmod +x Enigma.Backup.Desktop`.
@@ -179,7 +180,7 @@ src/Enigma.Backup.Core       net10.0 library — profiles, scanning, archive pip
 src/Enigma.Backup.Desktop    net10.0 Avalonia 12 desktop app — MVVM layer over the core
 tests/Enigma.Backup.Core.Tests
 tests/Enigma.Backup.Desktop.Tests
-packaging/windows            publish.ps1 / publish.bat — a plain ReadyToRun publish
+packaging/windows            publish.ps1 / publish.bat — a plain ReadyToRun publish; buildmsi.ps1 / buildmsi.bat — the MSI
 packaging/linux              publish.sh, and the per-user install.sh / uninstall.sh with the launcher entry and icons
 docs/                        roadmap, per-item plans, completion records, release runbook
 ```
@@ -249,6 +250,29 @@ faster and runs on an installed .NET 10 runtime. Each script runs from any direc
 They run `dotnet publish src/Enigma.Backup.Desktop -c Release -r <win-x64|linux-x64> -p:PublishReadyToRun=true`,
 and the result lands in `src/Enigma.Backup.Desktop/bin/Release/net10.0/<rid>/publish/`, with `app.ico`
 beside the executable. The release zips above are something else: self-contained and single-file.
+
+### Windows installer
+
+`packaging\windows\buildmsi.ps1` (or `buildmsi.bat`, from a `cmd` prompt) builds
+`artifacts\Enigma.Backup.X.Y.Z.msi` in one step:
+
+1. it runs `git clean -dxf`, which deletes **every file git does not track**: build output,
+   `artifacts\`, IDE folders, and any new file you have not added yet;
+2. it publishes with `packaging\windows\publish.ps1`, the plain publish above;
+3. it packages the result, uncompressed, with Enigma.Msi. A copy of Enigma.Msi's worker is in
+   `packaging\windows\Enigma.Msi.Worker\`.
+
+The MSI installs **Enigma Backup** for all users in `%ProgramFiles%\Enigma Backup`, with a shortcut on
+the desktop and one in the program menu. It replaces an earlier version installed from an MSI. The
+version is the one in `Directory.Build.props`. Building it needs Windows and the WiX CLI
+(`dotnet tool install --global wix`) as well as the .NET 10 SDK; the installed application needs the
+.NET 10 runtime.
+
+```powershell
+.\packaging\windows\buildmsi.ps1
+# Under Windows PowerShell's default execution policy, which refuses local scripts:
+powershell -ExecutionPolicy Bypass -File packaging\windows\buildmsi.ps1
+```
 
 ## Security
 

@@ -39,13 +39,15 @@ vendors.
 | Question | Chosen | Why |
 |---|---|---|
 | Which build to copy | Enigma.Msi's existing `bin/Release/net472/` output | Its tree is clean at the `1.7.0` tag, and GitClient's copy matches it. Rebuilding would have written into another repository |
-| README | GitClient's, with this repository's MSI name, and the line-ending note replaced | The source `.exe.config` is already LF here, so every file is byte for byte |
+| README | GitClient's, with this repository's MSI name | The same files, the same requirements and licences |
 | Link to Enigma.Msi or GitClient | Plain text, no relative link | A link out of the repository works only with the sibling checkout |
 
 ## Deviations & follow-ups
 
-- GitClient's README says its `.exe.config` differs from the build in line endings. Here it does not:
-  Enigma.Msi's build output now has LF, so all 20 files are identical, the config included.
+- **Corrected in PHASE02:** this record first said the `.exe.config` was LF and so identical in git. It
+  is not. The source has CRLF; `.gitattributes` (`* text=auto eol=lf`) stores it as LF, as in GitClient.
+  The CR check had used `grep $''`, which finds nothing under Git Bash. .NET Framework reads either
+  ending. PHASE02 also fixed the worker README's line saying so.
 - No test reads `packaging/` as text in this repository, so the binaries affect no suite.
 
 ## Build/test evidence
@@ -53,10 +55,11 @@ vendors.
 - Baseline: see `docs/done/FEATURE-F207.md` (0 warnings; 549 tests, 0 failed).
 - `dotnet build Enigma.Backup.slnx -c Release`: **0 warnings, 0 errors**.
 - `dotnet test --solution Enigma.Backup.slnx -c Release`: **549 total, 537 passed, 12 skipped, 0 failed**.
-- `cmp` of each copied file against its source: all 20 identical.
+- `cmp` of each copied file against its source, before staging: all 20 identical. In git, the 19
+  binaries are byte for byte; the `.exe.config` is stored with LF (the source has 13 CRLFs).
 - `git status --porcelain --ignored -uall packaging/windows/`: the 20 binaries are untracked, none
   ignored. `git check-ignore -v` matches `.wixsharp/…` to the new rule (`.gitignore:374`).
-- `git check-attr`: the `.dll`s are `binary`. The `.exe.config` is `text eol=lf` and has no CR.
+- `git check-attr`: the `.dll`s are `binary`. The `.exe.config` is `text eol=lf`.
 - `Enigma.Msi.Worker.exe` with no arguments printed "No arguments were given." and the two usage forms,
   exit code **2**.
 - Fix budget: 0 cycles used.

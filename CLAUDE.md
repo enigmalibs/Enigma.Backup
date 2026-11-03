@@ -19,6 +19,7 @@ dotnet test --solution Enigma.Backup.slnx       # xUnit v3 on MTP — note: --so
 ./publish.sh                                    # release zips for win-x64 + linux-x64 (publish.ps1 on Windows)
 ./packaging/linux/publish.sh                    # plain ReadyToRun publish into bin/ (windows/publish.ps1|.bat)
 ./packaging/linux/install.sh                    # per-user Linux install; uninstall.sh removes it
+.\packaging\windows\buildmsi.ps1                # Windows MSI into artifacts/ (buildmsi.bat) — runs git clean -dxf!
 ```
 
 `publish.sh` / `publish.ps1` build self-contained single-file apps into `artifacts/publish/<rid>/`
@@ -26,7 +27,16 @@ and zip them; `<Version>` in `Directory.Build.props` names the zips. Build the *
 Linux — `Compress-Archive` records no Unix file mode. Full procedure: `docs/RELEASE.md`. The
 `packaging/` scripts are the plain publish and the Linux installer every Enigma app has, not the release:
 keep `packaging/linux/*.sh` at mode `100755` (`git update-index --chmod=+x` when adding one from Windows)
-and `publish.bat` CRLF (`.gitattributes` does the latter).
+and `publish.bat` / `buildmsi.bat` CRLF (`.gitattributes` does the latter).
+
+`buildmsi.ps1` cleans the repository with `git clean -dxf` **before** it publishes, so never run it in a
+tree with work you have not committed — verify it in a scratch clone instead. It packages
+`packaging/windows/publish.ps1`'s output with the vendored Enigma.Msi worker
+(`packaging/windows/Enigma.Msi.Worker/`, refreshed only as its README says; WixSharp's `.wixsharp/`
+beside it is ignored) and writes the Enigma.Msi profile itself, so a release edits nothing for it. Its
+`$UpgradeCode` is the product line's identity in Windows Installer and **never changes** — a new one
+installs beside the old version instead of upgrading it; `WindowsInstallerTests` pins it. The script is
+ASCII on purpose: Windows PowerShell 5.1 reads a BOM-less script as ANSI.
 
 **Warnings are build errors solution-wide** (`TreatWarningsAsErrors`), and the root `.editorconfig`
 is enforced at build time (`EnforceCodeStyleInBuild`) — a style rule at `warning` severity fails the
