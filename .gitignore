@@ -368,3 +368,7 @@ FodyWeavers.xsd
 # would swallow them, so src/ and tests/ are exempted from it.
 !src/**/Backup*/
 !tests/**/Backup*/
+
+# Enigma.Msi worker (packaging/windows/Enigma.Msi.Worker): WixSharp writes this folder beside the
+# worker on its first MSI build. It is rebuilt on demand, never committed.
+packaging/windows/Enigma.Msi.Worker/.wixsharp/

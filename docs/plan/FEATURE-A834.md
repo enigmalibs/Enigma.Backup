@@ -1,6 +1,6 @@
 # FEATURE-A834 — Windows MSI build script
 
-**Status:** TODO
+**Status:** IN PROGRESS
 **Type:** FEATURE
 **Branch:** one per phase, see below
 **Run:** feature/2026-11-03-icons-msi-release
@@ -52,7 +52,7 @@ The repository carries a copy of Enigma.Msi's worker CLI. The scripts work exact
 ## PHASE01 — Vendor the Enigma.Msi worker CLI
 
 **Branch:** `feature/feature-a834-phase01-vendor-msi-worker`
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 
