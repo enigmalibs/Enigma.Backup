@@ -1,6 +1,6 @@
 # FEATURE-9663 — Release 1.4.0
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-9663-release-1-4-0`
 **Run:** feature/2026-11-03-icons-msi-release

@@ -37,4 +37,4 @@
 | FEATURE-A834 | Windows MSI build script                     | DONE   | docs/plan/FEATURE-A834.md |
 | - PHASE01    | Vendor the Enigma.Msi worker CLI             | DONE   | (in FEATURE-A834.md)      |
 | - PHASE02    | The buildmsi scripts                         | DONE   | (in FEATURE-A834.md)      |
-| FEATURE-9663 | Release 1.4.0                                | TODO   | docs/plan/FEATURE-9663.md |
+| FEATURE-9663 | Release 1.4.0                                | DONE   | docs/plan/FEATURE-9663.md |
