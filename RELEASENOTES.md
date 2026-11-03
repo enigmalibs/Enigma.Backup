@@ -1,3 +1,72 @@
+# Enigma.Backup v1.4.0 Release Notes
+
+Enigma.Backup gets the **new icon** from the set the Enigma apps now share, and a **Windows installer** you can build
+from the repository in one command. The icon is the same page with a zip down its spine, without the
+dark tile behind it. The installer is an MSI that puts **Enigma Backup** in Program Files, with a
+shortcut on the desktop and in the program menu.
+
+Nothing about a backup changed. The `EBK1` container version byte has not moved, profiles are written
+exactly as 1.3.0 wrote them, and the real 1.0.0 archive checked into the test suite is still verified
+and restored byte-for-byte on every build.
+
+## What is new
+
+- **The new app icon.** The window, the taskbar, the executable, the About dialog, the `app.ico` beside
+  the executable and the Linux launcher entry all show the new icon: the same page and zip, now on a
+  transparent background instead of a dark tile, so it sits on any taskbar or launcher colour.
+- **A Windows installer.** `packaging\windows\buildmsi.ps1` (or `buildmsi.bat` from cmd) builds
+  `artifacts\Enigma.Backup.X.Y.Z.msi` in one step: it cleans the repository with `git clean -dxf`,
+  publishes the app with `packaging\windows\publish.ps1`, and packages the result with Enigma.Msi. The
+  MSI installs **Enigma Backup** for all users in `%ProgramFiles%\Enigma Backup`, with a shortcut on the
+  desktop and one in the program menu, and the icon in *Apps & features*. A later MSI replaces an earlier
+  one instead of installing beside it: every MSI carries the same upgrade code. The installed app runs on
+  an installed .NET 10 runtime. Building it needs Windows, the .NET 10 SDK and the WiX CLI
+  (`dotnet tool install --global wix`); a copy of Enigma.Msi's worker is in
+  `packaging\windows\Enigma.Msi.Worker\`.
+
+## Files
+
+- **Nothing new is stored, and nothing stored changed.** Profiles are written exactly as 1.3.0 wrote
+  them (`formatVersion` 1 unless a pattern input or Zip asks for 2), and `settings.json` still holds the
+  theme and nothing else.
+- **The release zips are unchanged in shape**: the executable and `app.ico`, which is now the new icon.
+- **The MSI writes nothing of its own** beyond the install folder, the two shortcuts and its Windows
+  Installer registration. Your profiles and preferences stay in the per-user config folder, where an
+  uninstall leaves them.
+
+## Dependencies
+
+- **No package moved.** The only update available is the coupled Avalonia set, **12.1.4 → 12.1.5**
+  (`Avalonia`, `Avalonia.Desktop`, `Avalonia.Themes.Fluent`, `Avalonia.Fonts.Inter`). It is **held back
+  as a unit**: Enigma.Avalonia.Desktop 1.3.0, still its latest release, is built against 12.1.4, and the
+  set moves with it or not at all.
+- `dotnet list package --outdated` reports nothing else for the four projects, and
+  `--vulnerable --include-transitive` reports no known vulnerability.
+- **Build-time only, not in the app:** the Windows installer is built with Enigma.Msi 1.7.0's worker
+  (WixSharp_wix4 2.14.2, MIT; WiX Toolset 4.0.1 assemblies, MS-RL), committed under
+  `packaging/windows/Enigma.Msi.Worker/`, and the WiX CLI the build machine installs.
+
+## Compatibility
+
+- **The `EBK1` container version byte is unchanged.** Every encrypted archive written by 1.0.0 through
+  1.3.0 opens, verifies and restores here, and the golden 1.0.0 archive in the test suite proves it on
+  every build.
+- **Profiles are unchanged in both directions**: everything 1.3.0 wrote opens here, and everything this
+  build writes opens in 1.3.0.
+- **Archive naming, the `.sha256` sidecar format and the `.zip` format are unchanged.**
+- **Windows x64** and **Linux x64**, still shipped as self-contained single-file zips that need no
+  installed .NET runtime. The MSI is the Windows alternative for a machine that has the .NET 10 runtime;
+  it is a 32-bit package, so on 64-bit Windows its folder is under `Program Files (x86)`, like the other
+  Enigma apps.
+
+## Version
+
+- Minor release: **1.4.0**. User-visible additions (the new icon, a Windows installer) and nothing
+  already released breaks: the `EBK1` byte, archive naming, the sidecar format and both profile versions
+  are untouched.
+
+---
+
 # Enigma.Backup v1.3.0 Release Notes
 
 Enigma.Backup joins the baseline every Enigma app now shares. It wears its **final icon**, opens the

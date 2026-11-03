@@ -45,9 +45,11 @@ Run from the repository root, on the branch that will be merged:
 
 ## 2. Build the release zips
 
-These are the **root** `publish.sh` / `publish.ps1`. The scripts under `packaging/` (`windows/publish.ps1`,
-`windows/publish.bat`, `linux/publish.sh`) are a different thing — a plain framework-dependent ReadyToRun
-publish into `bin/`, for local use — and produce nothing a release ships.
+These are the **root** `publish.sh` / `publish.ps1`. The publish scripts under `packaging/`
+(`windows/publish.ps1`, `windows/publish.bat`, `linux/publish.sh`) are a different thing — a plain
+framework-dependent ReadyToRun publish into `bin/`, for local use — and produce no zip. The Windows
+installer, `packaging/windows/buildmsi.ps1`, is built from that plain publish: see
+[The Windows installer](#the-windows-installer).
 
 ```bash
 ./publish.sh                    # Linux and macOS hosts
@@ -111,6 +113,9 @@ git push origin X.Y.Z
 
 - [ ] Create the GitHub release against the `X.Y.Z` tag.
 - [ ] Attach both zips from `artifacts/`.
+- [ ] If the release ships the Windows installer: build it on the tagged commit with
+      `packaging\windows\buildmsi.ps1` (it runs `git clean -dxf`, which deletes the zips — attach them
+      first or build it in a separate clone) and attach `artifacts\Enigma.Backup.X.Y.Z.msi`.
 - [ ] Paste the `RELEASENOTES.md` section for `X.Y.Z` as the release body.
 
 ## 7. Post-release verification
@@ -120,3 +125,22 @@ git push origin X.Y.Z
       window — this is what "self-contained" is claiming, and it is the one thing a developer
       machine cannot check.
 - [ ] The tag exists on `main` and its release notes match `RELEASENOTES.md`.
+
+## The Windows installer
+
+`packaging\windows\buildmsi.ps1` (or `buildmsi.bat`) builds `artifacts\Enigma.Backup.X.Y.Z.msi`:
+`git clean -dxf`, then `packaging\windows\publish.ps1`, then Enigma.Msi's worker (vendored in
+`packaging\windows\Enigma.Msi.Worker\`). It needs Windows, the .NET 10 SDK and the WiX CLI
+(`dotnet tool install --global wix`; WiX 7 also needs `wix eula accept wix7` once). The installed app
+runs on an installed .NET 10 runtime: the MSI is the plain publish, not the self-contained zip.
+
+There is no committed MSI profile per version. The script writes the profile on every build, from
+`Directory.Build.props` (the version) and its own constants, and keeps it beside the MSI as
+`Enigma.Backup.X.Y.Z.msipkg.json`. So a release changes nothing for the installer.
+
+- **`upgradeCode`** is `d60f30d6-32d0-4629-ba7d-f98eb9731a91`, written once in `buildmsi.ps1` and
+  drawn for the first MSI (1.4.0). It must never change: an MSI with another code installs beside the
+  old version instead of replacing it. `WindowsInstallerTests` pins it.
+- **`productId`** is new for every build.
+- The package is 32-bit (Enigma.Msi has no platform setting), so on 64-bit Windows
+  `%ProgramFiles%\Enigma Backup` is under `Program Files (x86)`, as for the other Enigma apps.
