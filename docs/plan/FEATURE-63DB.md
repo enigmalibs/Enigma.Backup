@@ -1,6 +1,6 @@
 # FEATURE-63DB — Release 1.5.0
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-63db-release-1-5-0`
 **Run:** feature/2026-11-04-icons-release

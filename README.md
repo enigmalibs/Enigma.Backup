@@ -6,11 +6,10 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.4.0** — the new app icon, without the dark tile, and a **Windows installer**:
-> `packaging\windows\buildmsi.ps1` builds an MSI that installs **Enigma Backup** in Program Files with
-> its shortcuts. 1.3.0 brought the shared **About** dialog, the **Something went wrong** safety net and
-> the Linux `install.sh`. The archive container, the file names and every existing profile are
-> untouched, so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
+> **What's new in 1.5.0** — the app icon now fills its frame: the same page and zip, a third larger,
+> wherever the icon appears. 1.4.0 brought the tile-less icon and a **Windows installer**
+> (`packaging\windows\buildmsi.ps1`). The archive container, the file names and every existing profile
+> are untouched, so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
 
 ## Capabilities
 
@@ -46,8 +45,8 @@ It is self-contained — **no .NET runtime needs to be installed.**
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.4.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.4.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.5.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.5.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 The zip needs no installer and writes nothing outside your home directory. To uninstall, delete the
 executable and its `app.ico` and — if you want your profiles gone too — the config folder listed below.
