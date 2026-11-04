@@ -246,6 +246,6 @@ commit), so there is no base branch to fork later phases from other than the cur
   kill the shell too.
 - The app icon `src/Enigma.Backup.Desktop/Assets/enigma-backup.ico` (ten PNG frames, 16–256 px) and
   `enigma-backup.png` (its 256-px frame) are the final art, copied byte for byte from the user's
-  `Branding/Apps/final2/backup` set (no tile: the background is transparent), whose SVG masters live
+  `Branding/Apps/final3/backup` set (no tile: the drawing fills a transparent frame), whose SVG masters live
   outside this repository. So are the eight `packaging/linux/icons/` PNGs, which are the `.ico`'s frames
   of their size. Replace them from there, never by re-rendering here.
