@@ -1,3 +1,59 @@
+# Enigma.Backup v1.5.0 Release Notes
+
+Enigma.Backup's icon **fills its frame** now. It is the same page with a zip down its spine, in the same
+colours and still without a tile, drawn a third larger, so it no longer looks small beside the other
+icons on a taskbar, in a launcher or in a shortcut. As before, the sizes up to 32 px use a simplified
+drawing, redrawn at the larger size, so the zip stays legible at 16 px.
+
+Nothing about a backup changed. The `EBK1` container version byte has not moved, profiles are written
+exactly as 1.4.0 wrote them, and the real 1.0.0 archive checked into the test suite is still verified
+and restored byte-for-byte on every build.
+
+## What is new
+
+- **The app icon fills its frame.** The window, the taskbar, the executable, the About dialog, the
+  `app.ico` beside the executable, the Windows installer's shortcuts and *Apps & features* entry, and
+  the Linux launcher entry all show the larger drawing. The `.ico` still carries the same ten sizes,
+  16 to 256 px.
+
+## Files
+
+- **Nothing new is stored, and nothing stored changed.** Profiles are written exactly as 1.4.0 wrote
+  them (`formatVersion` 1 unless a pattern input or Zip asks for 2), and `settings.json` still holds the
+  theme and nothing else.
+- **The release zips are unchanged in shape**: the executable and `app.ico`, which is now the new icon.
+- **The MSI is unchanged in shape**: `packaging\windows\buildmsi.ps1` takes the version from
+  `Directory.Build.props`, so it builds `Enigma.Backup.1.5.0.msi` with no change of its own, and an
+  installed 1.4.0 is replaced rather than joined: the upgrade code has not moved.
+
+## Dependencies
+
+- **No package moved.** The only update available is still the coupled Avalonia set, **12.1.4 → 12.1.5**
+  (`Avalonia`, `Avalonia.Desktop`, `Avalonia.Themes.Fluent`, `Avalonia.Fonts.Inter`). It is **held back
+  as a unit**: Enigma.Avalonia.Desktop 1.3.0, still its latest release, is built against 12.1.4, and the
+  set moves with it or not at all.
+- `dotnet list package --outdated` reports nothing else for the four projects, and
+  `--vulnerable --include-transitive` reports no known vulnerability.
+
+## Compatibility
+
+- **The `EBK1` container version byte is unchanged.** Every encrypted archive written by 1.0.0 through
+  1.4.0 opens, verifies and restores here, and the golden 1.0.0 archive in the test suite proves it on
+  every build.
+- **Profiles are unchanged in both directions**: everything 1.4.0 wrote opens here, and everything this
+  build writes opens in 1.4.0.
+- **Archive naming, the `.sha256` sidecar format and the `.zip` format are unchanged.**
+- **Windows x64** and **Linux x64**, still shipped as self-contained single-file zips that need no
+  installed .NET runtime, plus the MSI for a Windows machine that has the .NET 10 runtime.
+
+## Version
+
+- Minor release: **1.5.0**. A user-visible change (the larger icon) and nothing already released
+  breaks: the `EBK1` byte, archive naming, the sidecar format, both profile versions and the MSI's
+  upgrade code are untouched.
+
+---
+
 # Enigma.Backup v1.4.0 Release Notes
 
 Enigma.Backup gets the **new icon** from the set the Enigma apps now share, and a **Windows installer** you can build
