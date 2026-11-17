@@ -40,3 +40,9 @@
 | FEATURE-9663 | Release 1.4.0                                | DONE   | docs/plan/FEATURE-9663.md |
 | FEATURE-76FB | Icon set final3                              | DONE   | docs/plan/FEATURE-76FB.md |
 | FEATURE-63DB | Release 1.5.0                                | DONE   | docs/plan/FEATURE-63DB.md |
+| FEATURE-95BE | Navigation rail and page-based UI            | TODO   | docs/plan/FEATURE-95BE.md |
+| - PHASE01    | Runs in a content dialog                     | TODO   | (in FEATURE-95BE.md)      |
+| - PHASE02    | Rail and Verify & Restore page               | TODO   | (in FEATURE-95BE.md)      |
+| - PHASE03    | Settings page                                | TODO   | (in FEATURE-95BE.md)      |
+| - PHASE04    | Profiles page and single backup              | TODO   | (in FEATURE-95BE.md)      |
+| - PHASE05    | Backup with a profile                        | TODO   | (in FEATURE-95BE.md)      |
