@@ -1,6 +1,6 @@
 # FEATURE-3310 — About dialog shows Enigma Backup
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-3310-app-display-name`
 **Run:** feature/2026-11-16-centered-pages-release

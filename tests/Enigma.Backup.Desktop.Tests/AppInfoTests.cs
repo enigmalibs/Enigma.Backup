@@ -91,5 +91,5 @@ public sealed class AppInfoTests
     }
 
     [Fact]
-    public void TheNameIsTheOneTheWindowUses() => Assert.Equal("Enigma.Backup", AppInfo.Name);
+    public void TheNameIsTheOneTheWindowUses() => Assert.Equal("Enigma Backup", AppInfo.Name);
 }

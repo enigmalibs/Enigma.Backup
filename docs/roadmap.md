@@ -47,5 +47,5 @@
 | - PHASE04    | Profiles page and single backup              | DONE   | (in FEATURE-95BE.md)      |
 | - PHASE05    | Backup with a profile                        | DONE   | (in FEATURE-95BE.md)      |
 | FEATURE-464A | Centre the page content                      | DONE   | docs/plan/FEATURE-464A.md |
-| FEATURE-3310 | About dialog shows Enigma Backup             | TODO   | docs/plan/FEATURE-3310.md |
+| FEATURE-3310 | About dialog shows Enigma Backup             | DONE   | docs/plan/FEATURE-3310.md |
 | FEATURE-63B5 | Release 1.6.0                                | TODO   | docs/plan/FEATURE-63B5.md |

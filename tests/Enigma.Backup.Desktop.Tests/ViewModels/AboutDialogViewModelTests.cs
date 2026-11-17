@@ -18,7 +18,7 @@ public sealed class AboutDialogViewModelTests
     {
         AboutDialogViewModel viewModel = new("1.3.0", "0f6b505", "Copyright © 2026 Someone");
 
-        Assert.Equal("Enigma.Backup", viewModel.DisplayName);
+        Assert.Equal("Enigma Backup", viewModel.DisplayName);
         Assert.Equal("1.3.0", viewModel.Version);
         Assert.Equal("0f6b505", viewModel.BuildSha);
         Assert.True(viewModel.HasBuildSha);

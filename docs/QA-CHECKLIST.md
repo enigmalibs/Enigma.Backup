@@ -146,7 +146,7 @@ beside the executable (§1).
 | 7.9 | An unexpected error (needs a throwing build — e.g. a temporary `throw` in a command) shows **Something went wrong** with the warning icon, its message and a single `Close`; the app keeps running afterwards | ☐ | ☐ |
 | 7.10 | A second error while that dialog is open adds "1 more error occurred." to it rather than opening another; *Details* expands to the type, message and stack, and **Copy details** puts them on the clipboard | ☐ | ☐ |
 | 7.11 | An unexpected error while another dialog is open (e.g. About) waits for that dialog to close, then appears — it never replaces it | ☐ | ☐ |
-| 7.12 | A failure during start-up (needs a throwing build — a temporary `throw` in `App.Compose`) opens a small `Enigma.Backup` window with the same dialog, saying the app could not start; `Close` ends the process | ☐ | ☐ |
+| 7.12 | A failure during start-up (needs a throwing build — a temporary `throw` in `App.Compose`) opens a small `Enigma Backup` window with the same dialog, saying the app could not start; `Close` ends the process | ☐ | ☐ |
 
 ## 8. Settings: theme and storage; About
 
@@ -168,7 +168,7 @@ The theme preference (1.1.0) lives in `settings.json` **beside** the `profiles/`
 | 8.10 | A **Storage** card names the config folder and carries an **Open folder** button | ☐ | ☐ |
 | 8.11 | `Open folder` shows that folder in the desktop's file manager, with `settings.json` and `profiles/` in it | ☐ | ☐ |
 | 8.12 | On a fresh config — nothing written yet — `Open folder` **creates** the folder and opens it rather than reporting an error | ☐ | ☐ |
-| 8.13 | `About Enigma Backup` on the About card (beside `Version 1.5.0`) opens **About**, with no title bar text and no header icon: the app icon, `Enigma.Backup`, `Version 1.5.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
+| 8.13 | `About Enigma Backup` on the About card (beside `Version 1.5.0`) opens **About**, with no title bar text and no header icon: the app icon, `Enigma Backup`, `Version 1.5.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
 | 8.14 | About's only button is `Close`; Escape and Enter close it too, and the build sha can be selected and copied | ☐ | ☐ |
 | 8.15 | About fits its host — nothing scrolls and nothing is clipped, in both variants; the Settings page holds Theme, Storage and About only, and no gear or ⓘ is left anywhere else | ☐ | ☐ |
 
