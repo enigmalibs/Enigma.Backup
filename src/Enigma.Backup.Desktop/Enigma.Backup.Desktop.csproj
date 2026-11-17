@@ -5,6 +5,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Enigma.Backup.Desktop</RootNamespace>
     <AssemblyName>Enigma.Backup.Desktop</AssemblyName>
+    <!-- The name Windows shows for the exe (Task Manager, the file's Properties, "Open with"): the
+         product's, as AppInfo.Name spells it. Left unset, both default to the assembly name above. -->
+    <AssemblyTitle>Enigma Backup</AssemblyTitle>
+    <Product>Enigma Backup</Product>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- Windows-only: embeds the icon in the .exe. The running window's icon is set in
          MainWindow.axaml (Icon="/Assets/enigma-backup.ico"), which is what Linux uses. -->

@@ -51,5 +51,5 @@
 | FEATURE-63B5 | Release 1.6.0                                | DONE        | docs/plan/FEATURE-63B5.md |
 | FEATURE-1AA8 | Enigma Backup in every user-facing text      | IN PROGRESS | docs/plan/FEATURE-1AA8.md |
 | - PHASE01    | Core error messages                          | DONE        | (in FEATURE-1AA8.md)      |
-| - PHASE02    | The Windows exe's metadata                   | TODO        | (in FEATURE-1AA8.md)      |
+| - PHASE02    | The Windows exe's metadata                   | DONE        | (in FEATURE-1AA8.md)      |
 | - PHASE03    | Linux launcher and install scripts           | TODO        | (in FEATURE-1AA8.md)      |

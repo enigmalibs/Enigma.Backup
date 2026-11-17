@@ -53,8 +53,10 @@ and restored byte-for-byte on every build.
 - **"Enigma Backup" everywhere the app names itself.** The window title is just `Enigma Backup`,
   without the profile's name. The About dialog, the window shown when the app cannot start, and the
   file picker's archive filter now use the same spelling. So do the errors a run can end with: a file
-  that is not an archive, and an encrypted archive from a newer version. The config folder keeps its
-  name (`Enigma.Backup`), so every saved profile and preference is still found.
+  that is not an archive, and an encrypted archive from a newer version. On Windows, Task Manager and
+  the exe's *Properties* name it `Enigma Backup` too; the exe itself is still
+  `Enigma.Backup.Desktop.exe`. The config folder keeps its name (`Enigma.Backup`), so every saved
+  profile and preference is still found.
 - **A shorter minimum window.** The pages scroll, so the window's minimum height drops to 600 px.
 
 ## Files

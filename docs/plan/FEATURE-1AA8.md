@@ -66,7 +66,7 @@ Acceptance criteria:
 
 ## PHASE02 — The Windows exe's metadata
 
-**Status:** TODO
+**Status:** DONE
 
 Steps:
 1. `Enigma.Backup.Desktop.csproj`: `<AssemblyTitle>Enigma Backup</AssemblyTitle>` and
