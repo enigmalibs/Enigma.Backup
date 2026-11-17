@@ -9,7 +9,7 @@
 
   <DockPanel>
 
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Classes="pageHeader">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Classes="pageHeader pageColumn">
       <Border Grid.Column="0" Classes="pageIcon">
         <PathIcon Data="{ei:IconGeometry FileText}" />
       </Border>
@@ -21,87 +21,82 @@
     </Grid>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <Grid Margin="24,0,24,24">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" MaxWidth="900" />
-        </Grid.ColumnDefinitions>
-        <StackPanel Spacing="10">
+      <StackPanel Spacing="10" Margin="24,0,24,24" Classes="pageColumn">
 
-          <!-- Which profile is loaded, and where it stands: the card's description is the status. -->
-          <controls:SettingsCard Header="Profile"
-                                 Description="{Binding ProfileStatus}"
-                                 IconData="{ei:IconGeometry FileText}">
-            <ComboBox ItemsSource="{Binding ProfileNames}"
-                      SelectedItem="{Binding SelectedProfileName}"
-                      PlaceholderText="No profile loaded"
-                      MinWidth="260"
-                      MaxWidth="360"
-                      AutomationProperties.Name="Profile" />
-          </controls:SettingsCard>
+        <!-- Which profile is loaded, and where it stands: the card's description is the status. -->
+        <controls:SettingsCard Header="Profile"
+                               Description="{Binding ProfileStatus}"
+                               IconData="{ei:IconGeometry FileText}">
+          <ComboBox ItemsSource="{Binding ProfileNames}"
+                    SelectedItem="{Binding SelectedProfileName}"
+                    PlaceholderText="No profile loaded"
+                    MinWidth="260"
+                    MaxWidth="360"
+                    AutomationProperties.Name="Profile" />
+        </controls:SettingsCard>
 
-          <!-- Everything that can be done to it. They wrap rather than overflow at a narrow width. -->
-          <WrapPanel Classes="actions">
-            <Button Command="{Binding NewProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry NoteBlank}" />
-                <TextBlock Text="New" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding SaveProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry FloppyDisk}" />
-                <TextBlock Text="Save" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding SaveProfileAsCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry FloppyDiskBack}" />
-                <TextBlock Text="Save as…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding RenameProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry PencilSimple}" />
-                <TextBlock Text="Rename…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding DeleteProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry Trash}" />
-                <TextBlock Text="Delete…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding ImportProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry DownloadSimple}" />
-                <TextBlock Text="Import…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding ExportProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry UploadSimple}" />
-                <TextBlock Text="Export…" />
-              </StackPanel>
-            </Button>
-          </WrapPanel>
+        <!-- Everything that can be done to it. They wrap rather than overflow at a narrow width. -->
+        <WrapPanel Classes="actions">
+          <Button Command="{Binding NewProfileCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry NoteBlank}" />
+              <TextBlock Text="New" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding SaveProfileCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry FloppyDisk}" />
+              <TextBlock Text="Save" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding SaveProfileAsCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry FloppyDiskBack}" />
+              <TextBlock Text="Save as…" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding RenameProfileCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry PencilSimple}" />
+              <TextBlock Text="Rename…" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding DeleteProfileCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry Trash}" />
+              <TextBlock Text="Delete…" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding ImportProfileCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry DownloadSimple}" />
+              <TextBlock Text="Import…" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding ExportProfileCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry UploadSimple}" />
+              <TextBlock Text="Export…" />
+            </StackPanel>
+          </Button>
+        </WrapPanel>
 
-          <!-- What the profile holds: the same two sections as the Backup page. -->
-          <controls:SettingsCardExpander Header="Input"
-                                         Description="What goes into the profile's archives"
-                                         IconData="{ei:IconGeometry Files}"
-                                         IsExpanded="True">
-            <views:InputsEditor DataContext="{Binding Editor}" />
-          </controls:SettingsCardExpander>
+        <!-- What the profile holds: the same two sections as the Backup page. -->
+        <controls:SettingsCardExpander Header="Input"
+                                       Description="What goes into the profile's archives"
+                                       IconData="{ei:IconGeometry Files}"
+                                       IsExpanded="True">
+          <views:InputsEditor DataContext="{Binding Editor}" />
+        </controls:SettingsCardExpander>
 
-          <controls:SettingsCardExpander Header="Output"
-                                         Description="Where the profile's archives are written, and how"
-                                         IconData="{ei:IconGeometry HardDrives}"
-                                         IsExpanded="True">
-            <views:OutputEditor DataContext="{Binding Editor}" />
-          </controls:SettingsCardExpander>
+        <controls:SettingsCardExpander Header="Output"
+                                       Description="Where the profile's archives are written, and how"
+                                       IconData="{ei:IconGeometry HardDrives}"
+                                       IsExpanded="True">
+          <views:OutputEditor DataContext="{Binding Editor}" />
+        </controls:SettingsCardExpander>
 
-        </StackPanel>
-      </Grid>
+      </StackPanel>
     </ScrollViewer>
 
   </DockPanel>

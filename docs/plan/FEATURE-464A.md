@@ -1,6 +1,6 @@
 # FEATURE-464A — Centre the page content
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-464a-centred-pages`
 **Run:** feature/2026-11-16-centered-pages-release

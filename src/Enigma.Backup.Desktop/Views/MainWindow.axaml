@@ -38,6 +38,14 @@
   </Window.Resources>
 
   <Window.Styles>
+    <!-- A page's column: its header, its cards and its action bar's contents. Cards read badly stretched
+         across a wide window, so the column has a ceiling; an element held below the width it is given
+         while left to Stretch is centred in it, so on a wide window the page sits in the middle of the
+         space right of the rail, and on a narrow one it fills it. One class, so the three line up. -->
+    <Style Selector=":is(Control).pageColumn">
+      <Setter Property="MaxWidth" Value="900" />
+    </Style>
+
     <!-- The page header, as Enigma.Launchpad's: an icon tile, the page's name and one sentence. -->
     <Style Selector="Grid.pageHeader">
       <Setter Property="Margin" Value="24,20,24,16" />

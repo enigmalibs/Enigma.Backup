@@ -92,6 +92,7 @@ beside the executable (§1).
 | 3.11 | Each page opens with its icon, name and one sentence; Backup holds two sections, **Input** and **Output**, and no profile button at all; the profile drop-down and its seven buttons are on **Profiles** | ☐ | ☐ |
 | 3.12 | With at least one profile saved, Backup opens on **A profile** with the first one chosen: Input shows its summary (each folder, each pattern as `pattern in folder`, what it leaves out), Output shows its folder and options greyed out under *Set by the profile*; with none, it opens on **Files and folders** | ☐ | ☐ |
 | 3.13 | **Back up** on a profile writes `<Profile>_…` archives exactly as last saved — an unsaved edit on the Profiles page is not in it; saving that edit updates the summary at once | ☐ | ☐ |
+| 3.14 | Maximised, every page's header, cards and — on Backup — the **Back up** row sit in one column of at most 900 px, **centred** right of the rail, the header's left edge over the cards'; at the minimum width the column fills the page and nothing scrolls sideways | ☐ | ☐ |
 
 ## 4. Backup
 

@@ -8,7 +8,7 @@
 
   <DockPanel>
 
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Classes="pageHeader">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Classes="pageHeader pageColumn">
       <Border Grid.Column="0" Classes="pageIcon">
         <PathIcon Data="{ei:IconGeometry ClockCounterClockwise}" />
       </Border>
@@ -20,39 +20,33 @@
     </Grid>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <!-- A column with a ceiling, as every page's. -->
-      <Grid Margin="24,0,24,24">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" MaxWidth="900" />
-        </Grid.ColumnDefinitions>
-        <!-- Both actions start with a picker and end in the run dialog: nothing to fill in here
-             first. -->
-        <StackPanel Spacing="8">
+      <!-- A centred column with a ceiling, as every page's. Both actions start with a picker and end in
+           the run dialog: nothing to fill in here first. -->
+      <StackPanel Spacing="8" Margin="24,0,24,24" Classes="pageColumn">
 
-          <controls:SettingsCard Header="Verify an archive"
-                                 Description="Re-reads an archive and checks it against the .sha256 file written beside it. For an encrypted archive, the password lets every block be checked too."
-                                 IconData="{ei:IconGeometry SealCheck}">
-            <Button Command="{Binding VerifyCommand}" MinWidth="130" Height="34">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry SealCheck}" />
-                <TextBlock Text="Verify…" />
-              </StackPanel>
-            </Button>
-          </controls:SettingsCard>
+        <controls:SettingsCard Header="Verify an archive"
+                               Description="Re-reads an archive and checks it against the .sha256 file written beside it. For an encrypted archive, the password lets every block be checked too."
+                               IconData="{ei:IconGeometry SealCheck}">
+          <Button Command="{Binding VerifyCommand}" MinWidth="130" Height="34">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry SealCheck}" />
+              <TextBlock Text="Verify…" />
+            </StackPanel>
+          </Button>
+        </controls:SettingsCard>
 
-          <controls:SettingsCard Header="Restore an archive"
-                                 Description="Unpacks an archive into a folder you choose. A file that is already there is never overwritten without asking."
-                                 IconData="{ei:IconGeometry ArrowCounterClockwise}">
-            <Button Command="{Binding RestoreCommand}" MinWidth="130" Height="34">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry ArrowCounterClockwise}" />
-                <TextBlock Text="Restore…" />
-              </StackPanel>
-            </Button>
-          </controls:SettingsCard>
+        <controls:SettingsCard Header="Restore an archive"
+                               Description="Unpacks an archive into a folder you choose. A file that is already there is never overwritten without asking."
+                               IconData="{ei:IconGeometry ArrowCounterClockwise}">
+          <Button Command="{Binding RestoreCommand}" MinWidth="130" Height="34">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry ArrowCounterClockwise}" />
+              <TextBlock Text="Restore…" />
+            </StackPanel>
+          </Button>
+        </controls:SettingsCard>
 
-        </StackPanel>
-      </Grid>
+      </StackPanel>
     </ScrollViewer>
 
   </DockPanel>
