@@ -27,18 +27,19 @@ Legend: **L** = Linux x64 · **W** = Windows x64. Tick both.
 **Since 1.1.0 the app asks its questions inside the window.** Every dialog below — the password, a
 profile name, a confirmation, a decision — is raised over a dimmed main window rather than as a
 separate window of its own, so there is no title-bar ✕ and **Escape or a click on the dimmed area**
-is what cancels one. **Since FEATURE-95BE a run is shown in a dialog of its own**: its progress and
+is what cancels one. **Since 1.6.0 a run is shown in a dialog of its own**: its progress and
 `Cancel` while it runs, then — in the same dialog — its outcome and `Close`. There is no banner and no
 **Last run** panel any more; wherever the rows below speak of the outcome, it is that dialog.
 
-**Since FEATURE-95BE the window has a rail of pages on the left**, and `Restore…` and `Verify…` are
+**Since 1.6.0 the window has a rail of pages on the left**, and `Restore…` and `Verify…` are
 on the **Verify & Restore** page (the rail's second icon) — wherever §§5–6 below say "start a restore"
 or "start a verify", that is where the button is now. The window title is just `Enigma Backup`, and
-**Settings** is a page at the foot of the rail (§8). Two new capabilities have sections of their own
-at the end: **pattern inputs** (§9) and **zip archives** (§10).
+**Settings** is a page at the foot of the rail (§8). On a wide window every page sits in a centred
+column (3.14), and About names the app `Enigma Backup` (8.13). The two capabilities 1.2.0 added have
+sections of their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 
 **Since 1.3.0 About is a dialog of its own**, opened from the Settings page's About card since
-FEATURE-95BE (§8). An unexpected error opens a **Something went wrong** dialog
+1.6.0 (§8). An unexpected error opens a **Something went wrong** dialog
 instead of ending the app (§7, 7.9–7.12 — these need a throwing build), and the zip carries `app.ico`
 beside the executable (§1).
 
@@ -168,7 +169,7 @@ The theme preference (1.1.0) lives in `settings.json` **beside** the `profiles/`
 | 8.10 | A **Storage** card names the config folder and carries an **Open folder** button | ☐ | ☐ |
 | 8.11 | `Open folder` shows that folder in the desktop's file manager, with `settings.json` and `profiles/` in it | ☐ | ☐ |
 | 8.12 | On a fresh config — nothing written yet — `Open folder` **creates** the folder and opens it rather than reporting an error | ☐ | ☐ |
-| 8.13 | `About Enigma Backup` on the About card (beside `Version 1.5.0`) opens **About**, with no title bar text and no header icon: the app icon, `Enigma Backup`, `Version 1.5.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
+| 8.13 | `About Enigma Backup` on the About card (beside `Version 1.6.0`) opens **About**, with no title bar text and no header icon: the app icon, `Enigma Backup`, `Version 1.6.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
 | 8.14 | About's only button is `Close`; Escape and Enter close it too, and the build sha can be selected and copied | ☐ | ☐ |
 | 8.15 | About fits its host — nothing scrolls and nothing is clipped, in both variants; the Settings page holds Theme, Storage and About only, and no gear or ⓘ is left anywhere else | ☐ | ☐ |
 
@@ -223,6 +224,35 @@ machine that has the **.NET 10 runtime** (the MSI is the framework-dependent pub
 | 11.3 | *Apps & features* lists **Enigma Backup**, version `X.Y.Z`, publisher `Josué Clément`, with the app icon | — | ☐ |
 | 11.4 | Installing a later MSI over an earlier one replaces it: *Apps & features* lists one **Enigma Backup**, at the new version | — | ☐ |
 | 11.5 | Uninstalling removes the folder and both shortcuts, and leaves `%APPDATA%\Enigma.Backup` (profiles and preferences) as it was | — | ☐ |
+
+---
+
+## What was verified for 1.6.0
+
+**Against the Windows x64 zip** (`Enigma.Backup-1.6.0-win-x64.zip`, built here with `./publish.ps1 -Rid
+win-x64` and extracted to a scratch folder), and against an MSI built with `buildmsi.bat` in a scratch
+clone of the release branch. The app was driven through **UI Automation**, and nothing was clicked that
+writes. The workstation was locked during the release check, so the zip's window was read but not
+seen, and the MSI was not installed.
+
+| # | Check | Result |
+|---|-------|--------|
+| 1.1 | The zip extracts to exactly two files, the executable and `app.ico` | Pass — `Enigma.Backup.Desktop.exe` (54,605,373 bytes) and `app.ico` (11,382 bytes, identical to the asset) |
+| 1.3 | It launches | Pass, **on a machine that has .NET installed**. A runtime-free machine was not available, so "self-contained" is still the maintainer's check |
+| 1.4 | The window's title is `Enigma Backup` | Pass — read through UIA |
+| 3.14 | Every page sits in a centred column on a wide window | Pass **by eye on a Debug build of the same markup** (FEATURE-464A): every page at 1120 px, maximised and at the 820 px minimum |
+| 8.13 | About shows `Enigma Backup`, `Version 1.6.0`, a `Build` line and the copyright | Pass **by automation**: the Settings page's *About Enigma Backup* invoked, and the dialog's texts read as `Enigma Backup`, `Version`, `1.6.0`, `Build`, `d5e03bd`, `Copyright © 2026 Josué Clément`. Not seen by eye |
+| 11.x | The MSI's identity | Pass **by its tables**, not installed — `Enigma.Backup.1.6.0.msi` (70.6 MB): `ProductName` Enigma Backup, `ProductVersion` 1.6.0, `UpgradeCode` `{D60F30D6-…-F98EB9731A91}` unchanged |
+
+**What was *not* exercised.**
+- The **Linux x64 zip** (`docs/RELEASE.md` requires it to be built on Linux, and this host is Windows),
+  and with it every **L** column.
+- §11.1–11.5: installing, upgrading 1.5.0 → 1.6.0 and uninstalling the MSI are the maintainer's.
+- 8.13 by eye, in either variant.
+- **§§2–10 by hand.** 1.6.0 moves almost every control (the rail, the pages, the run dialog), so this
+  release needs the whole checklist run against both zips before it ships. The automated suite (590
+  tests, including the end-to-end window test that drives the real pipeline) is green, but it does not
+  press buttons.
 
 ---
 

@@ -1,6 +1,6 @@
 # FEATURE-63B5 — Release 1.6.0
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE
 **Branch:** `feature/feature-63b5-release-1-6-0`
 **Run:** feature/2026-11-16-centered-pages-release

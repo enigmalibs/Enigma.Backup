@@ -6,8 +6,10 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.5.0** — the app icon now fills its frame: the same page and zip, a third larger,
-> wherever the icon appears. 1.4.0 brought the tile-less icon and a **Windows installer**
+> **What's new in 1.6.0** — a new window: a rail of pages (**Backup**, **Verify & Restore**,
+> **Profiles**, **Settings**) in a centred column. Backup runs from files picked on the page or from a
+> saved profile. Every run is shown in a dialog of its own, from its first file to its outcome. 1.5.0
+> made the icon fill its frame, and 1.4.0 brought a **Windows installer**
 > (`packaging\windows\buildmsi.ps1`). The archive container, the file names and every existing profile
 > are untouched, so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
 
@@ -46,8 +48,8 @@ It is self-contained — **no .NET runtime needs to be installed.**
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.5.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.5.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.6.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.6.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 The zip needs no installer and writes nothing outside your home directory. To uninstall, delete the
 executable and its `app.ico` and — if you want your profiles gone too — the config folder listed below.
