@@ -57,7 +57,7 @@ internal static class ArchiveFormatDetector
         }
 
         throw new ArchiveFormatException(
-            "The file is not an Enigma.Backup archive: it is not a zip, a zstd or a gzip stream, nor an encrypted EBK1 container.");
+            "The file is not an Enigma Backup archive: it is not a zip, a zstd or a gzip stream, nor an encrypted EBK1 container.");
     }
 
     /// <summary>

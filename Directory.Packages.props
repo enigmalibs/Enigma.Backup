@@ -54,7 +54,7 @@
 
   <!-- Tests (MTP-native: xunit.v3 only). No Microsoft.NET.Test.Sdk. -->
   <ItemGroup>
-    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <!-- Concrete ServiceCollection for the DI-registration tests (the core only takes abstractions). -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
   </ItemGroup>

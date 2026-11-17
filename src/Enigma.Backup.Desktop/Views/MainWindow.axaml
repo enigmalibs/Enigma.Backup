@@ -1,44 +1,107 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:sys="using:System"
         xmlns:ei="https://github.com/josueclement/Enigma.Icons"
         xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
-        xmlns:controls="using:Enigma.Avalonia.Desktop.Controls"
         xmlns:contentDialog="using:Enigma.Avalonia.Desktop.Controls.ContentDialog"
         xmlns:editors="using:Enigma.Avalonia.Desktop.Controls.Editors"
-        xmlns:infoBar="using:Enigma.Avalonia.Desktop.Controls.InfoBar"
+        xmlns:nav="using:Enigma.Avalonia.Desktop.Controls.Navigation"
+        xmlns:pages="using:Enigma.Backup.Desktop.Views.Pages"
         x:Class="Enigma.Backup.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="{Binding Title}"
+        Title="Enigma Backup"
         Icon="/Assets/enigma-backup.ico"
         Width="1120" Height="860"
-        MinWidth="960" MinHeight="780"
+        MinWidth="820" MinHeight="600"
         Background="{DynamicResource EnigmaBackgroundBrush}"
         DragDrop.AllowDrop="True"
         WindowStartupLocation="CenterScreen">
 
+  <Window.Resources>
+    <!-- The rail's items: the icon alone, no label under it, as in Enigma.TextEditor. The name the
+         label would have shown is the tooltip and what a screen reader says. Keyed by type here, so it
+         replaces the library's theme for this window's rail only. -->
+    <ControlTheme x:Key="{x:Type nav:NavigationItem}" TargetType="nav:NavigationItem">
+      <Setter Property="Margin" Value="1" />
+      <Setter Property="ToolTip.Tip" Value="{Binding Header, RelativeSource={RelativeSource Self}}" />
+      <Setter Property="AutomationProperties.Name" Value="{Binding Header, RelativeSource={RelativeSource Self}}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <PathIcon Data="{TemplateBinding IconData}"
+                    Width="20"
+                    Height="20"
+                    Margin="{TemplateBinding Margin}"
+                    HorizontalAlignment="Center"
+                    Foreground="{DynamicResource EnigmaForegroundBrush}" />
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+  </Window.Resources>
+
   <Window.Styles>
-    <Style Selector="Border.panel">
+    <!-- A page's column: its header, its cards and its action bar's contents. Cards read badly stretched
+         across a wide window, so the column has a ceiling; an element held below the width it is given
+         while left to Stretch is centred in it, so on a wide window the page sits in the middle of the
+         space right of the rail, and on a narrow one it fills it. One class, so the three line up. -->
+    <Style Selector=":is(Control).pageColumn">
+      <Setter Property="MaxWidth" Value="900" />
+    </Style>
+
+    <!-- The page header, as Enigma.Launchpad's: an icon tile, the page's name and one sentence. -->
+    <Style Selector="Grid.pageHeader">
+      <Setter Property="Margin" Value="24,20,24,16" />
+    </Style>
+    <Style Selector="Border.pageIcon">
+      <Setter Property="Width" Value="44" />
+      <Setter Property="Height" Value="44" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Background" Value="{DynamicResource EnigmaSurfaceBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource EnigmaBorderSubtleBrush}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Padding" Value="12" />
     </Style>
+    <Style Selector="Border.pageIcon > PathIcon">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaAccentBrush}" />
+    </Style>
+    <Style Selector="StackPanel.pageHeading">
+      <Setter Property="Spacing" Value="2" />
+      <Setter Property="Margin" Value="14,0,0,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.pageTitle">
+      <Setter Property="FontSize" Value="24" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaForegroundBrush}" />
+    </Style>
+    <Style Selector="TextBlock.pageDescription">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaForegroundSecondaryBrush}" />
+    </Style>
+    <!-- The strip at the foot of a page that holds the page's one action, always in view. -->
+    <Style Selector="Border.actionBar">
+      <Setter Property="Background" Value="{DynamicResource EnigmaSurfaceBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource EnigmaBorderSubtleBrush}" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+      <Setter Property="Padding" Value="24,12" />
+    </Style>
+
+    <!-- A section's title on a page of cards, above the cards it groups. -->
+    <Style Selector="TextBlock.sectionHeader">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="2,12,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaForegroundBrush}" />
+    </Style>
+
     <Style Selector="TextBlock.section">
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.muted">
       <Setter Property="Foreground" Value="{DynamicResource EnigmaForegroundSecondaryBrush}" />
-    </Style>
-    <Style Selector="TextBlock.headline.success">
-      <Setter Property="Foreground" Value="{DynamicResource EnigmaSuccessBrush}" />
-    </Style>
-    <Style Selector="TextBlock.headline.warning">
-      <Setter Property="Foreground" Value="{DynamicResource EnigmaWarningBrush}" />
-    </Style>
-    <Style Selector="TextBlock.headline.failure">
-      <Setter Property="Foreground" Value="{DynamicResource EnigmaErrorBrush}" />
     </Style>
 
     <!-- A glyph beside a label, in a button or above a section. PathIcon, not a bare Path, so the glyph
@@ -57,8 +120,8 @@
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- The input actions wrap rather than overflow: five buttons do not fit the panel at the window's
-         minimum width, and a button pushed past the edge is a button nobody can press. -->
+    <!-- Rows of actions wrap rather than overflow: a button pushed past the edge at the window's minimum
+         width is a button nobody can press. -->
     <Style Selector="WrapPanel.actions > Button">
       <Setter Property="Margin" Value="0,0,6,4" />
     </Style>
@@ -79,403 +142,56 @@
   </Window.Styles>
 
   <!--
-    A Panel z-stacks its children, so the three hosts come last and draw over the app. Their order
-    among themselves is deliberate and is NOT the order in the library's own setup.md: the overlay's
-    scrim has to sit *below* the dialog, because a mid-run decision (an unreadable file, a restore
-    conflict) is raised while the run overlay is open, and a dialog behind the scrim cannot be
-    clicked — the app would look hung. The InfoBar stays on top of both. Reorder these three and a
+    A Panel z-stacks its children, so the two dialog hosts come last and draw over the app. Their order
+    is deliberate: the run dialog sits *below* the question host, because a mid-run decision (an
+    unreadable file, a restore conflict, a password) is raised while the run is on screen, and a
+    question behind the run dialog cannot be clicked — the app would look hung. Swap these two and a
     backup that hits an unreadable file becomes unanswerable.
   -->
   <Panel>
 
-    <Grid Margin="14" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="10">
+    <DockPanel>
 
-      <!-- Profile bar: which profile is loaded, and everything that can be done to it. -->
-      <Border Grid.Row="0" Classes="panel" IsEnabled="{Binding IsIdle}">
-        <StackPanel Spacing="10">
-          <Grid ColumnDefinitions="Auto,280,*,Auto,Auto,Auto">
-            <StackPanel Grid.Column="0" Classes="glyphrow" Margin="0,0,10,0">
-              <PathIcon Data="{ei:IconGeometry FileText}" />
-              <TextBlock Text="Profile" Classes="section" />
-            </StackPanel>
-            <ComboBox Grid.Column="1"
-                      ItemsSource="{Binding ProfileNames}"
-                      SelectedItem="{Binding SelectedProfileName}"
-                      PlaceholderText="No profile loaded"
-                      HorizontalAlignment="Stretch" />
-            <!-- The lowest-value text in the row, and the only one that may truncate: it holds the
-                 star column so the action group beside it keeps its full width. -->
-            <TextBlock Grid.Column="2"
-                       Text="{Binding ProfileStatus}"
-                       Classes="muted"
-                       VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis"
-                       Margin="12,0,0,0" />
-            <!-- Restore… and Verify… read nothing from the form below — both are picker-driven end to
-                 end — so they belong up here with the app's own actions, not in the bottom bar where
-                 their neighbour is the one button the form does feed. The separator keeps them from
-                 reading as part of the gear. -->
-            <StackPanel Grid.Column="3"
-                        Orientation="Horizontal"
-                        Spacing="8"
-                        VerticalAlignment="Center"
-                        Margin="12,0,0,0">
-              <Button Command="{Binding RestoreCommand}" MinWidth="130" Height="34">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry ArrowCounterClockwise}" />
-                  <TextBlock Text="Restore…" />
-                </StackPanel>
-              </Button>
-              <Button Command="{Binding VerifyCommand}" MinWidth="130" Height="34">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry SealCheck}" />
-                  <TextBlock Text="Verify…" />
-                </StackPanel>
-              </Button>
-              <Border Width="1"
-                      Margin="4,3"
-                      Background="{DynamicResource EnigmaBorderSubtleBrush}" />
-            </StackPanel>
-            <!-- The app's preferences, not the profile's: the gear sits at the far end of the bar
-                 rather than among the profile buttons below it. -->
-            <Button Grid.Column="4"
-                    Command="{Binding OpenSettingsCommand}"
-                    ToolTip.Tip="Settings"
-                    AutomationProperties.Name="Settings"
-                    VerticalAlignment="Center"
-                    Height="34"
-                    Padding="8,5">
-              <PathIcon Data="{ei:IconGeometry GearSix}" Width="15" Height="15" />
-            </Button>
-            <!-- About sits beside the gear, not inside it: the Settings dialog is itself on the one
-                 dialog host, so it cannot open a second dialog without replacing itself. -->
-            <Button Grid.Column="5"
-                    Command="{Binding OpenAboutCommand}"
-                    ToolTip.Tip="About"
-                    AutomationProperties.Name="About Enigma.Backup"
-                    VerticalAlignment="Center"
-                    Margin="6,0,0,0"
-                    Height="34"
-                    Padding="8,5">
-              <PathIcon Data="{ei:IconGeometry Info}" Width="15" Height="15" />
-            </Button>
-          </Grid>
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button Command="{Binding NewProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry NoteBlank}" />
-                <TextBlock Text="New" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding SaveProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry FloppyDisk}" />
-                <TextBlock Text="Save" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding SaveProfileAsCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry FloppyDiskBack}" />
-                <TextBlock Text="Save as…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding RenameProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry PencilSimple}" />
-                <TextBlock Text="Rename…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding DeleteProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry Trash}" />
-                <TextBlock Text="Delete…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding ImportProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry DownloadSimple}" />
-                <TextBlock Text="Import…" />
-              </StackPanel>
-            </Button>
-            <Button Command="{Binding ExportProfileCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry UploadSimple}" />
-                <TextBlock Text="Export…" />
-              </StackPanel>
-            </Button>
-          </StackPanel>
-        </StackPanel>
-      </Border>
+      <!-- The rail: the pages at the top, the app's own at the bottom. Its items are built in the
+           code-behind, because they are controls and the view model names none. -->
+      <nav:NavigationView x:Name="Rail" DockPanel.Dock="Left" PaneSize="44" />
 
-      <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+      <!-- One page at a time. Each is built once and hidden rather than taken out, so a page keeps
+           its state — a half-edited profile — while another one is shown. -->
+      <Panel>
+        <Panel IsVisible="{Binding IsBackupPage}">
+          <pages:BackupPage DataContext="{Binding BackupPage}" />
+        </Panel>
+        <Panel IsVisible="{Binding IsVerifyRestorePage}">
+          <pages:VerifyRestorePage DataContext="{Binding VerifyRestorePage}" />
+        </Panel>
+        <Panel IsVisible="{Binding IsProfilesPage}">
+          <pages:ProfilesPage DataContext="{Binding ProfilesPage}" />
+        </Panel>
+        <Panel IsVisible="{Binding IsSettingsPage}">
+          <pages:SettingsPage DataContext="{Binding SettingsPage}" />
+        </Panel>
+      </Panel>
 
-        <!-- What to back up. -->
-        <Border Grid.Column="0" Classes="panel" IsEnabled="{Binding IsIdle}">
-          <Grid RowDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+    </DockPanel>
 
-            <StackPanel Grid.Row="0" Classes="glyphrow">
-              <PathIcon Data="{ei:IconGeometry Files}" />
-              <TextBlock Text="Files, folders and patterns to back up" Classes="section" />
-            </StackPanel>
+    <!-- The run dialog: one backup, restore or verification, from its first report to its outcome. A
+         host of its own, below the question host, because a run asks its questions (an unreadable
+         file, a restore conflict, a password) while it is on screen, and those must draw above it.
+         Its scrim is the theme's, which differs per variant. -->
+    <contentDialog:ContentDialog x:Name="HostRunDialog"
+                                 OverlayBrush="{DynamicResource EnigmaOverlayBrush}"
+                                 DialogMinWidth="480"
+                                 DialogMaxWidth="680"
+                                 DialogMaxHeight="560" />
 
-            <!-- No MinHeight: this row is the one that gives when the window is made small, and a list
-                 that refuses to shrink pushes the heading above it out from under itself. -->
-            <ListBox Grid.Row="1"
-                     Classes="framed"
-                     ItemsSource="{Binding Editor.Inputs}"
-                     SelectedItem="{Binding Editor.SelectedInput}">
-              <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="vm:InputItem">
-                  <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Detail}" />
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-
-            <WrapPanel Grid.Row="2" Classes="actions">
-              <Button Command="{Binding Editor.AddFilesCommand}">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry FilePlus}" />
-                  <TextBlock Text="Add files…" />
-                </StackPanel>
-              </Button>
-              <Button Command="{Binding Editor.AddFolderCommand}">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry FolderPlus}" />
-                  <TextBlock Text="Add folder…" />
-                </StackPanel>
-              </Button>
-              <!-- On the window, not the editor: a pattern is asked for with a dialog rather than a
-                   picker, and the window is what owns the app's questions. -->
-              <Button Command="{Binding AddPatternCommand}" ToolTip.Tip="A folder plus a pattern, re-read on every run">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry Asterisk}" />
-                  <TextBlock Text="Add pattern…" />
-                </StackPanel>
-              </Button>
-              <Button Command="{Binding Editor.RemoveInputCommand}">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry Minus}" />
-                  <TextBlock Text="Remove" />
-                </StackPanel>
-              </Button>
-              <Button Command="{Binding Editor.ClearInputsCommand}">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry Broom}" />
-                  <TextBlock Text="Remove all" />
-                </StackPanel>
-              </Button>
-            </WrapPanel>
-
-            <TextBlock Grid.Row="3"
-                       Text="Anything dropped on this window is added here too."
-                       Classes="muted"
-                       FontSize="12"
-                       TextTrimming="CharacterEllipsis" />
-
-            <StackPanel Grid.Row="4" Classes="glyphrow" Margin="0,4,0,0">
-              <PathIcon Data="{ei:IconGeometry Funnel}" />
-              <TextBlock Text="Exclude patterns" Classes="section" />
-            </StackPanel>
-
-            <Grid Grid.Row="5" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-              <editors:TextEditor Grid.Column="0"
-                                  Text="{Binding Editor.NewExcludeGlob}"
-                                  PlaceholderText="e.g. **/bin/** or *.log">
-                <editors:TextEditor.KeyBindings>
-                  <KeyBinding Gesture="Enter" Command="{Binding Editor.AddExcludeCommand}" />
-                </editors:TextEditor.KeyBindings>
-                <editors:TextEditor.ActionContent>
-                  <Button Classes="inline" Command="{Binding Editor.AddExcludeCommand}">
-                    <StackPanel Classes="glyphrow">
-                      <PathIcon Data="{ei:IconGeometry Plus}" />
-                      <TextBlock Text="Add" />
-                    </StackPanel>
-                  </Button>
-                </editors:TextEditor.ActionContent>
-              </editors:TextEditor>
-              <Button Grid.Column="1" Command="{Binding Editor.RemoveExcludeCommand}" VerticalAlignment="Center">
-                <StackPanel Classes="glyphrow">
-                  <PathIcon Data="{ei:IconGeometry Minus}" />
-                  <TextBlock Text="Remove" />
-                </StackPanel>
-              </Button>
-            </Grid>
-
-            <ListBox Grid.Row="6"
-                     Classes="framed"
-                     ItemsSource="{Binding Editor.ExcludeGlobs}"
-                     SelectedItem="{Binding Editor.SelectedExcludeGlob}"
-                     Height="76" />
-
-          </Grid>
-        </Border>
-
-        <!-- What the last run produced. The banner says how it ended; this says what it did. -->
-        <Border Grid.Column="1" Classes="panel">
-          <Grid RowDefinitions="Auto,*" RowSpacing="8">
-
-            <StackPanel Grid.Row="0" Classes="glyphrow">
-              <PathIcon Data="{ei:IconGeometry ClockCounterClockwise}" />
-              <TextBlock Text="Last run" Classes="section" />
-            </StackPanel>
-
-            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-              <StackPanel Spacing="12">
-
-                <TextBlock Text="Nothing has run yet. Back up, restore or verify — what happened appears here."
-                           Classes="muted"
-                           TextWrapping="Wrap"
-                           IsVisible="{Binding !HasSummary}" />
-
-                <StackPanel Spacing="12" IsVisible="{Binding HasSummary}">
-
-                  <TextBlock Text="{Binding Summary.Headline}"
-                             Classes="headline"
-                             Classes.success="{Binding Summary.IsSuccess}"
-                             Classes.warning="{Binding Summary.IsWarning}"
-                             Classes.failure="{Binding Summary.IsFailure}"
-                             FontWeight="SemiBold"
-                             TextWrapping="Wrap" />
-
-                  <ItemsControl ItemsSource="{Binding Summary.Details}" IsVisible="{Binding Summary.HasDetails}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="vm:SummaryDetail">
-                        <Grid ColumnDefinitions="130,*" Margin="0,0,0,3">
-                          <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" />
-                          <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
-                        </Grid>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-
-                  <StackPanel Spacing="4" IsVisible="{Binding Summary.HasSkipped}">
-                    <TextBlock Text="{Binding Summary.SkippedHeader}"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource EnigmaWarningBrush}" />
-                    <ItemsControl ItemsSource="{Binding Summary.Skipped}">
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="sys:String">
-                          <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,0,0,3" />
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                  </StackPanel>
-
-                  <StackPanel Spacing="4" IsVisible="{Binding Summary.HasWarnings}">
-                    <TextBlock Text="{Binding Summary.WarningsHeader}" FontWeight="SemiBold" />
-                    <ItemsControl ItemsSource="{Binding Summary.Warnings}">
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="sys:String">
-                          <SelectableTextBlock Text="{Binding}" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,3" />
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                  </StackPanel>
-
-                </StackPanel>
-              </StackPanel>
-            </ScrollViewer>
-
-          </Grid>
-        </Border>
-      </Grid>
-
-      <!-- Where it goes, and how. Neither of these needs a panel of its own: the editor and the card
-           draw their own surface and border out of the same theme keys Border.panel uses. -->
-      <StackPanel Grid.Row="2" Spacing="10" IsEnabled="{Binding IsIdle}">
-
-        <editors:TextEditor Title="Save backups in"
-                            Text="{Binding Editor.OutputDirectory}"
-                            PlaceholderText="Choose the folder the archives are written to">
-          <editors:TextEditor.LeadingContent>
-            <PathIcon Data="{ei:IconGeometry HardDrives}" Width="15" Height="15" VerticalAlignment="Center" />
-          </editors:TextEditor.LeadingContent>
-          <editors:TextEditor.ActionContent>
-            <Button Classes="inline" Command="{Binding Editor.BrowseOutputCommand}">
-              <StackPanel Classes="glyphrow">
-                <PathIcon Data="{ei:IconGeometry FolderOpen}" />
-                <TextBlock Text="Browse…" />
-              </StackPanel>
-            </Button>
-          </editors:TextEditor.ActionContent>
-        </editors:TextEditor>
-
-        <!-- Expanded on purpose: both rows decide what the next run produces, so neither should be a
-             click away. The expander is here for the grouping and the frame. -->
-        <controls:SettingsCardExpander Header="Archive options"
-                                       Description="How the archive is compressed, and whether it is encrypted"
-                                       IconData="{ei:IconGeometry SlidersHorizontal}"
-                                       IsExpanded="True">
-          <!-- Side by side, because stacked they cost more height than the file lists can spare. -->
-          <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-
-            <controls:SettingsCard Grid.Column="0"
-                                   Header="Compression"
-                                   Description="{Binding Editor.SelectedCompression.Description}"
-                                   IconData="{ei:IconGeometry FileZip}">
-              <ComboBox ItemsSource="{Binding Editor.CompressionOptions}"
-                        SelectedItem="{Binding Editor.SelectedCompression}"
-                        MinWidth="170">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:CompressionOption">
-                    <TextBlock Text="{Binding Label}" />
-                  </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
-            </controls:SettingsCard>
-
-            <!-- The toggle, not the card, is what goes dead under a format that cannot be encrypted:
-                 the description has to stay readable to say why. -->
-            <controls:SettingsCard Grid.Column="1"
-                                   Header="Encrypt with a password"
-                                   Description="{Binding Editor.EncryptDescription}"
-                                   IconData="{ei:IconGeometry LockKey}">
-              <ToggleSwitch IsChecked="{Binding Editor.Encrypt}"
-                            IsEnabled="{Binding Editor.CanEncrypt}"
-                            OnContent="On"
-                            OffContent="Off" />
-            </controls:SettingsCard>
-
-          </Grid>
-        </controls:SettingsCardExpander>
-
-      </StackPanel>
-
-      <!-- What the form above is for, alone: everything between the profile bar and this button
-           describes the run it starts. Restore… and Verify… take no part in that and sit in the top
-           bar. How far a run has got is on the run card, and so is Cancel: behind the scrim a button
-           in the window cannot be clicked. -->
-      <Border Grid.Row="3" Classes="panel">
-        <Button Command="{Binding BackupCommand}"
-                Classes="accent"
-                HorizontalAlignment="Left"
-                MinWidth="140"
-                Height="34">
-          <StackPanel Classes="glyphrow">
-            <PathIcon Data="{ei:IconGeometry Archive}" />
-            <TextBlock Text="Back up" />
-          </StackPanel>
-        </Button>
-      </Border>
-
-    </Grid>
-
-    <!-- The run scrim, holding the card built by ProgressOverlay. Closed, an Overlay is
-         IsVisible="False", so it neither draws nor takes a click. Its own default scrim is a fixed
-         translucent black; the theme has a key for exactly this, and it differs per variant. -->
-    <controls:Overlay x:Name="HostOverlay" OverlayBrush="{DynamicResource EnigmaOverlayBrush}" />
-
-    <!-- Every dialog the app shows, one at a time. The six size properties are set here because the
+    <!-- Every question the app asks, one at a time. The six size properties are set here because the
          service does not reset them between dialogs: the bounds have to suit the widest question
          (the restore conflict, 640px as a window) and let the tallest one scroll inside the card. -->
     <contentDialog:ContentDialog x:Name="HostDialog"
                                  DialogMinWidth="420"
                                  DialogMaxWidth="680"
                                  DialogMaxHeight="560" />
-
-    <!-- How the last run ended. It draws itself at the top of the window and stays until the user
-         closes it or the next run starts. -->
-    <infoBar:InfoBar x:Name="HostInfoBar" />
 
   </Panel>
 

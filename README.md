@@ -6,8 +6,10 @@ A cross-platform desktop backup tool for Windows and Linux. It packs any number 
 and folders into a single compressed — optionally password-encrypted — archive, restores them again,
 and verifies what it wrote.
 
-> **What's new in 1.5.0** — the app icon now fills its frame: the same page and zip, a third larger,
-> wherever the icon appears. 1.4.0 brought the tile-less icon and a **Windows installer**
+> **What's new in 1.6.0** — a new window: a rail of pages (**Backup**, **Verify & Restore**,
+> **Profiles**, **Settings**) in a centred column. Backup runs from files picked on the page or from a
+> saved profile. Every run is shown in a dialog of its own, from its first file to its outcome. 1.5.0
+> made the icon fill its frame, and 1.4.0 brought a **Windows installer**
 > (`packaging\windows\buildmsi.ps1`). The archive container, the file names and every existing profile
 > are untouched, so all your archives still open. See [RELEASENOTES.md](RELEASENOTES.md).
 
@@ -31,9 +33,10 @@ and verifies what it wrote.
   of offering something that only looks like protection.
 - **Glob excludes**, live progress with cancel, and a per-error Skip / Retry / Abort policy with an
   end-of-run summary of everything skipped.
-- **Light, dark, or whatever the system asks for** — chosen under `Settings` (the gear in the profile
-  bar), applied the moment you pick it and remembered afterwards. The same dialog opens the folder
-  your profiles and preferences live in; the ⓘ beside the gear says which version you are running.
+- **Light, dark, or whatever the system asks for** — chosen on the **Settings** page (the gear at the
+  foot of the rail), applied the moment you pick it and remembered afterwards. The same page opens the
+  folder your profiles and preferences live in, and its **About** card says which version you are
+  running.
 - **A safety net** — an unexpected error is shown in a dialog that says the app is still running, with
   the details one click away for a bug report, instead of the app vanishing.
 
@@ -45,8 +48,8 @@ It is self-contained — **no .NET runtime needs to be installed.**
 
 | Platform | Zip | Run |
 |----------|-----|-----|
-| Windows x64 | `Enigma.Backup-1.5.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
-| Linux x64 | `Enigma.Backup-1.5.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
+| Windows x64 | `Enigma.Backup-1.6.0-win-x64.zip` | `Enigma.Backup.Desktop.exe` |
+| Linux x64 | `Enigma.Backup-1.6.0-linux-x64.zip` | `./Enigma.Backup.Desktop` |
 
 The zip needs no installer and writes nothing outside your home directory. To uninstall, delete the
 executable and its `app.ico` and — if you want your profiles gone too — the config folder listed below.
@@ -74,36 +77,44 @@ preferences survive an uninstall — nor any backup you wrote.
 
 ## Using it
 
-The app is a single window, top to bottom:
+The window has a narrow rail on the left — hover an icon for its name — that switches between its
+pages: **Backup**, **Verify & Restore** and **Profiles**, with **Settings** at its foot. **Backup**
+comes first, in two sections, top to bottom. **Input** starts with a choice: **Files and folders**,
+picked on the page for this backup only, or **A profile** saved on the Profiles page — then a
+drop-down of your profiles and a summary of what the chosen one backs up, as last saved, while
+**Output** shows its folder and options without letting you change them here. The page opens on
+**A profile** when you have one. For files and folders:
 
-1. **Profile** — pick a saved profile from the drop-down, or start from `New`. A profile is just the
-   settings below, under a name; `Save`, `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…`
-   are beside it. Unsaved edits are marked with a `*` in the title bar, and switching profiles
-   discards them. The gear at the right-hand end of the bar opens **Settings**: the theme, and an
-   `Open folder` button on the folder your profiles and preferences are kept in. The ⓘ beside it opens
-   **About**: the version, the build it was cut from, and the copyright.
-2. **Files, folders and patterns to back up** — `Add files…`, `Add folder…`, or drop them anywhere on
-   the window. Overlapping entries are merged automatically when the backup runs. `Add pattern…` adds
+1. **Input → Files, folders and patterns to back up** — `Add files…`, `Add folder…`, or drop them on
+   the page. Overlapping entries are merged automatically when the backup runs. `Add pattern…` adds
    a rule instead of a path: pick the folder it applies to, type the glob, and the row reads
    `folder ▸ pattern`. It is re-resolved on every run, so a pattern that matches nothing today simply
    says so in the run summary.
-3. **Exclude patterns** — optional globs applied during the scan, one per line: `**/bin/**`,
+2. **Input → Exclude patterns** — optional globs applied during the scan, one per line: `**/bin/**`,
    `*.log`, `**/node_modules/**`.
-4. **Save backups in** — the output folder. It is always excluded from the backup itself, so
+3. **Output → Save backups in** — the output folder. It is always excluded from the backup itself, so
    pointing it inside an input folder is safe.
-5. **Archive options → Compression** — Zstandard (`.tar.zst`, the default: faster and smaller), gzip
+4. **Output → Compression** — Zstandard (`.tar.zst`, the default: faster and smaller), gzip
    (`.tar.gz`, readable by anything), or Zip (`.zip`, which any file manager opens without this app —
    at the cost of two-second timestamps, no Unix permission bits, and no encryption).
-6. **Archive options → Encrypt with a password** — switch it on to get AES-256-GCM encryption. You are
+5. **Output → Encrypt with a password** — switch it on to get AES-256-GCM encryption. You are
    prompted for the password each run, with a confirmation field; it is never saved anywhere. Choosing
    Zip switches it off and greys it out, with the reason on the card.
-7. **Back up** — the accent button at the bottom. It runs the backup behind a card that shows the
-   phase, the current file, the percentage and `Cancel`. When a run ends, the outcome appears as a
-   banner at the top of the window, and the **Last run** panel fills with the counts, the duration, the
-   output path, and a prominent list of anything skipped — including any pattern that matched nothing.
-8. **Restore… and Verify…** are in the **top bar**, beside the gear, because neither one reads anything
-   from the form: **Restore…** asks for an archive and a destination, **Verify…** re-reads an archive
-   and checks it against its sidecar. Both report on the same card and the same banner as a backup.
+6. **Back up** — the accent button at the foot of the page, always in view; while it is greyed out,
+   the line beside it says what it still needs. It runs the backup in a dialog over the window that
+   shows the phase, the current file, the percentage and `Cancel`. When the run ends, the same dialog
+   turns to the outcome: how it went, the counts, the duration, the output path, and a prominent list
+   of anything skipped — including any pattern that matched nothing. `Close` puts it away.
+7. **Profiles** is a page of its own: pick a saved profile from the drop-down, or start from `New`. A
+   profile is the same Input and Output, saved under a name to run again from the Backup page; `Save`,
+   `Save as…`, `Rename…`, `Delete…`, `Import…` and `Export…` are under the drop-down. Unsaved edits
+   are marked `Unsaved changes.` on the Profile card, and switching profiles discards them.
+8. **Verify & Restore** is a page of its own on the rail, because neither one reads anything from a
+   profile: **Verify…** re-reads an archive and checks it against its sidecar, **Restore…** asks for
+   an archive and a destination. Both run in the same dialog as a backup.
+9. **Settings** — the gear at the foot of the rail: the theme, an `Open folder` button on the folder
+   your profiles and preferences are kept in, and **About** — the version, the build it was cut from,
+   and the copyright.
 
 If a file cannot be read, the run stops and asks: **Skip**, **Retry** or **Abort**, with an
 *apply to all further errors* option. Aborting — like cancelling — deletes the partial archive, so a

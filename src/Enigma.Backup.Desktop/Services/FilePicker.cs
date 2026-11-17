@@ -24,7 +24,7 @@ namespace Enigma.Backup.Desktop.Services;
 /// </remarks>
 public sealed class FilePicker : IFilePicker
 {
-    private static readonly FilePickerFileType ArchiveFileType = new("Enigma.Backup archives")
+    private static readonly FilePickerFileType ArchiveFileType = new("Enigma Backup archives")
     {
         Patterns = ["*.tar.zst", "*.tar.gz", "*.zip", "*.tar.zst.enc", "*.tar.gz.enc", "*.enc"],
     };

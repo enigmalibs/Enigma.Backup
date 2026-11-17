@@ -1,3 +1,108 @@
+# Enigma.Backup v1.6.0 Release Notes
+
+Enigma.Backup has a **new window**. The single crowded window is gone. In its place, a narrow rail on
+the left switches between four pages:
+
+- **Backup**;
+- **Verify & Restore**;
+- **Profiles**;
+- **Settings**, at the rail's foot.
+
+Each page does one thing and says what it is for in one sentence. A backup, a restore or a
+verification now runs in a dialog of its own, from its first file to its outcome. On a wide window,
+every page sits in a centred column. The About dialog calls the app **Enigma Backup**, as the window
+title and the installer already did.
+
+Nothing about a backup changed. The `EBK1` container version byte has not moved, profiles are written
+exactly as 1.5.0 wrote them, and the real 1.0.0 archive checked into the test suite is still verified
+and restored byte-for-byte on every build.
+
+## What is new
+
+- **A rail of pages.** The rail shows icons only. Hover one for its name; the page shown is
+  highlighted. Each page keeps what it holds while another one is shown, so a half-edited profile is
+  still there when you come back to it.
+- **Backup** has two sections, **Input** and **Output**, and the **Back up** button at its foot, which
+  is always in view. While the button is greyed out, the line beside it says what is still missing.
+  **Input** starts with a choice:
+  - **Files and folders** — picked on the page, for this backup only. The archives are named
+    `Backup_…`.
+  - **A profile** — chosen from a drop-down and summed up as last saved: each folder, each pattern,
+    and what it leaves out. Its output folder and options are shown greyed out, under *Set by the
+    profile*. An unsaved edit on the Profiles page is not part of it.
+
+  The page opens on **A profile** when you have saved one.
+- **Profiles** is a page of its own: the drop-down of saved profiles, `New`, `Save`, `Save as…`,
+  `Rename…`, `Delete…`, `Import…` and `Export…`, then the same Input and Output as Backup.
+- **Verify & Restore** is a page of its own, with one card for each: **Verify…** and **Restore…**.
+- **Settings** is a page instead of a dialog. It holds:
+  - the theme;
+  - the folder your profiles and preferences live in, with `Open folder`;
+  - an **About** card with the version, and the button that opens **About**, which is no longer on
+    the main window.
+- **Runs are shown in a dialog.** It shows the phase, the current file, the percentage and `Cancel`.
+  When the run ends, the same dialog turns to the outcome: the counts, the duration, the output path
+  and anything skipped. `Close` puts it away. There is no outcome banner and no **Last run** panel any
+  more. A question asked during a run (an unreadable file, a restore conflict, a password) appears
+  above that dialog.
+- **Dropping files** adds them to the list of the page you are on: Backup, while on *Files and
+  folders*, or Profiles. Anywhere else, a drop is refused.
+- **Centred pages.** On a wide window, each page's header, cards and **Back up** row sit in one column
+  of at most 900 px, centred right of the rail. On a narrow window the column fills the page, as
+  before.
+- **"Enigma Backup" everywhere the app names itself.** The window title is just `Enigma Backup`,
+  without the profile's name. The About dialog, the window shown when the app cannot start, and the
+  file picker's archive filter now use the same spelling. So do the errors a run can end with: a file
+  that is not an archive, and an encrypted archive from a newer version. On Windows, Task Manager and
+  the exe's *Properties* name it `Enigma Backup` too; the exe itself is still
+  `Enigma.Backup.Desktop.exe`. On Linux, the launcher entry `packaging/linux/install.sh` writes is
+  named `Enigma Backup`, and so are the messages of both install scripts; running `install.sh` again
+  renames an existing entry in place. The config folder keeps its name (`Enigma.Backup`), so every
+  saved profile and preference is still found.
+- **A shorter minimum window.** The pages scroll, so the window's minimum height drops to 600 px.
+
+## Files
+
+- **Nothing new is stored, and nothing stored changed.** Profiles are written exactly as 1.5.0 wrote
+  them (`formatVersion` 1 unless a pattern input or Zip asks for 2). `settings.json` still holds the
+  theme and nothing else. A one-off backup is not saved anywhere.
+- **The release zips are unchanged in shape**: the executable and `app.ico`.
+- **The MSI is unchanged in shape**: `packaging\windows\buildmsi.ps1` takes the version from
+  `Directory.Build.props`, so it builds `Enigma.Backup.1.6.0.msi` with no change of its own. An
+  installed 1.5.0 is replaced rather than joined, because the upgrade code has not moved.
+
+## Dependencies
+
+- **xunit.v3 4.0.2 → 4.0.3** (tests only).
+- **The Avalonia set is held back as a unit.** The update available is **12.1.4 → 12.1.6** (`Avalonia`,
+  `Avalonia.Desktop`, `Avalonia.Themes.Fluent`, `Avalonia.Fonts.Inter`). Enigma.Avalonia.Desktop
+  1.3.0, still its latest release, is built against 12.1.4, and the set moves with it or not at all.
+- **The Microsoft.Extensions packages stay on 10.0.14.** 11.0.0 is out (`Hosting`,
+  `DependencyInjection`, `DependencyInjection.Abstractions`, `FileSystemGlobbing`), but it is a major
+  version from the .NET 11 line. This app targets the .NET 10 runtime, whose 10.0.x packages are still
+  serviced. That move is a change of its own, not part of a minor release.
+- `dotnet list package --vulnerable --include-transitive` reports no known vulnerability in any of the
+  four projects.
+
+## Compatibility
+
+- **The `EBK1` container version byte is unchanged.** Every encrypted archive written by 1.0.0 through
+  1.5.0 opens, verifies and restores here, and the golden 1.0.0 archive in the test suite proves it on
+  every build.
+- **Profiles are unchanged in both directions**: everything 1.5.0 wrote opens here, and everything this
+  build writes opens in 1.5.0.
+- **Archive naming, the `.sha256` sidecar format and the `.zip` format are unchanged.**
+- **Windows x64** and **Linux x64**, still shipped as self-contained single-file zips that need no
+  installed .NET runtime, plus the MSI for a Windows machine that has the .NET 10 runtime.
+
+## Version
+
+- Minor release: **1.6.0**. The window is reorganised, and nothing already released breaks: the `EBK1`
+  byte, archive naming, the sidecar format, both profile versions, the config folder and the MSI's
+  upgrade code are untouched.
+
+---
+
 # Enigma.Backup v1.5.0 Release Notes
 
 Enigma.Backup's icon **fills its frame** now. It is the same page with a zip down its spine, in the same

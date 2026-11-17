@@ -8,9 +8,9 @@ namespace Enigma.Backup.Desktop.Hosting;
 /// <remarks>
 /// <para>
 /// The package ships no registration extension of its own, so this is it. All six are singletons
-/// because three of them own a host control and two own the window's storage provider, all handed
-/// over exactly once in <see cref="App"/> — a second instance would be one nobody ever wired, and
-/// every call on it would throw.
+/// because the dialog service owns a host control and the two pickers own the window's storage
+/// provider, all handed over exactly once in <see cref="App"/> — a second instance would be one nobody
+/// ever wired, and every call on it would throw.
 /// </para>
 /// <para>
 /// Nothing outside <c>Desktop/Services/</c> injects these: the app's own
@@ -27,15 +27,16 @@ public static class EnigmaAvaloniaServiceCollectionExtensions
         public IServiceCollection AddEnigmaAvaloniaDesktop()
         {
             services.TryAddSingleton<IContentDialogService, ContentDialogService>();
-            services.TryAddSingleton<IOverlayService, OverlayService>();
-            services.TryAddSingleton<IInfoBarService, InfoBarService>();
             services.TryAddSingleton<IFileDialogService, FileDialogService>();
             services.TryAddSingleton<IFolderDialogService, FolderDialogService>();
 
-            // Registered for completeness, and unused: this app is one window with no NavigationView
-            // (see the plan's "the layout stays a single window"). It costs one descriptor and means
-            // the library's set is registered as a set rather than as the four pieces we happen to
-            // need today.
+            // Registered for completeness, and unused: a run is shown in a dialog of its own rather
+            // than on an overlay or a banner, and nothing builds pages through the navigation service.
+            // Their hosts are not in the window, so calling one would throw — which is why nothing
+            // does. Each costs one descriptor, and the library's set stays registered as a set rather
+            // than as the three pieces we happen to need today.
+            services.TryAddSingleton<IOverlayService, OverlayService>();
+            services.TryAddSingleton<IInfoBarService, InfoBarService>();
             services.TryAddSingleton<INavigationService, NavigationService>();
 
             return services;

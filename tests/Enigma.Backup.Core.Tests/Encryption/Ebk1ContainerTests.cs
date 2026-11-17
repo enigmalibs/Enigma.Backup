@@ -225,6 +225,7 @@ public sealed class Ebk1ContainerTests
             RestoreAsync(archive, temp.Resolve("restored"), Password));
 
         Assert.Equal(EncryptedArchiveProblem.UnsupportedVersion, exception.Problem);
+        Assert.Contains("this version of Enigma Backup only reads", exception.Message, StringComparison.Ordinal);
         Assert.Contains("newer version of the application", exception.Message, StringComparison.Ordinal);
     }
 
@@ -240,6 +241,8 @@ public sealed class Ebk1ContainerTests
             RestoreAsync(archive, temp.Resolve("restored"), Password));
 
         Assert.Equal(EncryptedArchiveProblem.UnsupportedKeyDerivation, exception.Problem);
+        Assert.Contains("this version of Enigma Backup does not know", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("newer version of the application", exception.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -387,7 +390,7 @@ public sealed class Ebk1ContainerTests
         ArchiveFormatException exception = await Assert.ThrowsAsync<ArchiveFormatException>(() =>
             RestoreAsync(archive, temp.Resolve("restored"), Password));
 
-        Assert.Contains("not an Enigma.Backup archive", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("not an Enigma Backup archive", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]

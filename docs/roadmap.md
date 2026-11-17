@@ -40,3 +40,16 @@
 | FEATURE-9663 | Release 1.4.0                                | DONE   | docs/plan/FEATURE-9663.md |
 | FEATURE-76FB | Icon set final3                              | DONE   | docs/plan/FEATURE-76FB.md |
 | FEATURE-63DB | Release 1.5.0                                | DONE   | docs/plan/FEATURE-63DB.md |
+| FEATURE-95BE | Navigation rail and page-based UI            | DONE   | docs/plan/FEATURE-95BE.md |
+| - PHASE01    | Runs in a content dialog                     | DONE   | (in FEATURE-95BE.md)      |
+| - PHASE02    | Rail and Verify & Restore page               | DONE   | (in FEATURE-95BE.md)      |
+| - PHASE03    | Settings page                                | DONE   | (in FEATURE-95BE.md)      |
+| - PHASE04    | Profiles page and single backup              | DONE   | (in FEATURE-95BE.md)      |
+| - PHASE05    | Backup with a profile                        | DONE   | (in FEATURE-95BE.md)      |
+| FEATURE-464A | Centre the page content                      | DONE   | docs/plan/FEATURE-464A.md |
+| FEATURE-3310 | About dialog shows Enigma Backup             | DONE   | docs/plan/FEATURE-3310.md |
+| FEATURE-63B5 | Release 1.6.0                                | DONE   | docs/plan/FEATURE-63B5.md |
+| FEATURE-1AA8 | Enigma Backup in every user-facing text      | DONE   | docs/plan/FEATURE-1AA8.md |
+| - PHASE01    | Core error messages                          | DONE   | (in FEATURE-1AA8.md)      |
+| - PHASE02    | The Windows exe's metadata                   | DONE   | (in FEATURE-1AA8.md)      |
+| - PHASE03    | Linux launcher and install scripts           | DONE   | (in FEATURE-1AA8.md)      |

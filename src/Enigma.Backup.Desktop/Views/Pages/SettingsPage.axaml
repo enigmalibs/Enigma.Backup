@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ei="https://github.com/josueclement/Enigma.Icons"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             xmlns:controls="using:Enigma.Avalonia.Desktop.Controls"
+             x:Class="Enigma.Backup.Desktop.Views.Pages.SettingsPage"
+             x:DataType="vm:SettingsPageViewModel">
+
+  <!-- Enigma.Launchpad's settings page: a header, then sections of cards in a column with a ceiling. -->
+  <DockPanel>
+
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Classes="pageHeader pageColumn">
+      <Border Grid.Column="0" Classes="pageIcon">
+        <PathIcon Data="{ei:IconGeometry Gear}" />
+      </Border>
+      <StackPanel Grid.Column="1" Classes="pageHeading">
+        <TextBlock Text="Settings" Classes="pageTitle" />
+        <TextBlock Text="How Enigma Backup looks, and where it keeps your profiles."
+                   Classes="pageDescription" />
+      </StackPanel>
+    </Grid>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <!-- Settings rows read badly stretched across a wide window, and a column sized to its content
+           would change width with the storage folder's path. -->
+      <StackPanel Spacing="8" Margin="24,0,24,24" Classes="pageColumn">
+
+        <TextBlock Text="Appearance" Classes="sectionHeader" Margin="2,0,0,4" />
+        <!-- The description is the selected theme's own sentence, so the card says what the choice
+             means without a second label. -->
+        <controls:SettingsCard Header="Theme"
+                               Description="{Binding SelectedTheme.Description}"
+                               IconData="{ei:IconGeometry Palette}">
+          <ComboBox ItemsSource="{Binding ThemeOptions}"
+                    SelectedItem="{Binding SelectedTheme}"
+                    MinWidth="170"
+                    AutomationProperties.Name="Theme">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:ThemeOption">
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </controls:SettingsCard>
+
+        <TextBlock Text="Storage" Classes="sectionHeader" />
+        <!-- The folder rather than the file: settings.json is not much use without the profiles beside
+             it, and a button that opens the place beats a path the user has to copy out by hand. -->
+        <controls:SettingsCard Header="Profiles and preferences"
+                               Description="{Binding StorageDescription}"
+                               IconData="{ei:IconGeometry FolderOpen}">
+          <Button Command="{Binding OpenStorageFolderCommand}"
+                  MinWidth="120"
+                  Height="32"
+                  AutomationProperties.Name="Open folder">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry ArrowSquareOut}" />
+              <TextBlock Text="Open folder" />
+            </StackPanel>
+          </Button>
+        </controls:SettingsCard>
+
+        <TextBlock Text="About" Classes="sectionHeader" />
+        <controls:SettingsCard Header="Enigma Backup"
+                               Description="Released under the MIT license."
+                               IconData="{ei:IconGeometry Info}">
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <TextBlock Text="{Binding Version, StringFormat='Version {0}'}"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource EnigmaForegroundSecondaryBrush}" />
+            <!-- The About dialog every Enigma app shows: the icon, the build and the copyright. -->
+            <Button Command="{Binding OpenAboutCommand}"
+                    Content="About Enigma Backup"
+                    Height="32"
+                    AutomationProperties.Name="About Enigma Backup" />
+          </StackPanel>
+        </controls:SettingsCard>
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </DockPanel>
+
+</UserControl>

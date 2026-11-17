@@ -23,6 +23,9 @@ internal sealed class FakeProfileStore : IProfileStore
     /// <summary>A failure to throw from the next write, import or export — how a test makes the store fail.</summary>
     public Exception? FailNextWrite { get; set; }
 
+    /// <summary>A failure to throw from the next listing — how a test makes the folder unreadable.</summary>
+    public Exception? FailNextList { get; set; }
+
     /// <summary>Names whose <see cref="LoadAsync"/> throws, standing in for an unreadable file.</summary>
     public HashSet<string> Unreadable { get; } = new(StringComparer.OrdinalIgnoreCase);
 
@@ -51,6 +54,13 @@ internal sealed class FakeProfileStore : IProfileStore
     public Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default)
     {
         Calls.Add("List");
+
+        if (FailNextList is Exception failure)
+        {
+            FailNextList = null;
+
+            throw failure;
+        }
 
         List<string> names = [.. _profiles.Keys];
         names.Sort(StringComparer.OrdinalIgnoreCase);
@@ -154,6 +164,7 @@ internal sealed class FakeProfileStore : IProfileStore
             FormatVersion = profile.FormatVersion,
             Name = profile.Name,
             Inputs = [.. profile.Inputs],
+            PatternInputs = [.. profile.PatternInputs],
             OutputDirectory = profile.OutputDirectory,
             Compression = profile.Compression,
             Encrypt = profile.Encrypt,

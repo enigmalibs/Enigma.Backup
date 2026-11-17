@@ -1,0 +1,140 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="using:System"
+             xmlns:ei="https://github.com/josueclement/Enigma.Icons"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             xmlns:views="using:Enigma.Backup.Desktop.Views"
+             xmlns:controls="using:Enigma.Avalonia.Desktop.Controls"
+             x:Class="Enigma.Backup.Desktop.Views.Pages.BackupPage"
+             x:DataType="vm:BackupPageViewModel">
+
+  <DockPanel>
+
+    <!-- The page header every page has: what this page is for, in one sentence. -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Classes="pageHeader pageColumn">
+      <Border Grid.Column="0" Classes="pageIcon">
+        <PathIcon Data="{ei:IconGeometry Archive}" />
+      </Border>
+      <StackPanel Grid.Column="1" Classes="pageHeading">
+        <TextBlock Text="Backup" Classes="pageTitle" />
+        <TextBlock Text="Pack files and folders into one compressed archive, encrypted if you like."
+                   Classes="pageDescription" />
+      </StackPanel>
+    </Grid>
+
+    <!-- What the page is for, alone at its foot and always in view, however far the sections above are
+         scrolled. Beside it, while it cannot be pressed, what it is still waiting for. How far a run
+         has got is in the run dialog, and so is Cancel. The strip spans the page; what is on it keeps
+         to the page's column, so Back up lines up with the cards' right edge. -->
+    <Border DockPanel.Dock="Bottom" Classes="actionBar">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" Classes="pageColumn">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding MissingForBackup}"
+                   Classes="muted"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   IsVisible="{Binding MissingForBackup, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Button Grid.Column="1"
+                Command="{Binding BackupCommand}"
+                Classes="accent"
+                MinWidth="140"
+                Height="34">
+          <StackPanel Classes="glyphrow">
+            <PathIcon Data="{ei:IconGeometry Archive}" />
+            <TextBlock Text="Back up" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <!-- The two sections a backup is made of. Both start expanded: everything in them decides what
+           the next run produces, so none of it should be a click away. -->
+      <StackPanel Spacing="10" Margin="24,0,24,24" Classes="pageColumn">
+
+        <controls:SettingsCardExpander Header="Input"
+                                       Description="What goes into the archive"
+                                       IconData="{ei:IconGeometry Files}"
+                                       IsExpanded="True">
+          <StackPanel Spacing="14">
+
+            <!-- The one choice the page starts with: files picked here, or a profile saved earlier. -->
+            <StackPanel Orientation="Horizontal" Spacing="24">
+              <RadioButton GroupName="BackupSource"
+                           Content="Files and folders"
+                           IsChecked="{Binding IsSingleMode}"
+                           ToolTip.Tip="Pick what to back up here, for this backup only" />
+              <RadioButton GroupName="BackupSource"
+                           Content="A profile"
+                           IsChecked="{Binding UseProfile}"
+                           ToolTip.Tip="Back up a profile saved on the Profiles page" />
+            </StackPanel>
+
+            <!-- A one-off: the list is edited here. The wrapper carries the visibility, because the
+                 editor's own bindings resolve against the editor it is given. -->
+            <Panel IsVisible="{Binding IsSingleMode}">
+              <views:InputsEditor DataContext="{Binding Single}" />
+            </Panel>
+
+            <!-- A profile: picked by name and summed up, never edited — that is the Profiles page. -->
+            <StackPanel Spacing="10" IsVisible="{Binding UseProfile}">
+              <ComboBox ItemsSource="{Binding ProfileNames}"
+                        SelectedItem="{Binding SelectedProfileName}"
+                        PlaceholderText="Choose a profile"
+                        MinWidth="260"
+                        MaxWidth="360"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding HasProfiles}"
+                        AutomationProperties.Name="Profile to back up" />
+
+              <TextBlock Text="There is no profile yet. Create one on the Profiles page, then choose it here."
+                         Classes="muted"
+                         TextWrapping="Wrap"
+                         IsVisible="{Binding !HasProfiles}" />
+
+              <StackPanel Spacing="4"
+                          IsVisible="{Binding SummaryLead, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding SummaryLead}" TextWrapping="Wrap" />
+                <ItemsControl ItemsSource="{Binding SummaryItems}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="sys:String">
+                      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="8,0,0,0">
+                        <TextBlock Grid.Column="0" Text="•" Classes="muted" />
+                        <SelectableTextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{Binding SummaryExcludes}"
+                           Classes="muted"
+                           TextWrapping="Wrap"
+                           Margin="0,4,0,0"
+                           IsVisible="{Binding SummaryExcludes, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </StackPanel>
+
+          </StackPanel>
+        </controls:SettingsCardExpander>
+
+        <controls:SettingsCardExpander Header="Output"
+                                       Description="Where the archive is written, and how"
+                                       IconData="{ei:IconGeometry HardDrives}"
+                                       IsExpanded="True">
+          <StackPanel Spacing="10">
+            <TextBlock Text="Set by the profile — change it on the Profiles page."
+                       Classes="muted"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding UseProfile}" />
+            <!-- A one-off's output is edited here; a profile's is shown as saved, and greyed out. -->
+            <Panel IsEnabled="{Binding IsOutputEditable}">
+              <views:OutputEditor DataContext="{Binding ActiveEditor}" />
+            </Panel>
+          </StackPanel>
+        </controls:SettingsCardExpander>
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </DockPanel>
+
+</UserControl>

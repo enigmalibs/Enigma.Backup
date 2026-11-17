@@ -18,7 +18,12 @@ namespace Enigma.Backup.Desktop;
 public static class AppInfo
 {
     /// <summary>What the app is called, on screen and in the window title.</summary>
-    public const string Name = "Enigma.Backup";
+    /// <remarks>
+    /// The product's name, with a space, as the installer names it too. <c>Enigma.Backup</c> with a dot
+    /// is the project's and the config folder's name, which stay as they are: a renamed folder would
+    /// leave every saved profile behind.
+    /// </remarks>
+    public const string Name = "Enigma Backup";
 
     /// <summary>Shown when a version cannot be read at all — which no shipped build can reach.</summary>
     private const string UnknownVersion = "unknown";

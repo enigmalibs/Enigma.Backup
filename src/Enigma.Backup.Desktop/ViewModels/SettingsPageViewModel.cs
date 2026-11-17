@@ -2,47 +2,50 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Enigma.Backup.Desktop.Services;
 using Enigma.Backup.Desktop.Settings;
 
 namespace Enigma.Backup.Desktop.ViewModels;
 
-/// <summary>The Settings dialog: the app's own preferences, and where they live.</summary>
+/// <summary>The Settings page: the app's own preferences, where they live, and About.</summary>
 /// <remarks>
 /// <para>
 /// A choice applies the moment it is made rather than on an OK button — a theme is judged by looking
-/// at it, so there is nothing to confirm and nothing to read back afterwards. The dialog is closed,
-/// not accepted, which is why it has no result property and no accept command.
+/// at it, so there is nothing to confirm and nothing to read back afterwards.
 /// </para>
 /// <para>
 /// Applying and persisting are two calls on two seams and this view model makes both, so a change is
 /// on screen and on disk in the same step. Nothing here names Avalonia: the variant is assigned
 /// through <see cref="IThemeSwitcher"/>, the file is written through <see cref="IAppSettingsStore"/>,
-/// and the folder is opened through <see cref="IShellLauncher"/>.
+/// and the folder is opened through <see cref="IShellLauncher"/>. About is the one dialog the page
+/// raises, through <see cref="IDialogService"/> — it is reached from here and nowhere else.
 /// </para>
 /// </remarks>
-public sealed class SettingsDialogViewModel : DialogViewModel
+public sealed class SettingsPageViewModel : ObservableObject
 {
     private readonly IAppSettingsStore _store;
     private readonly IThemeSwitcher _themes;
     private readonly IShellLauncher _launcher;
 
     /// <summary>
-    /// What is on disk, read once when the dialog opens and updated in step with every change that is
-    /// written back — so it is also what "the value this dialog started from" means.
+    /// What is on disk, read once when the page is built and updated in step with every change that is
+    /// written back — so it is also what "the value this page started from" means.
     /// </summary>
     private readonly AppSettings _stored;
 
-    /// <summary>Creates the dialog's view model over the stored preferences.</summary>
+    /// <summary>Creates the page's view model over the stored preferences.</summary>
     /// <param name="store">Where the preferences are read from and written back to.</param>
     /// <param name="themes">Applies a chosen theme to the running app.</param>
     /// <param name="launcher">Opens the storage folder on the desktop.</param>
-    public SettingsDialogViewModel(IAppSettingsStore store, IThemeSwitcher themes, IShellLauncher launcher)
+    /// <param name="dialogs">Shows the About dialog.</param>
+    public SettingsPageViewModel(IAppSettingsStore store, IThemeSwitcher themes, IShellLauncher launcher, IDialogService dialogs)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(themes);
         ArgumentNullException.ThrowIfNull(launcher);
+        ArgumentNullException.ThrowIfNull(dialogs);
 
         _store = store;
         _themes = themes;
@@ -50,12 +53,12 @@ public sealed class SettingsDialogViewModel : DialogViewModel
 
         StorageFolder = ResolveStorageFolder(store.FilePath);
 
-        // Read here rather than injected: reopening the dialog should show what is on disk, including
-        // an edit made to the file by hand.
+        // Read here rather than injected: the page shows what is on disk when the app starts, and from
+        // then on it is the only thing that writes the file.
         _stored = store.Load();
 
-        CloseCommand = new RelayCommand(RequestClose);
         OpenStorageFolderCommand = new AsyncRelayCommand(OnOpenStorageFolderAsync);
+        OpenAboutCommand = new AsyncRelayCommand(() => dialogs.ShowAboutAsync());
 
         SelectedTheme = ThemeOption.For(_stored.Theme);
     }
@@ -76,6 +79,12 @@ public sealed class SettingsDialogViewModel : DialogViewModel
 
     /// <summary>Opens the folder the app's files live in, creating it if this is a fresh install.</summary>
     public AsyncRelayCommand OpenStorageFolderCommand { get; }
+
+    /// <summary>The version of the running build, as the About card shows it.</summary>
+    public string Version => AppInfo.Version;
+
+    /// <summary>Shows the About dialog every Enigma app has — from this page, and nowhere else.</summary>
+    public AsyncRelayCommand OpenAboutCommand { get; }
 
     /// <summary>Every theme the drop-down offers.</summary>
     public IReadOnlyList<ThemeOption> ThemeOptions { get; } = ThemeOption.All;
@@ -107,9 +116,6 @@ public sealed class SettingsDialogViewModel : DialogViewModel
             _store.Save(_stored);
         }
     } = ThemeOption.All[0];
-
-    /// <summary>Closes the dialog. There is nothing to accept: every choice has already applied.</summary>
-    public RelayCommand CloseCommand { get; }
 
     /// <summary>The folder a settings file sits in, which is also where the profiles are.</summary>
     /// <param name="settingsFilePath">The store's own file.</param>

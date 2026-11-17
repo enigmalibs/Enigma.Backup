@@ -27,16 +27,19 @@ Legend: **L** = Linux x64 · **W** = Windows x64. Tick both.
 **Since 1.1.0 the app asks its questions inside the window.** Every dialog below — the password, a
 profile name, a confirmation, a decision — is raised over a dimmed main window rather than as a
 separate window of its own, so there is no title-bar ✕ and **Escape or a click on the dimmed area**
-is what cancels one. Run progress is likewise on a card over the window, with `Cancel` on the card
-itself, and the outcome of a run arrives as a banner across the top of the window.
+is what cancels one. **Since 1.6.0 a run is shown in a dialog of its own**: its progress and
+`Cancel` while it runs, then — in the same dialog — its outcome and `Close`. There is no banner and no
+**Last run** panel any more; wherever the rows below speak of the outcome, it is that dialog.
 
-**Since 1.2.0 `Restore…` and `Verify…` are in the top bar**, right of the profile status and left of
-the settings gear; the bottom bar holds the accent **Back up** alone. Wherever §§5–6 below say "start
-a restore" or "start a verify", that is where the button is now. Two new capabilities have sections of
-their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
+**Since 1.6.0 the window has a rail of pages on the left**, and `Restore…` and `Verify…` are
+on the **Verify & Restore** page (the rail's second icon) — wherever §§5–6 below say "start a restore"
+or "start a verify", that is where the button is now. The window title is just `Enigma Backup`, and
+**Settings** is a page at the foot of the rail (§8). On a wide window every page sits in a centred
+column (3.14), and About names the app `Enigma Backup` (8.13). The two capabilities 1.2.0 added have
+sections of their own at the end: **pattern inputs** (§9) and **zip archives** (§10).
 
-**Since 1.3.0 About is a dialog of its own**, opened by the ⓘ right of the gear; Settings holds the
-theme and the storage folder only (§8). An unexpected error opens a **Something went wrong** dialog
+**Since 1.3.0 About is a dialog of its own**, opened from the Settings page's About card since
+1.6.0 (§8). An unexpected error opens a **Something went wrong** dialog
 instead of ending the app (§7, 7.9–7.12 — these need a throwing build), and the zip carries `app.ico`
 beside the executable (§1).
 
@@ -54,22 +57,24 @@ beside the executable (§1).
 | 1.1 | The zip extracts to **exactly two files**: the executable and `app.ico` (the app's icon, identical to the one the window shows) | ☐ | ☐ |
 | 1.2 | Linux only: the extracted binary has its executable bit (`-rwxr-xr-x`) | ☐ | — |
 | 1.3 | It launches on a machine with **no .NET runtime installed** | ☐ | ☐ |
-| 1.4 | The window opens with the app icon and the title `Enigma.Backup` | ☐ | ☐ |
+| 1.4 | The window opens with the app icon and the title `Enigma Backup` | ☐ | ☐ |
 | 1.5 | Closing the window exits the process — nothing is left running | ☐ | ☐ |
 | 1.6 | Linux only: `kill -TERM <pid>` terminates it (a session logout must not hang) | ☐ | — |
+| 1.7 | Windows only: Task Manager lists the running app as `Enigma Backup`, and the exe's *Properties → Details* show `Enigma Backup` as File description and Product name | — | ☐ |
+| 1.8 | Linux only: after `packaging/linux/install.sh`, the application launcher lists `Enigma Backup`, the script's last lines say `Done. "Enigma Backup" is in your application launcher.`, and the running window groups under that entry | ☐ | — |
 
 ## 2. Profiles
 
 | # | Check | L | W |
 |---|-------|---|---|
-| 2.1 | `New` clears the editor; the title shows `*` once anything is edited | ☐ | ☐ |
-| 2.2 | `Save` prompts for a name **in the window**, over a dimmed background; the bar then reads `Saved.` and the `*` clears | ☐ | ☐ |
+| 2.1 | On the **Profiles** page, `New` clears the editor; the Profile card reads `Not saved as a profile yet.` once anything is edited | ☐ | ☐ |
+| 2.2 | `Save` prompts for a name **in the window**, over a dimmed background; the Profile card then reads `Saved.` | ☐ | ☐ |
 | 2.3 | The profile survives a restart — reopen the app and it is in the drop-down, fully populated | ☐ | ☐ |
 | 2.4 | The `.json` file is in `%APPDATA%\Enigma.Backup\profiles` / `~/.config/Enigma.Backup/profiles` | ☐ | ☐ |
 | 2.5 | `Save as…` refuses a name already taken (its OK button greys out); `Rename…` accepts the profile's own name | ☐ | ☐ |
 | 2.6 | `Delete…` asks first, and does nothing when declined | ☐ | ☐ |
 | 2.7 | `Export…` writes a `.json` to an arbitrary folder; `Import…` reads one back in | ☐ | ☐ |
-| 2.8 | Switching profiles with unsaved edits discards them (the bar warned: *Unsaved changes.*) | ☐ | ☐ |
+| 2.8 | Switching profiles with unsaved edits discards them (the Profile card warned: *Unsaved changes.*); going to another page and back keeps them | ☐ | ☐ |
 | 2.9 | On a name prompt, **Enter** confirms and **Escape** cancels; a click on the dimmed area also cancels | ☐ | ☐ |
 | 2.10 | Each dialog carries a header icon matching what it is asking (a pencil to name, a warning to confirm a delete) | ☐ | ☐ |
 
@@ -77,17 +82,20 @@ beside the executable (§1).
 
 | # | Check | L | W |
 |---|-------|---|---|
-| 3.1 | `Add files…` and `Add folder…` both add to the list | ☐ | ☐ |
-| 3.2 | Dropping files/folders anywhere on the window adds them | ☐ | ☐ |
+| 3.1 | `Add files…` and `Add folder…` both add to the list — on Backup and on Profiles alike | ☐ | ☐ |
+| 3.2 | Dropping files/folders on the Backup page (on **Files and folders**) or the Profiles page adds them to that page's list; on the other pages, and on Backup while **A profile** is chosen, a drop is refused | ☐ | ☐ |
 | 3.3 | `Remove` takes out the selected entry; `Remove all` empties the list | ☐ | ☐ |
 | 3.4 | Typing `**/build/**` in the exclude field and pressing **Enter** (or `Add`) lists it; `Remove` takes it away | ☐ | ☐ |
-| 3.5 | **Back up** is disabled with no inputs, and with no output folder | ☐ | ☐ |
-| 3.6 | Every editor control is disabled while a run is in progress (and covered by the run card's dim) | ☐ | ☐ |
-| 3.7 | *Archive options* shows **Compression** and **Encrypt with a password** as two cards; the compression text under the card changes with the choice | ☐ | ☐ |
-| 3.8 | At the window's **minimum size** nothing overlaps — the headings stay above their lists and the action row stays visible | ☐ | ☐ |
+| 3.5 | **Back up** is disabled with no inputs, and with no output folder — and the line beside it says which is missing | ☐ | ☐ |
+| 3.6 | Every editor control is disabled while a run is in progress (and covered by the run dialog's dim) | ☐ | ☐ |
+| 3.7 | *Output* shows **Save backups in**, then **Compression** and **Encrypt with a password** as two cards; the compression text under the card changes with the choice | ☐ | ☐ |
+| 3.8 | At the window's **minimum size** nothing overlaps — the pages scroll, and **Back up** stays in view at the foot of Backup | ☐ | ☐ |
 | 3.9 | `Add pattern…` sits beside `Add files…` and `Add folder…`; at the minimum width the five buttons wrap to two rows and all stay pressable (the rule itself is §9) | ☐ | ☐ |
-| 3.10 | The top bar reads `Profile │ combo │ status │ Restore… │ Verify… │ ▏ │ ⚙ │ ⓘ` and the bottom bar holds **Back up** alone; all four top-bar controls are the same height | ☐ | ☐ |
-| 3.11 | All of `Restore…`, `Verify…`, the gear and ⓘ grey out while a run is in progress, and come back when it ends | ☐ | ☐ |
+| 3.10 | The rail shows **Backup**, **Verify & Restore** and **Profiles** as icons, with **Settings** at its foot, each naming its page on hover; the selected one is highlighted, and clicking the other switches the page and keeps what the first one held | ☐ | ☐ |
+| 3.11 | Each page opens with its icon, name and one sentence; Backup holds two sections, **Input** and **Output**, and no profile button at all; the profile drop-down and its seven buttons are on **Profiles** | ☐ | ☐ |
+| 3.12 | With at least one profile saved, Backup opens on **A profile** with the first one chosen: Input shows its summary (each folder, each pattern as `pattern in folder`, what it leaves out), Output shows its folder and options greyed out under *Set by the profile*; with none, it opens on **Files and folders** | ☐ | ☐ |
+| 3.13 | **Back up** on a profile writes `<Profile>_…` archives exactly as last saved — an unsaved edit on the Profiles page is not in it; saving that edit updates the summary at once | ☐ | ☐ |
+| 3.14 | Maximised, every page's header, cards and — on Backup — the **Back up** row sit in one column of at most 900 px, **centred** right of the rail, the header's left edge over the cards'; at the minimum width the column fills the page and nothing scrolls sideways | ☐ | ☐ |
 
 ## 4. Backup
 
@@ -99,10 +107,10 @@ beside the executable (§1).
 | 4.4 | The password prompt refuses a mismatch, and refuses an empty password | ☐ | ☐ |
 | 4.5 | `build/junk.o` is **not** in the archive — the exclude was applied | ☐ | ☐ |
 | 4.6 | The empty directory **is** in the archive | ☐ | ☐ |
-| 4.7 | The **run card** covers the window and shows the phase, the current file and a percentage that advances | ☐ | ☐ |
-| 4.8 | The card is gone the moment the run ends — no dim is left over an app that cannot be clicked | ☐ | ☐ |
-| 4.9 | A **banner** reports the outcome across the top of the window: green for a clean run | ☐ | ☐ |
-| 4.10 | The **Last run** panel fills in with the counts, the duration and the output path | ☐ | ☐ |
+| 4.7 | The **run dialog** covers the window and shows the phase, the current file and a percentage that advances; Escape and a click on the dimmed area do **not** close it | ☐ | ☐ |
+| 4.8 | When the run ends, the same dialog turns to the outcome with a `Close` button (Enter and Escape close it too) — no dim is ever left over an app that cannot be clicked | ☐ | ☐ |
+| 4.9 | The outcome's title and icon say how it went: **Done** with a green check for a clean run | ☐ | ☐ |
+| 4.10 | The outcome lists the counts, the duration and the output path, labels aligned in one column | ☐ | ☐ |
 | 4.11 | Pointing the output folder *inside* an input folder still works (it excludes itself) | ☐ | ☐ |
 
 ## 5. Restore
@@ -111,37 +119,37 @@ beside the executable (§1).
 |---|-------|---|---|
 | 5.1 | Restoring the unencrypted archive reproduces the tree byte-for-byte | ☐ | ☐ |
 | 5.2 | Restoring the encrypted archive prompts for the password, then does the same | ☐ | ☐ |
-| 5.3 | A wrong password is reported clearly — a red banner — and **nothing** is written to the destination | ☐ | ☐ |
-| 5.4 | Restoring twice over the same destination raises Skip / Overwrite / Abort **above the run card**, and it is clickable | ☐ | ☐ |
+| 5.3 | A wrong password is reported clearly — **Something went wrong**, in red — and **nothing** is written to the destination | ☐ | ☐ |
+| 5.4 | Restoring twice over the same destination raises Skip / Overwrite / Abort **above the run dialog**, and it is clickable | ☐ | ☐ |
 | 5.5 | *Apply to all* on that dialog stops it reappearing for the remaining files | ☐ | ☐ |
-| 5.6 | The run card says `Restoring…` (not `Backing up…`) and its `Cancel` stops the restore | ☐ | ☐ |
+| 5.6 | The run dialog says `Restoring` (not `Backing up`) and its `Cancel` stops the restore | ☐ | ☐ |
 
 ## 6. Verify
 
 | # | Check | L | W |
 |---|-------|---|---|
-| 6.1 | Verifying a fresh archive succeeds — green banner | ☐ | ☐ |
+| 6.1 | Verifying a fresh archive succeeds — **Done**, green | ☐ | ☐ |
 | 6.2 | Verifying the encrypted archive prompts in-window for the password and authenticates every block | ☐ | ☐ |
-| 6.3 | Flipping one byte in the archive makes verify fail — red banner, and the reason in **Last run** | ☐ | ☐ |
+| 6.3 | Flipping one byte in the archive makes verify fail — **Something went wrong**, red, with the reason in the outcome | ☐ | ☐ |
 | 6.4 | Editing the `.sha256` sidecar makes verify fail | ☐ | ☐ |
-| 6.5 | The run card says `Verifying…` and the banner from the previous run is taken away when this one starts | ☐ | ☐ |
+| 6.5 | The run dialog says `Checking the archive`, and each run opens a dialog of its own — nothing of the previous run is left on screen | ☐ | ☐ |
 
 ## 7. Errors and cancellation
 
 | # | Check | L | W |
 |---|-------|---|---|
-| 7.1 | Make an input unreadable (`chmod 000` / deny read in the ACL): the run raises **Skip / Retry / Abort** — **above the run card**, and its buttons respond | ☐ | ☐ |
-| 7.2 | **Skip** continues, and the skipped file is listed prominently in the summary; the banner is amber, not green | ☐ | ☐ |
+| 7.1 | Make an input unreadable (`chmod 000` / deny read in the ACL): the run raises **Skip / Retry / Abort** — **above the run dialog**, and its buttons respond | ☐ | ☐ |
+| 7.2 | **Skip** continues, and the skipped file is listed prominently in the outcome; its title is **Finished, with something to report**, amber, not green | ☐ | ☐ |
 | 7.3 | *Apply to all further errors* stops the dialog reappearing | ☐ | ☐ |
 | 7.4 | **Abort** ends the run and leaves **no** partial archive in the output folder | ☐ | ☐ |
 | 7.5 | Deleting an input path before running routes through the same dialog | ☐ | ☐ |
-| 7.6 | `Cancel` **on the run card** stops the backup and deletes the partial archive | ☐ | ☐ |
+| 7.6 | `Cancel` **in the run dialog** stops the backup and deletes the partial archive; the dialog stays up, says `Cancelling…`, then shows the cancelled outcome | ☐ | ☐ |
 | 7.7 | Dismissing a decision dialog with **Escape**, or by clicking the dimmed area, aborts (it never silently skips) | ☐ | ☐ |
-| 7.8 | After an abort, a cancel and a failure alike, the card is gone and the window is clickable again | ☐ | ☐ |
+| 7.8 | After an abort, a cancel and a failure alike, the run dialog shows the outcome, and once closed the window is clickable again | ☐ | ☐ |
 | 7.9 | An unexpected error (needs a throwing build — e.g. a temporary `throw` in a command) shows **Something went wrong** with the warning icon, its message and a single `Close`; the app keeps running afterwards | ☐ | ☐ |
 | 7.10 | A second error while that dialog is open adds "1 more error occurred." to it rather than opening another; *Details* expands to the type, message and stack, and **Copy details** puts them on the clipboard | ☐ | ☐ |
-| 7.11 | An unexpected error while another dialog is open (e.g. Settings) waits for that dialog to close, then appears — it never replaces it | ☐ | ☐ |
-| 7.12 | A failure during start-up (needs a throwing build — a temporary `throw` in `App.Compose`) opens a small `Enigma.Backup` window with the same dialog, saying the app could not start; `Close` ends the process | ☐ | ☐ |
+| 7.11 | An unexpected error while another dialog is open (e.g. About) waits for that dialog to close, then appears — it never replaces it | ☐ | ☐ |
+| 7.12 | A failure during start-up (needs a throwing build — a temporary `throw` in `App.Compose`) opens a small `Enigma Backup` window with the same dialog, saying the app could not start; `Close` ends the process | ☐ | ☐ |
 
 ## 8. Settings: theme and storage; About
 
@@ -151,10 +159,10 @@ The theme preference (1.1.0) lives in `settings.json` **beside** the `profiles/`
 
 | # | Check | L | W |
 |---|-------|---|---|
-| 8.1 | The gear at the right-hand end of the profile bar opens **Settings** in the window | ☐ | ☐ |
-| 8.2 | Choosing `Light` and then `Dark` repaints the whole app at once — panels, editors, cards, buttons, **and the open dialog** | ☐ | ☐ |
+| 8.1 | The gear at the foot of the rail opens the **Settings** page: an **Appearance**, a **Storage** and an **About** section, laid out like Enigma.Launchpad's | ☐ | ☐ |
+| 8.2 | Choosing `Light` and then `Dark` repaints the whole app at once — the rail, the pages, editors, cards and buttons | ☐ | ☐ |
 | 8.3 | `System` returns the app to following the desktop's own light/dark setting | ☐ | ☐ |
-| 8.4 | There is no OK button: the choice is already applied, and `Close`/Escape just closes the dialog | ☐ | ☐ |
+| 8.4 | There is no OK button: the choice is already applied, and leaving the page keeps it | ☐ | ☐ |
 | 8.5 | `settings.json` appears beside `profiles/` after the first change and holds the chosen theme | ☐ | ☐ |
 | 8.6 | The choice survives a restart — the app opens in it, with **no flash** of the other variant first | ☐ | ☐ |
 | 8.7 | Deleting `settings.json` returns the app to following the system, and merely starting the app does not recreate it | ☐ | ☐ |
@@ -163,9 +171,9 @@ The theme preference (1.1.0) lives in `settings.json` **beside** the `profiles/`
 | 8.10 | A **Storage** card names the config folder and carries an **Open folder** button | ☐ | ☐ |
 | 8.11 | `Open folder` shows that folder in the desktop's file manager, with `settings.json` and `profiles/` in it | ☐ | ☐ |
 | 8.12 | On a fresh config — nothing written yet — `Open folder` **creates** the folder and opens it rather than reporting an error | ☐ | ☐ |
-| 8.13 | The ⓘ beside the gear opens **About**, with no title bar text and no header icon: the app icon, `Enigma.Backup`, `Version 1.5.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
+| 8.13 | `About Enigma Backup` on the About card (beside `Version 1.6.0`) opens **About**, with no title bar text and no header icon: the app icon, `Enigma Backup`, `Version 1.6.0`, a quieter `Build <7-char sha>` line and the copyright line, centred — the same dialog as every other Enigma app | ☐ | ☐ |
 | 8.14 | About's only button is `Close`; Escape and Enter close it too, and the build sha can be selected and copied | ☐ | ☐ |
-| 8.15 | Settings and About each fit their host — nothing scrolls and nothing is clipped, in both variants; Settings holds Theme and Storage only | ☐ | ☐ |
+| 8.15 | About fits its host — nothing scrolls and nothing is clipped, in both variants; the Settings page holds Theme, Storage and About only, and no gear or ⓘ is left anywhere else | ☐ | ☐ |
 
 ## 9. Pattern inputs
 
@@ -182,7 +190,7 @@ from the top of this file.
 | 9.6 | `qa/logs` + `**/*.txt` reaches `DirPrefixOne/inner.txt` and `other/x.txt` — `**` goes to any depth | ☐ | ☐ |
 | 9.7 | `qa/logs` + `DirPrefix*` takes `DirPrefixOne/` **with everything in it** | ☐ | ☐ |
 | 9.8 | An exclude glob still wins over a pattern match | ☐ | ☐ |
-| 9.9 | A pattern matching nothing does **not** fail the run: the banner is amber and **Last run** carries a warning naming the folder and the pattern | ☐ | ☐ |
+| 9.9 | A pattern matching nothing does **not** fail the run: the outcome is amber and carries a warning naming the folder and the pattern | ☐ | ☐ |
 | 9.10 | A pattern whose base folder has been deleted routes through the same **Skip / Retry / Abort** dialog as a missing path, with a message naming the pattern | ☐ | ☐ |
 | 9.11 | Files added to the base folder **after** the profile was saved are in the next backup — the rule is re-resolved, not frozen | ☐ | ☐ |
 | 9.12 | A profile carrying a pattern is saved as `"formatVersion": 2`; one with no pattern and no Zip is still `1` (read the `.json`) | ☐ | ☐ |
@@ -218,6 +226,35 @@ machine that has the **.NET 10 runtime** (the MSI is the framework-dependent pub
 | 11.3 | *Apps & features* lists **Enigma Backup**, version `X.Y.Z`, publisher `Josué Clément`, with the app icon | — | ☐ |
 | 11.4 | Installing a later MSI over an earlier one replaces it: *Apps & features* lists one **Enigma Backup**, at the new version | — | ☐ |
 | 11.5 | Uninstalling removes the folder and both shortcuts, and leaves `%APPDATA%\Enigma.Backup` (profiles and preferences) as it was | — | ☐ |
+
+---
+
+## What was verified for 1.6.0
+
+**Against the Windows x64 zip** (`Enigma.Backup-1.6.0-win-x64.zip`, built here with `./publish.ps1 -Rid
+win-x64` and extracted to a scratch folder), and against an MSI built with `buildmsi.bat` in a scratch
+clone of the release branch. The app was driven through **UI Automation**, and nothing was clicked that
+writes. The workstation was locked during the release check, so the zip's window was read but not
+seen, and the MSI was not installed.
+
+| # | Check | Result |
+|---|-------|--------|
+| 1.1 | The zip extracts to exactly two files, the executable and `app.ico` | Pass — `Enigma.Backup.Desktop.exe` (54,605,373 bytes) and `app.ico` (11,382 bytes, identical to the asset) |
+| 1.3 | It launches | Pass, **on a machine that has .NET installed**. A runtime-free machine was not available, so "self-contained" is still the maintainer's check |
+| 1.4 | The window's title is `Enigma Backup` | Pass — read through UIA |
+| 3.14 | Every page sits in a centred column on a wide window | Pass **by eye on a Debug build of the same markup** (FEATURE-464A): every page at 1120 px, maximised and at the 820 px minimum |
+| 8.13 | About shows `Enigma Backup`, `Version 1.6.0`, a `Build` line and the copyright | Pass **by automation**: the Settings page's *About Enigma Backup* invoked, and the dialog's texts read as `Enigma Backup`, `Version`, `1.6.0`, `Build`, `d5e03bd`, `Copyright © 2026 Josué Clément`. Not seen by eye |
+| 11.x | The MSI's identity | Pass **by its tables**, not installed — `Enigma.Backup.1.6.0.msi` (70.6 MB): `ProductName` Enigma Backup, `ProductVersion` 1.6.0, `UpgradeCode` `{D60F30D6-…-F98EB9731A91}` unchanged |
+
+**What was *not* exercised.**
+- The **Linux x64 zip** (`docs/RELEASE.md` requires it to be built on Linux, and this host is Windows),
+  and with it every **L** column.
+- §11.1–11.5: installing, upgrading 1.5.0 → 1.6.0 and uninstalling the MSI are the maintainer's.
+- 8.13 by eye, in either variant.
+- **§§2–10 by hand.** 1.6.0 moves almost every control (the rail, the pages, the run dialog), so this
+  release needs the whole checklist run against both zips before it ships. The automated suite (590
+  tests, including the end-to-end window test that drives the real pipeline) is green, but it does not
+  press buttons.
 
 ---
 

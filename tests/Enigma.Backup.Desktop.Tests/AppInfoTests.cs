@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Xunit;
 
 namespace Enigma.Backup.Desktop.Tests;
@@ -91,5 +92,20 @@ public sealed class AppInfoTests
     }
 
     [Fact]
-    public void TheNameIsTheOneTheWindowUses() => Assert.Equal("Enigma.Backup", AppInfo.Name);
+    public void TheNameIsTheOneTheWindowUses() => Assert.Equal("Enigma Backup", AppInfo.Name);
+
+    /// <summary>
+    /// The exe's file description and product name are what Windows shows for the running app — Task
+    /// Manager, the file's Properties — so they spell the product as the window does, not as the
+    /// assembly is named.
+    /// </summary>
+    [Fact]
+    public void TheExecutableCarriesTheProductsName()
+    {
+        Assembly app = typeof(AppInfo).Assembly;
+
+        Assert.Equal(AppInfo.Name, app.GetCustomAttribute<AssemblyTitleAttribute>()?.Title);
+        Assert.Equal(AppInfo.Name, app.GetCustomAttribute<AssemblyProductAttribute>()?.Product);
+        Assert.Equal("Enigma.Backup.Desktop", app.GetName().Name);
+    }
 }
