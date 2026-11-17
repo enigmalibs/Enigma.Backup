@@ -58,9 +58,6 @@ internal sealed class FakeDialogService : IDialogService
     /// <summary>How many times a pattern was asked for.</summary>
     public int PatternRequests { get; private set; }
 
-    /// <summary>How many times the preferences were opened. There is nothing to answer.</summary>
-    public int SettingsRequests { get; private set; }
-
     /// <summary>How many times the About dialog was opened. There is nothing to answer.</summary>
     public int AboutRequests { get; private set; }
 
@@ -117,14 +114,6 @@ internal sealed class FakeDialogService : IDialogService
     public Task ShowMessageAsync(string title, string message, MessageSeverity severity, CancellationToken cancellationToken = default)
     {
         Messages.Add((title, message, severity));
-
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public Task ShowSettingsAsync(CancellationToken cancellationToken = default)
-    {
-        SettingsRequests++;
 
         return Task.CompletedTask;
     }

@@ -1,0 +1,107 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ei="https://github.com/josueclement/Enigma.Icons"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             xmlns:editors="using:Enigma.Avalonia.Desktop.Controls.Editors"
+             x:Class="Enigma.Backup.Desktop.Views.InputsEditor"
+             x:DataType="vm:ProfileEditorViewModel">
+
+  <!-- What goes into an archive: the files, folders and patterns, and what is left out of them. The same
+       editor on the Backup page (a one-off backup) and on the Profiles page (a profile); its styles are
+       the window's. -->
+  <StackPanel Spacing="6">
+
+    <StackPanel Classes="glyphrow">
+      <PathIcon Data="{ei:IconGeometry Files}" />
+      <TextBlock Text="Files, folders and patterns to back up" Classes="section" />
+    </StackPanel>
+
+    <!-- The page scrolls, so the list has a height of its own: it grows with its entries up to a point,
+         then scrolls inside itself. -->
+    <ListBox Classes="framed"
+             MinHeight="110"
+             MaxHeight="260"
+             ItemsSource="{Binding Inputs}"
+             SelectedItem="{Binding SelectedInput}">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:InputItem">
+          <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Detail}" />
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <WrapPanel Classes="actions">
+      <Button Command="{Binding AddFilesCommand}">
+        <StackPanel Classes="glyphrow">
+          <PathIcon Data="{ei:IconGeometry FilePlus}" />
+          <TextBlock Text="Add files…" />
+        </StackPanel>
+      </Button>
+      <Button Command="{Binding AddFolderCommand}">
+        <StackPanel Classes="glyphrow">
+          <PathIcon Data="{ei:IconGeometry FolderPlus}" />
+          <TextBlock Text="Add folder…" />
+        </StackPanel>
+      </Button>
+      <Button Command="{Binding AddPatternCommand}" ToolTip.Tip="A folder plus a pattern, re-read on every run">
+        <StackPanel Classes="glyphrow">
+          <PathIcon Data="{ei:IconGeometry Asterisk}" />
+          <TextBlock Text="Add pattern…" />
+        </StackPanel>
+      </Button>
+      <Button Command="{Binding RemoveInputCommand}">
+        <StackPanel Classes="glyphrow">
+          <PathIcon Data="{ei:IconGeometry Minus}" />
+          <TextBlock Text="Remove" />
+        </StackPanel>
+      </Button>
+      <Button Command="{Binding ClearInputsCommand}">
+        <StackPanel Classes="glyphrow">
+          <PathIcon Data="{ei:IconGeometry Broom}" />
+          <TextBlock Text="Remove all" />
+        </StackPanel>
+      </Button>
+    </WrapPanel>
+
+    <TextBlock Text="Files and folders dropped on this page are added here too."
+               Classes="muted"
+               FontSize="12"
+               TextTrimming="CharacterEllipsis" />
+
+    <StackPanel Classes="glyphrow" Margin="0,8,0,0">
+      <PathIcon Data="{ei:IconGeometry Funnel}" />
+      <TextBlock Text="Exclude patterns" Classes="section" />
+    </StackPanel>
+
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+      <editors:TextEditor Grid.Column="0"
+                          Text="{Binding NewExcludeGlob}"
+                          PlaceholderText="e.g. **/bin/** or *.log">
+        <editors:TextEditor.KeyBindings>
+          <KeyBinding Gesture="Enter" Command="{Binding AddExcludeCommand}" />
+        </editors:TextEditor.KeyBindings>
+        <editors:TextEditor.ActionContent>
+          <Button Classes="inline" Command="{Binding AddExcludeCommand}">
+            <StackPanel Classes="glyphrow">
+              <PathIcon Data="{ei:IconGeometry Plus}" />
+              <TextBlock Text="Add" />
+            </StackPanel>
+          </Button>
+        </editors:TextEditor.ActionContent>
+      </editors:TextEditor>
+      <Button Grid.Column="1" Command="{Binding RemoveExcludeCommand}" VerticalAlignment="Center">
+        <StackPanel Classes="glyphrow">
+          <PathIcon Data="{ei:IconGeometry Minus}" />
+          <TextBlock Text="Remove" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <ListBox Classes="framed"
+             ItemsSource="{Binding ExcludeGlobs}"
+             SelectedItem="{Binding SelectedExcludeGlob}"
+             Height="76" />
+
+  </StackPanel>
+
+</UserControl>

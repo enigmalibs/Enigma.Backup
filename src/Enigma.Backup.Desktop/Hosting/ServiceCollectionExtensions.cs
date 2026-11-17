@@ -32,7 +32,6 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();
             services.TryAddSingleton<IFilePicker, FilePicker>();
             services.TryAddSingleton<IDialogService, DialogService>();
-            services.TryAddSingleton<INotificationService, NotificationService>();
             services.TryAddSingleton<IThemeSwitcher, ThemeSwitcher>();
 
             // Registered under both its own type and the seam, because App has to hand it the window
@@ -49,9 +48,11 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton<IAppSettingsStore>(static provider =>
                 new AppSettingsStore(provider.GetRequiredService<ILogger<AppSettingsStore>>()));
 
-            // Singleton because it holds the card it is currently showing: a second instance would be
-            // one whose Update calls draw on nothing.
-            services.TryAddSingleton<IProgressOverlay, ProgressOverlay>();
+            // The run dialog, registered the same way and for the same reason as the launcher: App hands
+            // it the window's run dialog host, which IRunDialog does not name. One instance, because it
+            // holds that host and the run it is showing.
+            services.TryAddSingleton<RunDialog>();
+            services.TryAddSingleton<IRunDialog>(static provider => provider.GetRequiredService<RunDialog>());
 
             // The safety net for exceptions nothing else caught. One instance, because App hands it to
             // the process-wide hooks once and it remembers what it has already seen. TimeProvider is
@@ -59,7 +60,20 @@ public static class ServiceCollectionExtensions
             services.TryAddSingleton(TimeProvider.System);
             services.TryAddSingleton<IUnhandledErrorReporter, UnhandledErrorReporter>();
 
-            // Transient: views and view models are cheap and per-consumer (see dotnet-di-design).
+            // One run at a time across every page, so every page shares the one coordinator; and one
+            // list of profiles, so a profile saved on one page is what every other page lists.
+            services.TryAddSingleton<RunCoordinator>();
+            services.TryAddSingleton<ProfileCatalog>();
+
+            // The pages' view models live as long as the app: the window only hides a page it is not
+            // showing, and a page has to come back as it was left.
+            services.TryAddSingleton<BackupPageViewModel>();
+            services.TryAddSingleton<VerifyRestorePageViewModel>();
+            services.TryAddSingleton<ProfilesPageViewModel>();
+            services.TryAddSingleton<SettingsPageViewModel>();
+
+            // Transient: the window, its view model and an editor are cheap and per-consumer (see
+            // dotnet-di-design) — the Backup page's one-off editor and the Profiles page's are two.
             services.AddTransient<ProfileEditorViewModel>();
             services.AddTransient<MainWindowViewModel>();
             services.AddTransient<MainWindow>();

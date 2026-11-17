@@ -13,8 +13,9 @@ using Enigma.Backup.Desktop.Services;
 namespace Enigma.Backup.Desktop.ViewModels;
 
 /// <summary>
-/// Everything a <see cref="BackupProfile"/> holds, as the window edits it: the inputs, the exclude
-/// patterns, the output folder, the compression and whether the archive is encrypted.
+/// Everything a <see cref="BackupProfile"/> holds, as a page edits it: the inputs, the exclude
+/// patterns, the output folder, the compression and whether the archive is encrypted. The Profiles page
+/// edits a stored profile with one; the Backup page holds its one-off backup in another.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -29,21 +30,26 @@ namespace Enigma.Backup.Desktop.ViewModels;
 public sealed class ProfileEditorViewModel : ObservableObject
 {
     private readonly IFilePicker _filePicker;
+    private readonly IDialogService _dialogs;
     private bool _loading;
 
     /// <summary>Creates an empty editor.</summary>
     /// <param name="filePicker">Opens the system pickers behind the Add and Browse buttons.</param>
-    public ProfileEditorViewModel(IFilePicker filePicker)
+    /// <param name="dialogs">Asks for a pattern input, behind the Add pattern button.</param>
+    public ProfileEditorViewModel(IFilePicker filePicker, IDialogService dialogs)
     {
         ArgumentNullException.ThrowIfNull(filePicker);
+        ArgumentNullException.ThrowIfNull(dialogs);
 
         _filePicker = filePicker;
+        _dialogs = dialogs;
 
         Inputs.CollectionChanged += OnInputsChanged;
         ExcludeGlobs.CollectionChanged += OnExcludesChanged;
 
         AddFilesCommand = new AsyncRelayCommand(OnAddFilesAsync);
         AddFolderCommand = new AsyncRelayCommand(OnAddFolderAsync);
+        AddPatternCommand = new AsyncRelayCommand(OnAddPatternAsync);
         RemoveInputCommand = new RelayCommand(OnRemoveInput, () => SelectedInput is not null);
         ClearInputsCommand = new RelayCommand(OnClearInputs, () => Inputs.Count > 0);
         BrowseOutputCommand = new AsyncRelayCommand(OnBrowseOutputAsync);
@@ -186,6 +192,12 @@ public sealed class ProfileEditorViewModel : ObservableObject
 
     /// <summary>Adds a chosen folder to the inputs.</summary>
     public AsyncRelayCommand AddFolderCommand { get; }
+
+    /// <summary>
+    /// Asks for a pattern input — a folder and the glob matched inside it — and adds it, unless the inputs
+    /// already have that pair.
+    /// </summary>
+    public AsyncRelayCommand AddPatternCommand { get; }
 
     /// <summary>Removes the selected input.</summary>
     public RelayCommand RemoveInputCommand { get; }
@@ -370,6 +382,14 @@ public sealed class ProfileEditorViewModel : ObservableObject
         if (await _filePicker.PickFolderAsync("Add a folder to back up") is string folder)
         {
             AddInputs([folder]);
+        }
+    }
+
+    private async Task OnAddPatternAsync()
+    {
+        if (await _dialogs.RequestPatternInputAsync() is PatternInput patternInput)
+        {
+            AddPatternInput(patternInput.BaseDirectory, patternInput.Pattern);
         }
     }
 

@@ -28,7 +28,7 @@ usage() {
     cat <<'USAGE'
 Usage: uninstall.sh [-h|--help]
 
-Removes Enigma.Backup from the XDG directories install.sh wrote to:
+Removes Enigma Backup from the XDG directories install.sh wrote to:
 the application, the launcher symlink, the desktop entry and the eight icons.
 
 Your profiles and preferences in ~/.config/Enigma.Backup are left exactly as they are,
@@ -62,7 +62,7 @@ readonly symlink="${bin_home}/${APP_ID}"
 # data_home, so an empty or wrong XDG_DATA_HOME could otherwise point it anywhere.
 [[ ${install_dir} = */${APP_ID} ]] || die "refusing to remove '${install_dir}': not an ${APP_ID} directory."
 
-printf 'Removing Enigma.Backup\n\n'
+printf 'Removing Enigma Backup\n\n'
 
 removed=0
 
@@ -112,7 +112,7 @@ command -v gtk-update-icon-cache > /dev/null 2>&1 && gtk-update-icon-cache -q -t
 command -v kbuildsycoca6 > /dev/null 2>&1 && kbuildsycoca6 --noincremental > /dev/null 2>&1 || true
 
 if [[ ${removed} -eq 0 ]]; then
-    printf '\nNothing to remove — Enigma.Backup is not installed under %s.\n' "${data_home}"
+    printf '\nNothing to remove — Enigma Backup is not installed under %s.\n' "${data_home}"
 else
     printf '\nDone.\n'
 fi

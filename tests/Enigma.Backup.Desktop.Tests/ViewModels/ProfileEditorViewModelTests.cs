@@ -270,7 +270,7 @@ public sealed class ProfileEditorViewModelTests
     {
         FakeFilePicker picker = new();
         picker.InputFiles.Enqueue(["/a", "/b"]);
-        ProfileEditorViewModel editor = new(picker);
+        ProfileEditorViewModel editor = new(picker, new FakeDialogService());
 
         await editor.AddFilesCommand.ExecuteAsync(null);
 
@@ -282,7 +282,7 @@ public sealed class ProfileEditorViewModelTests
     {
         FakeFilePicker picker = new();
         picker.Folders.Enqueue("/backups/new");
-        ProfileEditorViewModel editor = new(picker);
+        ProfileEditorViewModel editor = new(picker, new FakeDialogService());
         editor.OutputDirectory = "/backups";
 
         await editor.BrowseOutputCommand.ExecuteAsync(null);
@@ -295,7 +295,7 @@ public sealed class ProfileEditorViewModelTests
     public async Task BrowseOutput_LeavesTheFolderAloneWhenThePickerIsDismissed()
     {
         FakeFilePicker picker = new();
-        ProfileEditorViewModel editor = new(picker);
+        ProfileEditorViewModel editor = new(picker, new FakeDialogService());
         editor.OutputDirectory = "/backups";
 
         await editor.BrowseOutputCommand.ExecuteAsync(null);
@@ -475,5 +475,5 @@ public sealed class ProfileEditorViewModelTests
         Assert.Equal(profile.PatternInputs, written.PatternInputs);
     }
 
-    private static ProfileEditorViewModel Editor() => new(new FakeFilePicker());
+    private static ProfileEditorViewModel Editor() => new(new FakeFilePicker(), new FakeDialogService());
 }

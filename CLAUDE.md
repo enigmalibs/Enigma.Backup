@@ -59,9 +59,9 @@ Two production projects (`src/`), both `net10.0` on purpose:
   `TextBox`/`ComboBox` via FluentTheme's key overrides — drop it and everything else goes
   untemplated) and merges `avares://Enigma.Avalonia.Desktop/Themes/Fluent.axaml` into
   `Application.Resources` as a **`ResourceInclude`**; a `StyleInclude` fails the build with
-  `AVLN2000`. Our own `Views/ProgressOverlayCard.axaml` is merged **after** it — a control theme of ours
-  reads the library's brushes, and on a duplicate key the last dictionary wins, so anything of ours
-  merged *before* it is silently ignored. Colours are the library's `Enigma*` brush keys, **always `DynamicResource`** —
+  `AVLN2000`. Anything of ours merged there goes **after** it — a control theme of ours would read the
+  library's brushes, and on a duplicate key the last dictionary wins, so anything of ours merged
+  *before* it is silently ignored. Colours are the library's `Enigma*` brush keys, **always `DynamicResource`** —
   `StaticResource` freezes the colour and the control stops following a theme switch. The window's own
   `Background` is ours to set (`EnigmaBackgroundBrush`): the theme paints controls, not windows.
   Icons come from `Enigma.Icons.Phosphor` through `xmlns:ei="https://github.com/josueclement/Enigma.Icons"`.
@@ -73,15 +73,18 @@ Invariants that are easy to violate and must be preserved:
   conflict handler, progress via `IProgress<T>`. Never reference Avalonia, show a dialog, or read the
   console from Core; the Desktop implements those interfaces with dialogs, tests implement them
   programmatically.
-- **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run card, the
-  outcome banner, the theme variant, opening a folder on the desktop, and UI-thread
-  marshaling enter through `IFilePicker` / `IDialogService` / `IProgressOverlay` /
-  `INotificationService` / `IThemeSwitcher` / `IShellLauncher` / `IUiDispatcher`
+- **The Desktop's view models never name Avalonia either.** File pickers, dialogs, the run dialog, the
+  theme variant, opening a folder on the desktop, and UI-thread marshaling enter through
+  `IFilePicker` / `IDialogService` / `IRunDialog` / `IThemeSwitcher` / `IShellLauncher` / `IUiDispatcher`
   (`Desktop/Services/`, with the Avalonia
   implementations beside them); only the Views, `App` and those implementations touch Avalonia types.
-  `IShellLauncher` is the one whose implementation is *also* registered under its concrete type, because
-  `App` has to hand `ShellLauncher` the window's `TopLevel` and the interface deliberately names no
-  Avalonia type — both registrations resolve to one instance, and a test pins that they do.
+  That includes the rail: its `NavigationItem`s are controls, so `MainWindow`'s code-behind builds them
+  and syncs the selection with `MainWindowViewModel.CurrentPage` (an `AppPage`); the pages are shown and
+  hidden, never rebuilt, so each keeps its state.
+  `IShellLauncher` and `IRunDialog` are the two whose implementations are *also* registered under their
+  concrete types, because `App` has to hand `ShellLauncher` the window's `TopLevel` and `RunDialog` its
+  `ContentDialog` host, and the interfaces deliberately name no Avalonia type — each pair resolves to one
+  instance, and tests pin that they do.
   This is what keeps `Enigma.Backup.Desktop.Tests` headless — including the end-to-end test that drives
   the real pipeline through the real container, which therefore has to register fakes for the two seams
   whose real implementations reach for a host control.
@@ -89,25 +92,25 @@ Invariants that are easy to violate and must be preserved:
   interfaces — no view model ever injects one.** `IContentDialogService` hands the caller an Avalonia
   control and the picker services deal in `IStorageFile`, so injecting one anywhere else breaks the
   invariant above. They are registered by `AddEnigmaAvaloniaDesktop()` (the package ships no such
-  extension) and each is handed its host control — or the window's storage provider — once in
-  `App.OnFrameworkInitializationCompleted`, before the window is shown; skip that and the first call
-  throws. Since dialogs and pickers no longer need an owner `Window`, nothing supplies one: don't
-  reintroduce a service that holds the main window.
-- **`MainWindow.axaml`'s root `Panel` ends with `Overlay` → `ContentDialog` → `InfoBar`, in that
-  order.** It is deliberately *not* the order in the library's `setup.md`: a `Panel` z-stacks its
-  children, and a mid-run decision (unreadable file, restore conflict) is raised *while* the run
-  overlay is open — behind the scrim it cannot be clicked and the app looks hung.
-- **A run's progress lives on the overlay, and the scrim must always come down.** There is one card
-  (`Views/ProgressOverlayCard`, ours — the library ships none), raised and taken away by
-  `MainWindowViewModel.RunAsync`, whose `finally` is what guarantees the second half: an exception
-  between show and hide leaves a scrim over an app nobody can click. Progress reaches both the view
-  model's own properties and the card through the single `ReportProgress` method, so the two cannot
-  drift; Cancel is *on* the card, because behind the scrim a button in the window cannot be pressed.
-- **Never `await IInfoBarService.ShowAsync`.** Its task completes when the banner is **dismissed**, not
-  when it appears (`InfoBar.ShowAsync` resolves a `TaskCompletionSource` from its `Closed` event), so
-  awaiting it holds the finishing run open until the user clicks the ✕. `NotificationService` starts it
-  and hands the task back only if it has already completed — which is how a host that was never
-  registered still surfaces as an exception.
+  extension) and the ones the app uses are handed their host control — or the window's storage
+  provider — once in `App.OnFrameworkInitializationCompleted`, before the window is shown; skip that and
+  the first call throws. The overlay, info-bar and navigation services are registered with the set and
+  never called: their hosts are not in the window. Since dialogs and pickers no longer need an owner
+  `Window`, nothing supplies one: don't reintroduce a service that holds the main window.
+- **`MainWindow.axaml`'s root `Panel` ends with `HostRunDialog` → `HostDialog`, in that order.** Both
+  are `ContentDialog`s, and a `Panel` z-stacks its children: a mid-run decision (unreadable file,
+  restore conflict, password) is raised *while* the run dialog is open — behind it, the question cannot
+  be clicked and the app looks hung.
+- **A run lives in a dialog of its own, and it must always end closable.** `IRunDialog` (implemented
+  by `Services/RunDialog` on `HostRunDialog`, its content `Views/RunView`) shows one `RunViewModel` per
+  run: progress and Cancel while it runs, then — in the same dialog — the outcome and Close. The
+  library's dialog closes itself on any button, Escape or a scrim click, so while `IsRunning` is true
+  `RunDialog` reopens it in the same call; only Cancel stops a run, and the dialog stays up to show it
+  stopping. That makes `RunCoordinator.RunAsync`'s `finally`, which always calls `run.Finish(...)`,
+  load-bearing: a run never finished is a dialog nobody can close. Progress reaches the dialog only
+  through `RunViewModel.Report`. The run dialog is deliberately *not* on `DialogService`'s gate (its
+  own questions must draw above it), and there is no outcome banner and no "Last run" panel — the
+  dialog is the outcome.
 - **An in-window dialog has to be given the keyboard focus.** `ContentDialog` handles Escape itself and
   each dialog's content binds Enter, but both need the focus to be inside the dialog; a window used to
   grant that for free. Every dialog content takes it on attach (posted at `DispatcherPriority.Loaded`,
@@ -115,7 +118,7 @@ Invariants that are easy to violate and must be preserved:
   window *behind* the scrim. Note also that the dialog's own buttons ignore a command's `CanExecute`,
   so a question that validates input drives `IsPrimaryButtonEnabled` from its view model.
 - **The dialogs take turns.** `DialogService` holds a one-slot gate from the moment a dialog is raised
-  until it has closed, because the one host replaces whatever it holds: a dialog asked for while another
+  until it has closed, because the question host replaces whatever it holds: a dialog asked for while another
   is open waits. So never show a dialog from inside another dialog's handler — it would wait on itself
   forever — and never put content on `IContentDialogService` around `DialogService`, which would bypass
   the gate.

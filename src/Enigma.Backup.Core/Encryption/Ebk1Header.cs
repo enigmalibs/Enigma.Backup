@@ -144,7 +144,7 @@ internal sealed class Ebk1Header
                 EncryptedArchiveProblem.UnsupportedVersion,
                 string.Create(
                     CultureInfo.InvariantCulture,
-                    $"This encrypted archive is version {prefix[4]}, and this version of Enigma.Backup only reads version {CurrentVersion}. A newer version of the application is needed to open it."));
+                    $"This encrypted archive is version {prefix[4]}, and this version of Enigma Backup only reads version {CurrentVersion}. A newer version of the application is needed to open it."));
         }
 
         if (prefix[5] != Argon2idKdfId)
@@ -153,7 +153,7 @@ internal sealed class Ebk1Header
                 EncryptedArchiveProblem.UnsupportedKeyDerivation,
                 string.Create(
                     CultureInfo.InvariantCulture,
-                    $"This encrypted archive derives its key with method {prefix[5]}, which this version of Enigma.Backup does not know. A newer version of the application is needed to open it."));
+                    $"This encrypted archive derives its key with method {prefix[5]}, which this version of Enigma Backup does not know. A newer version of the application is needed to open it."));
         }
 
         int memoryKiB = ReadBoundedUInt32(prefix.AsSpan(6), Ebk1Options.MinMemoryKiB, Ebk1Options.MaxMemoryKiB, "memory cost");
