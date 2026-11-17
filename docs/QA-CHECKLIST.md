@@ -61,6 +61,7 @@ beside the executable (§1).
 | 1.5 | Closing the window exits the process — nothing is left running | ☐ | ☐ |
 | 1.6 | Linux only: `kill -TERM <pid>` terminates it (a session logout must not hang) | ☐ | — |
 | 1.7 | Windows only: Task Manager lists the running app as `Enigma Backup`, and the exe's *Properties → Details* show `Enigma Backup` as File description and Product name | — | ☐ |
+| 1.8 | Linux only: after `packaging/linux/install.sh`, the application launcher lists `Enigma Backup`, the script's last lines say `Done. "Enigma Backup" is in your application launcher.`, and the running window groups under that entry | ☐ | — |
 
 ## 2. Profiles
 

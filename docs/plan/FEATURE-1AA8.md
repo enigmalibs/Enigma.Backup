@@ -1,6 +1,6 @@
 # FEATURE-1AA8 — Enigma Backup in every user-facing text
 
-**Status:** IN PROGRESS
+**Status:** DONE
 **Type:** FEATURE (multi-phase — 3 phases)
 **Branch (per phase, at build time):** `feature/feature-1aa8-phaseNN-<slug>`, cut from the run-branch tip.
 **Run:** feature/2026-11-16-display-name-everywhere
@@ -89,7 +89,7 @@ Acceptance criteria:
 
 ## PHASE03 — Linux launcher and install scripts
 
-**Status:** TODO
+**Status:** DONE
 
 Steps:
 1. `enigma-backup.desktop.in`: `Name=Enigma Backup`. `StartupWMClass` and the file's name stay as they

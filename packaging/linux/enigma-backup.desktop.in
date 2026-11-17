@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Version=1.5
-Name=Enigma.Backup
+Name=Enigma Backup
 GenericName=Backup Tool
 Comment=Pack files and folders into one compressed, optionally encrypted archive — and restore and verify it
 Exec=@EXEC@
