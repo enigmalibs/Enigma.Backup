@@ -1,6 +1,6 @@
 # FEATURE-1AA8 — Enigma Backup in every user-facing text
 
-**Status:** TODO
+**Status:** IN PROGRESS
 **Type:** FEATURE (multi-phase — 3 phases)
 **Branch (per phase, at build time):** `feature/feature-1aa8-phaseNN-<slug>`, cut from the run-branch tip.
 **Run:** feature/2026-11-16-display-name-everywhere
@@ -47,7 +47,7 @@ scripts a user runs.
 
 ## PHASE01 — Core error messages
 
-**Status:** TODO
+**Status:** DONE
 
 Steps:
 1. `ArchiveFormatDetector`: "The file is not an Enigma Backup archive: …".

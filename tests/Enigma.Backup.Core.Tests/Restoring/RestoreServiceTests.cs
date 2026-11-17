@@ -198,7 +198,7 @@ public sealed class RestoreServiceTests
         ArchiveFormatException exception = await Assert.ThrowsAsync<ArchiveFormatException>(() =>
             RestoreAsync(notAnArchive, temp.Resolve("restored")));
 
-        Assert.Contains("not an Enigma.Backup archive", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("not an Enigma Backup archive", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
