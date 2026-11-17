@@ -49,3 +49,7 @@
 | FEATURE-464A | Centre the page content                      | DONE   | docs/plan/FEATURE-464A.md |
 | FEATURE-3310 | About dialog shows Enigma Backup             | DONE   | docs/plan/FEATURE-3310.md |
 | FEATURE-63B5 | Release 1.6.0                                | DONE   | docs/plan/FEATURE-63B5.md |
+| FEATURE-1AA8 | Enigma Backup in every user-facing text      | TODO   | docs/plan/FEATURE-1AA8.md |
+| - PHASE01    | Core error messages                          | TODO   | (in FEATURE-1AA8.md)      |
+| - PHASE02    | The Windows exe's metadata                   | TODO   | (in FEATURE-1AA8.md)      |
+| - PHASE03    | Linux launcher and install scripts           | TODO   | (in FEATURE-1AA8.md)      |
