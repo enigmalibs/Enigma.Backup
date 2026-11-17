@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ei="https://github.com/josueclement/Enigma.Icons"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             xmlns:controls="using:Enigma.Avalonia.Desktop.Controls"
+             xmlns:editors="using:Enigma.Avalonia.Desktop.Controls.Editors"
+             x:Class="Enigma.Backup.Desktop.Views.OutputEditor"
+             x:DataType="vm:ProfileEditorViewModel">
+
+  <!-- Where an archive goes, and how it is written. The same editor on the Backup page and on the
+       Profiles page; its styles are the window's. -->
+  <StackPanel Spacing="8">
+
+    <editors:TextEditor Title="Save backups in"
+                        Text="{Binding OutputDirectory}"
+                        PlaceholderText="Choose the folder the archives are written to">
+      <editors:TextEditor.LeadingContent>
+        <PathIcon Data="{ei:IconGeometry HardDrives}" Width="15" Height="15" VerticalAlignment="Center" />
+      </editors:TextEditor.LeadingContent>
+      <editors:TextEditor.ActionContent>
+        <Button Classes="inline" Command="{Binding BrowseOutputCommand}">
+          <StackPanel Classes="glyphrow">
+            <PathIcon Data="{ei:IconGeometry FolderOpen}" />
+            <TextBlock Text="Browse…" />
+          </StackPanel>
+        </Button>
+      </editors:TextEditor.ActionContent>
+    </editors:TextEditor>
+
+    <controls:SettingsCard Header="Compression"
+                           Description="{Binding SelectedCompression.Description}"
+                           IconData="{ei:IconGeometry FileZip}">
+      <ComboBox ItemsSource="{Binding CompressionOptions}"
+                SelectedItem="{Binding SelectedCompression}"
+                MinWidth="170"
+                AutomationProperties.Name="Compression">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:CompressionOption">
+            <TextBlock Text="{Binding Label}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </controls:SettingsCard>
+
+    <!-- The toggle, not the card, is what goes dead under a format that cannot be encrypted: the
+         description has to stay readable to say why. -->
+    <controls:SettingsCard Header="Encrypt with a password"
+                           Description="{Binding EncryptDescription}"
+                           IconData="{ei:IconGeometry LockKey}">
+      <ToggleSwitch IsChecked="{Binding Encrypt}"
+                    IsEnabled="{Binding CanEncrypt}"
+                    OnContent="On"
+                    OffContent="Off"
+                    AutomationProperties.Name="Encrypt with a password" />
+    </controls:SettingsCard>
+
+  </StackPanel>
+
+</UserControl>

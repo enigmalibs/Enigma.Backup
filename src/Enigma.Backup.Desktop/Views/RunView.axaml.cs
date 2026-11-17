@@ -6,21 +6,18 @@ using Enigma.Backup.Desktop.ViewModels;
 
 namespace Enigma.Backup.Desktop.Views;
 
-/// <summary>The app's preferences.</summary>
-/// <remarks>
-/// The content of a <c>ContentDialog</c>, not a window — see <see cref="Services.DialogService"/>.
-/// </remarks>
-public partial class SettingsDialog : UserControl
+/// <summary>The run dialog's content: the run's progress while it goes, then its outcome.</summary>
+public partial class RunView : UserControl
 {
     // Parameterless constructor for the XAML previewer/designer.
-    public SettingsDialog()
+    public RunView()
     {
         InitializeComponent();
     }
 
-    /// <summary>Creates the dialog's content around its view model.</summary>
-    /// <param name="viewModel">The preferences to show, which apply as they are changed.</param>
-    public SettingsDialog(SettingsDialogViewModel viewModel)
+    /// <summary>Creates the content around the run it shows.</summary>
+    /// <param name="viewModel">The run.</param>
+    public RunView(RunViewModel viewModel)
         : this()
     {
         ArgumentNullException.ThrowIfNull(viewModel);
@@ -33,8 +30,8 @@ public partial class SettingsDialog : UserControl
     {
         base.OnAttachedToVisualTree(e);
 
-        // The root takes the focus rather than the drop-down: a focused ComboBox swallows Enter, and
-        // Enter has to reach the key binding above. Posted because this content is attached while the
+        // The dialog has to hold the focus, or Enter and Escape go to whatever the window had focused —
+        // behind the scrim, where they must not land. Posted because this content is attached while the
         // dialog host is still collapsed, and an invisible control cannot take the focus.
         Dispatcher.UIThread.Post(() => Focus(), DispatcherPriority.Loaded);
     }

@@ -19,19 +19,46 @@ namespace Enigma.Backup.Desktop.Tests.Hosting;
 /// </summary>
 /// <remarks>
 /// A missing registration would otherwise only show up as the app failing to open a window, which is
-/// the worst possible moment to find out — the main view model alone takes nine dependencies.
+/// the worst possible moment to find out — the window's view model holds every page, and the pages
+/// take most of the app's services between them.
 /// </remarks>
 public sealed class ServiceCollectionExtensionsTests
 {
     [Fact]
-    public void TheMainViewModelResolvesWithEveryDependencyItNeeds()
+    public void TheMainViewModelResolvesWithEveryPageItShows()
     {
         using ServiceProvider provider = Build();
 
         MainWindowViewModel viewModel = provider.GetRequiredService<MainWindowViewModel>();
 
-        Assert.NotNull(viewModel.Editor);
-        Assert.Equal("Enigma.Backup", viewModel.Title);
+        Assert.NotNull(viewModel.BackupPage.Single);
+        Assert.NotNull(viewModel.ProfilesPage.Editor);
+        Assert.NotSame(viewModel.BackupPage.Single, viewModel.ProfilesPage.Editor);
+        Assert.NotSame(viewModel.BackupPage.Single, viewModel.BackupPage.FromProfile);
+        Assert.NotNull(viewModel.VerifyRestorePage);
+        Assert.NotNull(viewModel.SettingsPage);
+        Assert.Equal(AppPage.Backup, viewModel.CurrentPage);
+    }
+
+    /// <remarks>
+    /// The window only hides a page it is not showing, so each page has to be the one instance for the
+    /// app's lifetime — and both run pages have to share the one coordinator, or two runs could start at
+    /// once.
+    /// </remarks>
+    [Fact]
+    public void ThePagesAndTheRunCoordinatorAreOneInstanceEach()
+    {
+        using ServiceProvider provider = Build();
+
+        Assert.Same(provider.GetRequiredService<BackupPageViewModel>(), provider.GetRequiredService<BackupPageViewModel>());
+        Assert.Same(provider.GetRequiredService<VerifyRestorePageViewModel>(), provider.GetRequiredService<VerifyRestorePageViewModel>());
+        Assert.Same(provider.GetRequiredService<SettingsPageViewModel>(), provider.GetRequiredService<SettingsPageViewModel>());
+        Assert.Same(provider.GetRequiredService<ProfilesPageViewModel>(), provider.GetRequiredService<ProfilesPageViewModel>());
+        Assert.Same(provider.GetRequiredService<ProfileCatalog>(), provider.GetRequiredService<ProfileCatalog>());
+        Assert.Same(provider.GetRequiredService<RunCoordinator>(), provider.GetRequiredService<RunCoordinator>());
+        Assert.Same(
+            provider.GetRequiredService<BackupPageViewModel>(),
+            provider.GetRequiredService<MainWindowViewModel>().BackupPage);
     }
 
     [Fact]
@@ -42,8 +69,7 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.IsType<AvaloniaUiDispatcher>(provider.GetRequiredService<IUiDispatcher>());
         Assert.IsType<FilePicker>(provider.GetRequiredService<IFilePicker>());
         Assert.IsType<DialogService>(provider.GetRequiredService<IDialogService>());
-        Assert.IsType<ProgressOverlay>(provider.GetRequiredService<IProgressOverlay>());
-        Assert.IsType<NotificationService>(provider.GetRequiredService<INotificationService>());
+        Assert.IsType<RunDialog>(provider.GetRequiredService<IRunDialog>());
         Assert.IsType<ThemeSwitcher>(provider.GetRequiredService<IThemeSwitcher>());
         Assert.IsType<ShellLauncher>(provider.GetRequiredService<IShellLauncher>());
     }
@@ -51,7 +77,7 @@ public sealed class ServiceCollectionExtensionsTests
     /// <remarks>
     /// <c>App</c> hands the launcher the window through its concrete type, because
     /// <c>IShellLauncher</c> deliberately names no Avalonia type. That only works if both registrations
-    /// resolve to the same object — otherwise the one the Settings dialog calls is a second instance
+    /// resolve to the same object — otherwise the one the Settings page calls is a second instance
     /// nobody ever wired, and every click throws.
     /// </remarks>
     [Fact]
@@ -81,16 +107,17 @@ public sealed class ServiceCollectionExtensionsTests
     }
 
     /// <remarks>
-    /// The overlay holds the card it is currently showing, so a second instance would be one whose
-    /// progress reports draw on nothing at all.
+    /// <c>App</c> hands the run dialog its host through the concrete type, because <c>IRunDialog</c>
+    /// names no Avalonia type. Both registrations have to resolve to the one instance — otherwise the
+    /// one a run is shown on is a second dialog nobody handed a host, and every run throws.
     /// </remarks>
     [Fact]
-    public void TheRunOverlayIsOneInstance()
+    public void TheRunDialogAppWiresIsTheOneEveryRunIsShownOn()
     {
         using ServiceProvider provider = Build();
 
-        Assert.Same(provider.GetRequiredService<IProgressOverlay>(), provider.GetRequiredService<IProgressOverlay>());
-        Assert.Same(provider.GetRequiredService<INotificationService>(), provider.GetRequiredService<INotificationService>());
+        Assert.Same(provider.GetRequiredService<RunDialog>(), provider.GetRequiredService<IRunDialog>());
+        Assert.Same(provider.GetRequiredService<IRunDialog>(), provider.GetRequiredService<IRunDialog>());
     }
 
     /// <remarks>
@@ -113,9 +140,9 @@ public sealed class ServiceCollectionExtensionsTests
     }
 
     /// <remarks>
-    /// Three of these own a host control and two own the window's storage provider, all handed over
-    /// exactly once in <c>App</c>. A second instance would be one nobody ever wired, and every call
-    /// on it would throw — so "singleton" is the behaviour under test, not a preference.
+    /// The dialog service owns a host control and the two pickers own the window's storage provider, all
+    /// handed over exactly once in <c>App</c>. A second instance would be one nobody ever wired, and
+    /// every call on it would throw — so "singleton" is the behaviour under test, not a preference.
     /// </remarks>
     [Fact]
     public void TheLibrarysServicesResolveToOneInstanceEach()

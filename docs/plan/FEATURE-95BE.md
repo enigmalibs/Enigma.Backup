@@ -1,6 +1,6 @@
 # FEATURE-95BE — Navigation rail and page-based UI
 
-**Status:** TODO
+**Status:** DONE
 **Type:** FEATURE (multi-phase — 5 phases)
 **Branch (per phase, at build time):** `feature/feature-95be-phaseNN-<slug>`, one branch per phase, cut from the run-branch tip.
 **Run:** feature/2026-11-16-page-based-ui
@@ -88,7 +88,7 @@ start to finish. The window title is just "Enigma Backup".
 
 ## PHASE01 — Runs in a content dialog
 
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 
@@ -156,7 +156,7 @@ start to finish. The window title is just "Enigma Backup".
 
 ## PHASE02 — Rail and Verify & Restore page
 
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 
@@ -210,7 +210,7 @@ start to finish. The window title is just "Enigma Backup".
 
 ## PHASE03 — Settings page
 
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 
@@ -242,7 +242,7 @@ start to finish. The window title is just "Enigma Backup".
 
 ## PHASE04 — Profiles page and single backup
 
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 
@@ -287,7 +287,7 @@ start to finish. The window title is just "Enigma Backup".
 
 ## PHASE05 — Backup with a profile
 
-**Status:** TODO
+**Status:** DONE
 
 ### Steps
 

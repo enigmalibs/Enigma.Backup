@@ -1,13 +1,11 @@
-using System.Threading.Tasks;
-using Enigma.Backup.Desktop.Tests.TestSupport;
 using Enigma.Backup.Desktop.ViewModels;
 using Xunit;
 
 namespace Enigma.Backup.Desktop.Tests.ViewModels;
 
 /// <summary>
-/// The About dialog: what it says about the build, which lines it leaves out, and the button that
-/// raises it.
+/// The About dialog: what it says about the build, and which lines it leaves out. The button that raises
+/// it is on the Settings page (<see cref="SettingsPageViewModelTests"/>).
 /// </summary>
 /// <remarks>
 /// The layout is every Enigma app's and lives in the view; what is pinned here is the content each line
@@ -67,47 +65,5 @@ public sealed class AboutDialogViewModelTests
         viewModel.CloseCommand.Execute(null);
 
         Assert.Equal(1, closes);
-    }
-
-    /// <remarks>
-    /// The window has nothing to do with the dialog beyond raising it, so this is the one assertion that
-    /// the button beside the gear is wired.
-    /// </remarks>
-    [Fact]
-    public async Task TheButtonBesideTheGearOpensTheDialog()
-    {
-        Harness harness = new();
-
-        Assert.True(harness.ViewModel.OpenAboutCommand.CanExecute(null));
-
-        await harness.ViewModel.OpenAboutCommand.ExecuteAsync(null);
-
-        Assert.Equal(1, harness.Dialogs.AboutRequests);
-        Assert.Equal(0, harness.Dialogs.SettingsRequests);
-    }
-
-    /// <remarks>
-    /// Like every other button in the top bar, it waits for a run to finish: the dialog host is where a
-    /// run asks its questions, and About must not take it from one.
-    /// </remarks>
-    [Fact]
-    public async Task TheButtonIsUnavailableWhileARunIsInProgress()
-    {
-        Harness harness = new();
-        harness.FillEditor();
-
-        bool availableWhileRunning = true;
-
-        harness.Backups.Behaviour = (_, _, _, _, _) =>
-        {
-            availableWhileRunning = harness.ViewModel.OpenAboutCommand.CanExecute(null);
-
-            return Task.FromResult(Results.Backup());
-        };
-
-        await harness.ViewModel.BackupCommand.ExecuteAsync(null);
-
-        Assert.False(availableWhileRunning);
-        Assert.True(harness.ViewModel.OpenAboutCommand.CanExecute(null));
     }
 }

@@ -10,31 +10,28 @@ using Xunit;
 namespace Enigma.Backup.Desktop.Tests.ViewModels;
 
 /// <summary>The profile bar: what it lists, what it loads, and what it writes.</summary>
-public sealed class MainWindowViewModelProfileTests
+public sealed class ProfilesPageViewModelTests
 {
     [Fact]
-    public void Title_IsJustTheProductName_BeforeAnythingIsLoaded()
+    public void Status_SaysNothingIsLoaded_BeforeAnythingIs()
     {
         Harness harness = new();
 
-        Assert.Equal("Enigma.Backup", harness.ViewModel.Title);
-        Assert.Equal("No profile loaded.", harness.ViewModel.ProfileStatus);
+        Assert.Equal("No profile loaded.", harness.ProfilesPage.ProfileStatus);
     }
 
     [Fact]
-    public async Task Title_NamesTheProfileAndMarksUnsavedEdits()
+    public async Task Status_MarksUnsavedEdits()
     {
         Harness harness = new();
         harness.Profiles.Seed(Harness.Profile("Documents"));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
-        Assert.Equal("Enigma.Backup — Documents", harness.ViewModel.Title);
-        Assert.Equal("Saved.", harness.ViewModel.ProfileStatus);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
+        Assert.Equal("Saved.", harness.ProfilesPage.ProfileStatus);
 
-        harness.Editor.Encrypt = true;
+        harness.ProfileEditor.Encrypt = true;
 
-        Assert.Equal("Enigma.Backup — Documents *", harness.ViewModel.Title);
-        Assert.Equal("Unsaved changes.", harness.ViewModel.ProfileStatus);
+        Assert.Equal("Unsaved changes.", harness.ProfilesPage.ProfileStatus);
     }
 
     [Fact]
@@ -44,14 +41,14 @@ public sealed class MainWindowViewModelProfileTests
         harness.Profiles.Seed(Harness.Profile("Photos", inputs: ["/pics"]));
         harness.Profiles.Seed(Harness.Profile("Documents", inputs: ["/docs"]));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
 
         string[] expected = ["Documents", "Photos"];
 
-        Assert.Equal(expected, harness.ViewModel.ProfileNames);
-        Assert.Equal("Documents", harness.ViewModel.SelectedProfileName);
-        Assert.Equal("/docs", Assert.Single(harness.Editor.Inputs).Path);
-        Assert.False(harness.Editor.IsDirty);
+        Assert.Equal(expected, harness.ProfilesPage.ProfileNames);
+        Assert.Equal("Documents", harness.ProfilesPage.SelectedProfileName);
+        Assert.Equal("/docs", Assert.Single(harness.ProfileEditor.Inputs).Path);
+        Assert.False(harness.ProfileEditor.IsDirty);
     }
 
     [Fact]
@@ -59,10 +56,10 @@ public sealed class MainWindowViewModelProfileTests
     {
         Harness harness = new();
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
 
-        Assert.Empty(harness.ViewModel.ProfileNames);
-        Assert.Null(harness.ViewModel.SelectedProfileName);
+        Assert.Empty(harness.ProfilesPage.ProfileNames);
+        Assert.Null(harness.ProfilesPage.SelectedProfileName);
         Assert.Empty(harness.Dialogs.Messages);
     }
 
@@ -74,10 +71,10 @@ public sealed class MainWindowViewModelProfileTests
         harness.Profiles.Seed(Harness.Profile("Broken"));
         harness.Profiles.Unreadable.Add("Broken");
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
 
-        Assert.DoesNotContain("Broken", harness.ViewModel.ProfileNames);
-        Assert.Contains("Documents", harness.ViewModel.ProfileNames);
+        Assert.DoesNotContain("Broken", harness.ProfilesPage.ProfileNames);
+        Assert.Contains("Documents", harness.ProfilesPage.ProfileNames);
 
         (string _, string message, MessageSeverity severity) = Assert.Single(harness.Dialogs.Messages);
         Assert.Equal(MessageSeverity.Warning, severity);
@@ -91,12 +88,12 @@ public sealed class MainWindowViewModelProfileTests
         harness.Profiles.Seed(Harness.Profile("Documents", inputs: ["/docs"]));
         harness.Profiles.Seed(Harness.Profile("Photos", inputs: ["/pics"], compression: CompressionAlgorithm.Gzip));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
-        harness.ViewModel.SelectedProfileName = "Photos";
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
+        harness.ProfilesPage.SelectedProfileName = "Photos";
 
-        Assert.Equal("/pics", Assert.Single(harness.Editor.Inputs).Path);
-        Assert.Equal(CompressionAlgorithm.Gzip, harness.Editor.SelectedCompression.Value);
-        Assert.False(harness.Editor.IsDirty);
+        Assert.Equal("/pics", Assert.Single(harness.ProfileEditor.Inputs).Path);
+        Assert.Equal(CompressionAlgorithm.Gzip, harness.ProfileEditor.SelectedCompression.Value);
+        Assert.False(harness.ProfileEditor.IsDirty);
     }
 
     [Fact]
@@ -104,28 +101,28 @@ public sealed class MainWindowViewModelProfileTests
     {
         Harness harness = new();
 
-        Assert.False(harness.ViewModel.RenameProfileCommand.CanExecute(null));
-        Assert.False(harness.ViewModel.DeleteProfileCommand.CanExecute(null));
-        Assert.False(harness.ViewModel.ExportProfileCommand.CanExecute(null));
+        Assert.False(harness.ProfilesPage.RenameProfileCommand.CanExecute(null));
+        Assert.False(harness.ProfilesPage.DeleteProfileCommand.CanExecute(null));
+        Assert.False(harness.ProfilesPage.ExportProfileCommand.CanExecute(null));
 
-        Assert.True(harness.ViewModel.NewProfileCommand.CanExecute(null));
-        Assert.True(harness.ViewModel.SaveProfileCommand.CanExecute(null));
-        Assert.True(harness.ViewModel.SaveProfileAsCommand.CanExecute(null));
-        Assert.True(harness.ViewModel.ImportProfileCommand.CanExecute(null));
+        Assert.True(harness.ProfilesPage.NewProfileCommand.CanExecute(null));
+        Assert.True(harness.ProfilesPage.SaveProfileCommand.CanExecute(null));
+        Assert.True(harness.ProfilesPage.SaveProfileAsCommand.CanExecute(null));
+        Assert.True(harness.ProfilesPage.ImportProfileCommand.CanExecute(null));
     }
 
     [Fact]
     public async Task Save_AsksForANameWhenThereIsNoProfileYet()
     {
         Harness harness = new();
-        harness.FillEditor();
+        harness.FillProfileEditor();
         harness.Dialogs.ProfileNames.Enqueue("Documents");
 
-        await harness.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.SaveProfileCommand.ExecuteAsync(null);
 
         Assert.True(harness.Profiles.Contains("Documents"));
-        Assert.Equal("Documents", harness.ViewModel.SelectedProfileName);
-        Assert.False(harness.Editor.IsDirty);
+        Assert.Equal("Documents", harness.ProfilesPage.SelectedProfileName);
+        Assert.False(harness.ProfileEditor.IsDirty);
         Assert.Equal("/backups", harness.Profiles.Stored("Documents").OutputDirectory);
     }
 
@@ -133,12 +130,12 @@ public sealed class MainWindowViewModelProfileTests
     public async Task Save_WritesNothingWhenTheNamePromptIsCancelled()
     {
         Harness harness = new();
-        harness.FillEditor();
+        harness.FillProfileEditor();
 
-        await harness.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.SaveProfileCommand.ExecuteAsync(null);
 
         Assert.Equal(0, harness.Profiles.Count);
-        Assert.True(harness.Editor.IsDirty);
+        Assert.True(harness.ProfileEditor.IsDirty);
     }
 
     [Fact]
@@ -147,13 +144,13 @@ public sealed class MainWindowViewModelProfileTests
         Harness harness = new();
         harness.Profiles.Seed(Harness.Profile("Documents", inputs: ["/docs"]));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
-        harness.Editor.Encrypt = true;
-        await harness.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
+        harness.ProfileEditor.Encrypt = true;
+        await harness.ProfilesPage.SaveProfileCommand.ExecuteAsync(null);
 
         Assert.Empty(harness.Dialogs.ProfileNameRequests);
         Assert.True(harness.Profiles.Stored("Documents").Encrypt);
-        Assert.False(harness.Editor.IsDirty);
+        Assert.False(harness.ProfileEditor.IsDirty);
     }
 
     [Fact]
@@ -163,9 +160,9 @@ public sealed class MainWindowViewModelProfileTests
         harness.Profiles.Seed(Harness.Profile("Documents"));
         harness.Profiles.Seed(Harness.Profile("Photos"));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
         harness.Dialogs.ProfileNames.Enqueue("Documents copy");
-        await harness.ViewModel.SaveProfileAsCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.SaveProfileAsCommand.ExecuteAsync(null);
 
         ProfileNameRequest request = Assert.Single(harness.Dialogs.ProfileNameRequests);
         string[] expected = ["Documents", "Photos"];
@@ -173,7 +170,7 @@ public sealed class MainWindowViewModelProfileTests
         Assert.Equal(expected, request.TakenNames.Order(System.StringComparer.Ordinal));
         Assert.Equal("Documents", request.InitialName);
         Assert.True(harness.Profiles.Contains("Documents copy"));
-        Assert.Equal("Documents copy", harness.ViewModel.SelectedProfileName);
+        Assert.Equal("Documents copy", harness.ProfilesPage.SelectedProfileName);
     }
 
     [Fact]
@@ -183,16 +180,16 @@ public sealed class MainWindowViewModelProfileTests
         harness.Profiles.Seed(Harness.Profile("Documents"));
         harness.Profiles.Seed(Harness.Profile("Photos"));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
         harness.Dialogs.ProfileNames.Enqueue("Papers");
-        await harness.ViewModel.RenameProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RenameProfileCommand.ExecuteAsync(null);
 
         ProfileNameRequest request = Assert.Single(harness.Dialogs.ProfileNameRequests);
 
         Assert.Equal("Photos", Assert.Single(request.TakenNames));
         Assert.False(harness.Profiles.Contains("Documents"));
         Assert.True(harness.Profiles.Contains("Papers"));
-        Assert.Equal("Papers", harness.ViewModel.SelectedProfileName);
+        Assert.Equal("Papers", harness.ProfilesPage.SelectedProfileName);
     }
 
     [Fact]
@@ -201,9 +198,9 @@ public sealed class MainWindowViewModelProfileTests
         Harness harness = new();
         harness.Profiles.Seed(Harness.Profile("Documents"));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
         harness.Dialogs.ProfileNames.Enqueue("Documents");
-        await harness.ViewModel.RenameProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RenameProfileCommand.ExecuteAsync(null);
 
         Assert.DoesNotContain(harness.Profiles.Calls, call => call.StartsWith("Rename", System.StringComparison.Ordinal));
     }
@@ -214,14 +211,14 @@ public sealed class MainWindowViewModelProfileTests
         Harness harness = new();
         harness.Profiles.Seed(Harness.Profile("Documents"));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
-        await harness.ViewModel.DeleteProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.DeleteProfileCommand.ExecuteAsync(null);
 
         (string _, string _, string confirmLabel) = Assert.Single(harness.Dialogs.ConfirmationRequests);
 
         Assert.Equal("Delete", confirmLabel);
         Assert.True(harness.Profiles.Contains("Documents"));
-        Assert.Equal("Documents", harness.ViewModel.SelectedProfileName);
+        Assert.Equal("Documents", harness.ProfilesPage.SelectedProfileName);
     }
 
     [Fact]
@@ -230,14 +227,14 @@ public sealed class MainWindowViewModelProfileTests
         Harness harness = new();
         harness.Profiles.Seed(Harness.Profile("Documents", inputs: ["/docs"]));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
         harness.Dialogs.Confirmations.Enqueue(true);
-        await harness.ViewModel.DeleteProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.DeleteProfileCommand.ExecuteAsync(null);
 
         Assert.False(harness.Profiles.Contains("Documents"));
-        Assert.Null(harness.ViewModel.SelectedProfileName);
-        Assert.Empty(harness.ViewModel.ProfileNames);
-        Assert.Empty(harness.Editor.Inputs);
+        Assert.Null(harness.ProfilesPage.SelectedProfileName);
+        Assert.Empty(harness.ProfilesPage.ProfileNames);
+        Assert.Empty(harness.ProfileEditor.Inputs);
     }
 
     [Fact]
@@ -247,11 +244,11 @@ public sealed class MainWindowViewModelProfileTests
         harness.FilePicker.ProfileImports.Enqueue(Path.Combine("elsewhere", "Photos.json"));
         harness.Profiles.ImportResult = Harness.Profile("Photos", inputs: ["/pics"]);
 
-        await harness.ViewModel.ImportProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.ImportProfileCommand.ExecuteAsync(null);
 
         Assert.True(harness.Profiles.Contains("Photos"));
-        Assert.Equal("Photos", harness.ViewModel.SelectedProfileName);
-        Assert.Equal("/pics", Assert.Single(harness.Editor.Inputs).Path);
+        Assert.Equal("Photos", harness.ProfilesPage.SelectedProfileName);
+        Assert.Equal("/pics", Assert.Single(harness.ProfileEditor.Inputs).Path);
     }
 
     [Fact]
@@ -259,7 +256,7 @@ public sealed class MainWindowViewModelProfileTests
     {
         Harness harness = new();
 
-        await harness.ViewModel.ImportProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.ImportProfileCommand.ExecuteAsync(null);
 
         Assert.Empty(harness.Profiles.Calls);
     }
@@ -270,9 +267,9 @@ public sealed class MainWindowViewModelProfileTests
         Harness harness = new();
         harness.Profiles.Seed(Harness.Profile("Documents"));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
         harness.FilePicker.ProfileExports.Enqueue(Path.Combine("elsewhere", "Documents.json"));
-        await harness.ViewModel.ExportProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.ExportProfileCommand.ExecuteAsync(null);
 
         Assert.Equal("Documents.json", Assert.Single(harness.FilePicker.ExportSuggestions));
         Assert.Contains(harness.Profiles.Calls, call => call.StartsWith("Export:Documents", System.StringComparison.Ordinal));
@@ -282,11 +279,11 @@ public sealed class MainWindowViewModelProfileTests
     public async Task AStoreFailure_IsReportedAndChangesNothing()
     {
         Harness harness = new();
-        harness.FillEditor();
+        harness.FillProfileEditor();
         harness.Dialogs.ProfileNames.Enqueue("Documents");
         harness.Profiles.FailNextWrite = new IOException("The disk is full.");
 
-        await harness.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+        await harness.ProfilesPage.SaveProfileCommand.ExecuteAsync(null);
 
         (string title, string message, MessageSeverity severity) = Assert.Single(harness.Dialogs.Messages);
 
@@ -294,7 +291,7 @@ public sealed class MainWindowViewModelProfileTests
         Assert.Equal("The disk is full.", message);
         Assert.Equal(MessageSeverity.Error, severity);
         Assert.Equal(0, harness.Profiles.Count);
-        Assert.Null(harness.ViewModel.SelectedProfileName);
+        Assert.Null(harness.ProfilesPage.SelectedProfileName);
     }
 
     [Fact]
@@ -303,13 +300,13 @@ public sealed class MainWindowViewModelProfileTests
         Harness harness = new();
         harness.Profiles.Seed(Harness.Profile("Documents", inputs: ["/docs"]));
 
-        await harness.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
-        harness.ViewModel.NewProfileCommand.Execute(null);
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
+        harness.ProfilesPage.NewProfileCommand.Execute(null);
 
-        Assert.Null(harness.ViewModel.SelectedProfileName);
-        Assert.Empty(harness.Editor.Inputs);
+        Assert.Null(harness.ProfilesPage.SelectedProfileName);
+        Assert.Empty(harness.ProfileEditor.Inputs);
         Assert.True(harness.Profiles.Contains("Documents"));
-        Assert.Contains("Documents", harness.ViewModel.ProfileNames);
+        Assert.Contains("Documents", harness.ProfilesPage.ProfileNames);
     }
 
     [Fact]
@@ -317,15 +314,15 @@ public sealed class MainWindowViewModelProfileTests
     {
         Harness harness = new();
 
-        harness.ViewModel.AddDroppedInputs(["/a", "/b"]);
+        harness.ProfilesPage.AddDroppedInputs(["/a", "/b"]);
 
-        Assert.Equal(2, harness.Editor.Inputs.Count);
-        Assert.Equal("Added 2 inputs.", harness.ViewModel.StatusText);
+        Assert.Equal(2, harness.ProfileEditor.Inputs.Count);
+        Assert.Equal("Added 2 inputs.", harness.ProfilesPage.StatusText);
 
-        harness.ViewModel.AddDroppedInputs(["/a"]);
+        harness.ProfilesPage.AddDroppedInputs(["/a"]);
 
-        Assert.Equal(2, harness.Editor.Inputs.Count);
-        Assert.Equal("Nothing was added — those paths are already in the profile.", harness.ViewModel.StatusText);
+        Assert.Equal(2, harness.ProfileEditor.Inputs.Count);
+        Assert.Equal("Nothing was added — those paths are already in the profile.", harness.ProfilesPage.StatusText);
     }
 
     [Fact]
@@ -334,12 +331,11 @@ public sealed class MainWindowViewModelProfileTests
         Harness harness = new();
         harness.Dialogs.Patterns.Enqueue(new PatternInput("/var/log", "*.log"));
 
-        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
+        await harness.ProfileEditor.AddPatternCommand.ExecuteAsync(null);
 
-        InputItem only = Assert.Single(harness.Editor.Inputs);
+        InputItem only = Assert.Single(harness.ProfileEditor.Inputs);
         Assert.True(only.IsPattern);
         Assert.Equal("/var/log ▸ *.log", only.Display);
-        Assert.Equal("Added the pattern '*.log' under '/var/log'.", harness.ViewModel.StatusText);
     }
 
     [Fact]
@@ -347,23 +343,43 @@ public sealed class MainWindowViewModelProfileTests
     {
         Harness harness = new();
 
-        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
+        await harness.ProfileEditor.AddPatternCommand.ExecuteAsync(null);
 
         Assert.Equal(1, harness.Dialogs.PatternRequests);
-        Assert.Empty(harness.Editor.Inputs);
+        Assert.Empty(harness.ProfileEditor.Inputs);
     }
 
     [Fact]
-    public async Task AddPattern_SaysSoWhenTheProfileAlreadyHasThatPattern()
+    public async Task AddPattern_AddsAPatternTheProfileAlreadyHasOnlyOnce()
     {
         Harness harness = new();
         harness.Dialogs.Patterns.Enqueue(new PatternInput("/var/log", "*.log"));
         harness.Dialogs.Patterns.Enqueue(new PatternInput("/var/log", "*.log"));
 
-        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
-        await harness.ViewModel.AddPatternCommand.ExecuteAsync(null);
+        await harness.ProfileEditor.AddPatternCommand.ExecuteAsync(null);
+        await harness.ProfileEditor.AddPatternCommand.ExecuteAsync(null);
 
-        Assert.Single(harness.Editor.Inputs);
-        Assert.Equal("Nothing was added — that pattern is already in the profile.", harness.ViewModel.StatusText);
+        Assert.Single(harness.ProfileEditor.Inputs);
+        Assert.Equal(2, harness.Dialogs.PatternRequests);
+    }
+
+    /// <remarks>
+    /// The catalog is shared: a profile can leave it through a reload this page did not start. The
+    /// selection goes with it, and the editor is left as it was — nothing asked for it to be thrown away.
+    /// </remarks>
+    [Fact]
+    public async Task AProfileThatLeavesTheStore_IsDeselected_AndTheEditorIsKept()
+    {
+        Harness harness = new();
+        harness.Profiles.Seed(Harness.Profile("Documents", inputs: ["/docs"]));
+        await harness.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
+        harness.ProfileEditor.AddInputs(["/more"]);
+
+        await harness.Profiles.DeleteAsync("Documents", TestContext.Current.CancellationToken);
+        await harness.Catalog.ReloadAsync();
+
+        Assert.Null(harness.ProfilesPage.SelectedProfileName);
+        Assert.Equal(2, harness.ProfileEditor.Inputs.Count);
+        Assert.Equal("Not saved as a profile yet.", harness.ProfilesPage.ProfileStatus);
     }
 }

@@ -11,8 +11,8 @@ using Xunit;
 namespace Enigma.Backup.Desktop.Tests.ViewModels;
 
 /// <summary>
-/// The Settings dialog: the theme it opens on, what a choice does, where it says the app's files are,
-/// and the gear that raises it.
+/// The Settings page: the theme it opens on, what a choice does, where it says the app's files are, and
+/// the About dialog it is the only way to.
 /// </summary>
 /// <remarks>
 /// A theme choice applies and persists in the same step, so the two seams are asserted together — a
@@ -20,7 +20,7 @@ namespace Enigma.Backup.Desktop.Tests.ViewModels;
 /// was written but not painted is a click that appears to do nothing. The folder button is asserted
 /// against the launcher for the same reason: it has no other observable effect.
 /// </remarks>
-public sealed class SettingsDialogViewModelTests
+public sealed class SettingsPageViewModelTests
 {
     [Fact]
     public void ItOpensOnTheStoredTheme_AndTouchesNothing()
@@ -28,7 +28,7 @@ public sealed class SettingsDialogViewModelTests
         FakeAppSettingsStore store = new() { Stored = new AppSettings { Theme = AppTheme.Dark } };
         FakeThemeSwitcher themes = new();
 
-        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
+        SettingsPageViewModel viewModel = new(store, themes, new FakeShellLauncher(), new FakeDialogService());
 
         Assert.Equal(AppTheme.Dark, viewModel.SelectedTheme.Value);
         Assert.Equal(1, store.Loads);
@@ -42,7 +42,7 @@ public sealed class SettingsDialogViewModelTests
     [Fact]
     public void ItOpensOnTheSystemThemeWhenNothingIsStored()
     {
-        SettingsDialogViewModel viewModel = Build();
+        SettingsPageViewModel viewModel = Build();
 
         Assert.Equal(AppTheme.System, viewModel.SelectedTheme.Value);
         Assert.Equal("System", viewModel.SelectedTheme.Label);
@@ -53,7 +53,7 @@ public sealed class SettingsDialogViewModelTests
     {
         FakeAppSettingsStore store = new();
         FakeThemeSwitcher themes = new();
-        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
+        SettingsPageViewModel viewModel = new(store, themes, new FakeShellLauncher(), new FakeDialogService());
 
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Light);
 
@@ -68,7 +68,7 @@ public sealed class SettingsDialogViewModelTests
     {
         FakeAppSettingsStore store = new() { Stored = new AppSettings { Theme = AppTheme.Dark } };
         FakeThemeSwitcher themes = new();
-        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
+        SettingsPageViewModel viewModel = new(store, themes, new FakeShellLauncher(), new FakeDialogService());
 
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Dark);
 
@@ -81,7 +81,7 @@ public sealed class SettingsDialogViewModelTests
     {
         FakeAppSettingsStore store = new();
         FakeThemeSwitcher themes = new();
-        SettingsDialogViewModel viewModel = new(store, themes, new FakeShellLauncher());
+        SettingsPageViewModel viewModel = new(store, themes, new FakeShellLauncher(), new FakeDialogService());
 
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Dark);
         viewModel.SelectedTheme = ThemeOption.For(AppTheme.Light);
@@ -100,7 +100,7 @@ public sealed class SettingsDialogViewModelTests
     [Fact]
     public void TheDropDownOffersTheThreeThemesInOrder()
     {
-        SettingsDialogViewModel viewModel = Build();
+        SettingsPageViewModel viewModel = Build();
 
         AppTheme[] expected = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
 
@@ -116,7 +116,7 @@ public sealed class SettingsDialogViewModelTests
     public void ItNamesTheFolderTheAppsFilesAreKeptIn()
     {
         FakeAppSettingsStore store = new();
-        SettingsDialogViewModel viewModel = new(store, new FakeThemeSwitcher(), new FakeShellLauncher());
+        SettingsPageViewModel viewModel = new(store, new FakeThemeSwitcher(), new FakeShellLauncher(), new FakeDialogService());
 
         Assert.Equal(Path.GetDirectoryName(store.FilePath), viewModel.StorageFolder);
         Assert.Contains(viewModel.StorageFolder, viewModel.StorageDescription, StringComparison.Ordinal);
@@ -135,7 +135,7 @@ public sealed class SettingsDialogViewModelTests
         Directory.CreateDirectory(folder);
 
         FakeShellLauncher launcher = new();
-        SettingsDialogViewModel viewModel = Build(launcher, Path.Combine(folder, "settings.json"));
+        SettingsPageViewModel viewModel = Build(launcher, Path.Combine(folder, "settings.json"));
 
         await viewModel.OpenStorageFolderCommand.ExecuteAsync(null);
 
@@ -156,7 +156,7 @@ public sealed class SettingsDialogViewModelTests
         Assert.False(Directory.Exists(folder));
 
         FakeShellLauncher launcher = new();
-        SettingsDialogViewModel viewModel = Build(launcher, Path.Combine(folder, "settings.json"));
+        SettingsPageViewModel viewModel = Build(launcher, Path.Combine(folder, "settings.json"));
 
         await viewModel.OpenStorageFolderCommand.ExecuteAsync(null);
 
@@ -164,40 +164,39 @@ public sealed class SettingsDialogViewModelTests
         Assert.Equal(folder, Assert.Single(launcher.Folders));
     }
 
-    [Fact]
-    public void CloseAsksTheDialogToClose()
-    {
-        SettingsDialogViewModel viewModel = Build();
-        int closes = 0;
-
-        viewModel.CloseRequested += (_, _) => closes++;
-        viewModel.CloseCommand.Execute(null);
-
-        Assert.Equal(1, closes);
-    }
-
     /// <remarks>
-    /// The preferences are not part of the backup workflow, so the window has nothing to do with the
-    /// answer — it opens the dialog and that is all. This is the one assertion that the gear is wired.
+    /// About has no other way in: the gear and the ⓘ the window used to have are gone, so this is the one
+    /// assertion that it can still be reached.
     /// </remarks>
     [Fact]
-    public async Task TheGearInTheProfileBarOpensTheDialog()
+    public async Task AboutOpensFromThisPage()
     {
-        Harness harness = new();
+        FakeDialogService dialogs = new();
+        SettingsPageViewModel viewModel = new(new FakeAppSettingsStore(), new FakeThemeSwitcher(), new FakeShellLauncher(), dialogs);
 
-        Assert.True(harness.ViewModel.OpenSettingsCommand.CanExecute(null));
+        Assert.True(viewModel.OpenAboutCommand.CanExecute(null));
 
-        await harness.ViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        await viewModel.OpenAboutCommand.ExecuteAsync(null);
 
-        Assert.Equal(1, harness.Dialogs.SettingsRequests);
+        Assert.Equal(1, dialogs.AboutRequests);
+    }
+
+    [Fact]
+    public void TheAboutCardShowsTheRunningVersion()
+    {
+        SettingsPageViewModel viewModel = Build();
+
+        Assert.Equal(AppInfo.Version, viewModel.Version);
+        Assert.False(string.IsNullOrWhiteSpace(viewModel.Version));
     }
 
     /// <summary>A view model over fakes, optionally pointed at a settings file of the test's choosing.</summary>
     /// <param name="launcher">The launcher to record against, when the test cares.</param>
     /// <param name="settingsFilePath">The store's file, when the test needs a real folder behind it.</param>
-    private static SettingsDialogViewModel Build(FakeShellLauncher? launcher = null, string? settingsFilePath = null) =>
+    private static SettingsPageViewModel Build(FakeShellLauncher? launcher = null, string? settingsFilePath = null) =>
         new(
             settingsFilePath is null ? new FakeAppSettingsStore() : new FakeAppSettingsStore { FilePath = settingsFilePath },
             new FakeThemeSwitcher(),
-            launcher ?? new FakeShellLauncher());
+            launcher ?? new FakeShellLauncher(),
+            new FakeDialogService());
 }

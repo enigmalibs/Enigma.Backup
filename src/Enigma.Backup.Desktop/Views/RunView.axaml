@@ -1,0 +1,126 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="using:System"
+             xmlns:vm="using:Enigma.Backup.Desktop.ViewModels"
+             x:Class="Enigma.Backup.Desktop.Views.RunView"
+             x:DataType="vm:RunViewModel"
+             Focusable="True"
+             MinWidth="480">
+
+  <!-- Enter closes the dialog once the run is over. While it runs the command cannot execute, so Enter
+       does nothing — only the Cancel button stops a run. -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding CloseCommand}" />
+  </UserControl.KeyBindings>
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaForegroundSecondaryBrush}" />
+    </Style>
+    <Style Selector="TextBlock.headline.success">
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaSuccessBrush}" />
+    </Style>
+    <Style Selector="TextBlock.headline.warning">
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaWarningBrush}" />
+    </Style>
+    <Style Selector="TextBlock.headline.failure">
+      <Setter Property="Foreground" Value="{DynamicResource EnigmaErrorBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Panel>
+
+    <!-- While it runs: how far it has got. -->
+    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10" IsVisible="{Binding IsRunning}">
+
+      <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+        <ProgressBar Grid.Column="0"
+                     Minimum="0"
+                     Maximum="100"
+                     VerticalAlignment="Center"
+                     Value="{Binding Percent}"
+                     IsIndeterminate="{Binding IsIndeterminate}" />
+
+        <!-- A figure only once there is one to give: a scan does not know what it is a fraction of. -->
+        <TextBlock Grid.Column="1"
+                   Text="{Binding Percent, StringFormat='{}{0:N0} %'}"
+                   Classes="muted"
+                   MinWidth="44"
+                   TextAlignment="Right"
+                   IsVisible="{Binding !IsIndeterminate}" />
+      </Grid>
+
+      <TextBlock Grid.Row="1"
+                 Text="{Binding Message}"
+                 TextWrapping="Wrap"
+                 IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+      <TextBlock Grid.Row="2"
+                 Text="{Binding CurrentItem}"
+                 Classes="muted"
+                 FontSize="12"
+                 TextTrimming="CharacterEllipsis"
+                 ToolTip.Tip="{Binding CurrentItem}"
+                 IsVisible="{Binding CurrentItem, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+    </Grid>
+
+    <!-- Once it is over: how it ended, and what it did. The dialog's own title says how to read it. -->
+    <StackPanel Spacing="12" IsVisible="{Binding HasSummary}">
+
+      <TextBlock Text="{Binding Summary.Headline}"
+                 Classes="headline"
+                 Classes.success="{Binding Summary.IsSuccess}"
+                 Classes.warning="{Binding Summary.IsWarning}"
+                 Classes.failure="{Binding Summary.IsFailure}"
+                 FontWeight="SemiBold"
+                 TextWrapping="Wrap" />
+
+      <!-- The labels share one column as wide as the longest of them ("Encrypted contents"), so no
+           label runs into its value and the values still line up. -->
+      <ItemsControl ItemsSource="{Binding Summary.Details}"
+                    IsVisible="{Binding Summary.HasDetails}"
+                    Grid.IsSharedSizeScope="True">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:SummaryDetail">
+            <Grid ColumnSpacing="16" Margin="0,0,0,3">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="SummaryLabel" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" />
+              <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <StackPanel Spacing="4" IsVisible="{Binding Summary.HasSkipped}">
+        <TextBlock Text="{Binding Summary.SkippedHeader}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource EnigmaWarningBrush}" />
+        <ItemsControl ItemsSource="{Binding Summary.Skipped}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="sys:String">
+              <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,0,0,3" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <StackPanel Spacing="4" IsVisible="{Binding Summary.HasWarnings}">
+        <TextBlock Text="{Binding Summary.WarningsHeader}" FontWeight="SemiBold" />
+        <ItemsControl ItemsSource="{Binding Summary.Warnings}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="sys:String">
+              <SelectableTextBlock Text="{Binding}" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,3" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+    </StackPanel>
+
+  </Panel>
+
+</UserControl>

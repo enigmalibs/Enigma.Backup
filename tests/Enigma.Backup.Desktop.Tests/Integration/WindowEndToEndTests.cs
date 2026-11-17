@@ -22,8 +22,8 @@ namespace Enigma.Backup.Desktop.Tests.Integration;
 /// Everything here is the shipping wiring — the container built by <c>AddEnigmaBackupCore</c> and
 /// <c>AddEnigmaBackupDesktop</c>, the real profile store, the real streaming pipeline, real files on
 /// disk. Only the seams that would need a window on screen are replaced: the pickers answer with
-/// paths, the dialogs answer with a password, the run card and the outcome banner are recorded rather
-/// than drawn, and the dispatcher runs work where it stands. What is left untested is the click itself.
+/// paths, the dialogs answer with a password, the run dialog is recorded rather than drawn, and the
+/// dispatcher runs work where it stands. What is left untested is the click itself.
 /// </remarks>
 public sealed class WindowEndToEndTests
 {
@@ -50,20 +50,20 @@ public sealed class WindowEndToEndTests
 
         Fixture fixture = new(temp.Combine("profiles"));
 
-        // Build the profile the way the window does, then save it through the real store.
-        fixture.Editor.AddInputs([source]);
-        fixture.Editor.OutputDirectory = output;
-        fixture.Editor.SelectedCompression = CompressionOption.For(compression);
-        fixture.Editor.Encrypt = encrypt;
-        fixture.Editor.NewExcludeGlob = "**/build/**";
-        fixture.Editor.AddExcludeCommand.Execute(null);
+        // Build the profile the way the Profiles page does, then save it through the real store.
+        Describe(fixture.ProfileEditor, source, output, compression, encrypt);
 
         fixture.Dialogs.ProfileNames.Enqueue("Documents");
-        await fixture.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+        await fixture.ProfilesPage.SaveProfileCommand.ExecuteAsync(null);
 
         Assert.True(File.Exists(Path.Combine(fixture.ProfilesDirectory, "Documents.json")));
-        Assert.Equal("Documents", fixture.ViewModel.SelectedProfileName);
-        Assert.False(fixture.Editor.IsDirty);
+        Assert.Equal("Documents", fixture.ProfilesPage.SelectedProfileName);
+        Assert.False(fixture.ProfileEditor.IsDirty);
+
+        // Backed up from the Backup page, through the profile just saved — the first load of the store
+        // already chose that mode, because there is a profile to choose.
+        Assert.True(fixture.BackupPage.UseProfile);
+        fixture.BackupPage.SelectedProfileName = "Documents";
 
         // Back up.
         if (encrypt)
@@ -71,9 +71,9 @@ public sealed class WindowEndToEndTests
             fixture.Dialogs.Passwords.Enqueue("correct horse battery staple");
         }
 
-        await fixture.ViewModel.BackupCommand.ExecuteAsync(null);
+        await fixture.BackupPage.BackupCommand.ExecuteAsync(null);
 
-        RunSummary backup = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        RunSummary backup = Assert.IsType<RunSummary>(fixture.RunDialog.LastSummary);
         Assert.True(backup.IsSuccess, backup.Headline);
 
         string archive = Assert.Single(Directory.GetFiles(output), static path => !path.EndsWith(".sha256", StringComparison.Ordinal));
@@ -94,9 +94,9 @@ public sealed class WindowEndToEndTests
             fixture.Dialogs.Passwords.Enqueue("correct horse battery staple");
         }
 
-        await fixture.ViewModel.VerifyCommand.ExecuteAsync(null);
+        await fixture.VerifyRestorePage.VerifyCommand.ExecuteAsync(null);
 
-        RunSummary verification = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        RunSummary verification = Assert.IsType<RunSummary>(fixture.RunDialog.LastSummary);
         Assert.True(verification.IsSuccess, verification.Headline);
 
         if (encrypt)
@@ -114,9 +114,9 @@ public sealed class WindowEndToEndTests
             fixture.Dialogs.Passwords.Enqueue("correct horse battery staple");
         }
 
-        await fixture.ViewModel.RestoreCommand.ExecuteAsync(null);
+        await fixture.VerifyRestorePage.RestoreCommand.ExecuteAsync(null);
 
-        RunSummary restore = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        RunSummary restore = Assert.IsType<RunSummary>(fixture.RunDialog.LastSummary);
         Assert.True(restore.IsSuccess, restore.Headline);
 
         // What came back is what went in, minus what the profile excluded.
@@ -148,13 +148,13 @@ public sealed class WindowEndToEndTests
         Directory.CreateDirectory(output);
 
         Fixture fixture = new(temp.Combine("profiles"));
-        fixture.Editor.AddInputs([source]);
-        fixture.Editor.OutputDirectory = output;
-        fixture.Editor.Encrypt = true;
+        fixture.BackupEditor.AddInputs([source]);
+        fixture.BackupEditor.OutputDirectory = output;
+        fixture.BackupEditor.Encrypt = true;
 
         fixture.Dialogs.Passwords.Enqueue("the right one");
-        await fixture.ViewModel.BackupCommand.ExecuteAsync(null);
-        Assert.True(fixture.ViewModel.Summary?.IsSuccess);
+        await fixture.BackupPage.BackupCommand.ExecuteAsync(null);
+        Assert.True(fixture.RunDialog.LastSummary?.IsSuccess);
 
         string archive = Assert.Single(Directory.GetFiles(output), static path => !path.EndsWith(".sha256", StringComparison.Ordinal));
 
@@ -162,9 +162,9 @@ public sealed class WindowEndToEndTests
         // the password is wrong — and the core's message says exactly that.
         fixture.FilePicker.Archives.Enqueue(archive);
         fixture.Dialogs.Passwords.Enqueue("the wrong one");
-        await fixture.ViewModel.VerifyCommand.ExecuteAsync(null);
+        await fixture.VerifyRestorePage.VerifyCommand.ExecuteAsync(null);
 
-        RunSummary verification = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        RunSummary verification = Assert.IsType<RunSummary>(fixture.RunDialog.LastSummary);
         Assert.True(verification.IsFailure);
         Assert.Contains("the password is wrong", verification.Headline, StringComparison.Ordinal);
 
@@ -175,9 +175,9 @@ public sealed class WindowEndToEndTests
         fixture.FilePicker.Archives.Enqueue(archive);
         fixture.FilePicker.Folders.Enqueue(restored);
         fixture.Dialogs.Passwords.Enqueue("the wrong one");
-        await fixture.ViewModel.RestoreCommand.ExecuteAsync(null);
+        await fixture.VerifyRestorePage.RestoreCommand.ExecuteAsync(null);
 
-        Assert.True(fixture.ViewModel.Summary?.IsFailure);
+        Assert.True(fixture.RunDialog.LastSummary?.IsFailure);
         Assert.Empty(Directory.GetFileSystemEntries(restored));
     }
 
@@ -187,40 +187,40 @@ public sealed class WindowEndToEndTests
         using TempDirectory temp = new();
 
         Fixture fixture = new(temp.Combine("profiles"));
-        fixture.Editor.AddInputs([temp.Path]);
-        fixture.Editor.OutputDirectory = temp.Combine("out");
-        fixture.Editor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Gzip);
-        fixture.Editor.Encrypt = true;
-        fixture.Editor.NewExcludeGlob = "*.tmp";
-        fixture.Editor.AddExcludeCommand.Execute(null);
+        fixture.ProfileEditor.AddInputs([temp.Path]);
+        fixture.ProfileEditor.OutputDirectory = temp.Combine("out");
+        fixture.ProfileEditor.SelectedCompression = CompressionOption.For(CompressionAlgorithm.Gzip);
+        fixture.ProfileEditor.Encrypt = true;
+        fixture.ProfileEditor.NewExcludeGlob = "*.tmp";
+        fixture.ProfileEditor.AddExcludeCommand.Execute(null);
 
         fixture.Dialogs.ProfileNames.Enqueue("Documents");
-        await fixture.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+        await fixture.ProfilesPage.SaveProfileCommand.ExecuteAsync(null);
 
         // A second window over the same folder sees the same profile.
         Fixture reopened = new(fixture.ProfilesDirectory);
-        await reopened.ViewModel.RefreshProfilesCommand.ExecuteAsync(null);
+        await reopened.ProfilesPage.RefreshProfilesCommand.ExecuteAsync(null);
 
-        Assert.Equal("Documents", reopened.ViewModel.SelectedProfileName);
-        Assert.Equal(temp.Path, Assert.Single(reopened.Editor.Inputs).Path);
-        Assert.Equal(CompressionAlgorithm.Gzip, reopened.Editor.SelectedCompression.Value);
-        Assert.True(reopened.Editor.Encrypt);
-        Assert.Equal("*.tmp", Assert.Single(reopened.Editor.ExcludeGlobs));
+        Assert.Equal("Documents", reopened.ProfilesPage.SelectedProfileName);
+        Assert.Equal(temp.Path, Assert.Single(reopened.ProfileEditor.Inputs).Path);
+        Assert.Equal(CompressionAlgorithm.Gzip, reopened.ProfileEditor.SelectedCompression.Value);
+        Assert.True(reopened.ProfileEditor.Encrypt);
+        Assert.Equal("*.tmp", Assert.Single(reopened.ProfileEditor.ExcludeGlobs));
 
         // Exported to an arbitrary place, and imported back into a fresh store.
         string exported = temp.Combine("exported", "Documents.json");
         reopened.FilePicker.ProfileExports.Enqueue(exported);
-        await reopened.ViewModel.ExportProfileCommand.ExecuteAsync(null);
+        await reopened.ProfilesPage.ExportProfileCommand.ExecuteAsync(null);
 
         Assert.True(File.Exists(exported));
 
         Fixture elsewhere = new(temp.Combine("other-profiles"));
         elsewhere.FilePicker.ProfileImports.Enqueue(exported);
-        await elsewhere.ViewModel.ImportProfileCommand.ExecuteAsync(null);
+        await elsewhere.ProfilesPage.ImportProfileCommand.ExecuteAsync(null);
 
-        Assert.Equal("Documents", elsewhere.ViewModel.SelectedProfileName);
-        Assert.Equal("*.tmp", Assert.Single(elsewhere.Editor.ExcludeGlobs));
-        Assert.True(elsewhere.Editor.Encrypt);
+        Assert.Equal("Documents", elsewhere.ProfilesPage.SelectedProfileName);
+        Assert.Equal("*.tmp", Assert.Single(elsewhere.ProfileEditor.ExcludeGlobs));
+        Assert.True(elsewhere.ProfileEditor.Encrypt);
     }
 
     /// <remarks>
@@ -248,30 +248,33 @@ public sealed class WindowEndToEndTests
         Fixture fixture = new(temp.Combine("profiles"));
 
         // "*.log" is one level deep; "DirPrefix*" matches a folder's name and so takes the folder.
-        Assert.True(fixture.Editor.AddPatternInput(logs, "*.log"));
-        Assert.True(fixture.Editor.AddPatternInput(logs, "DirPrefix*"));
-        fixture.Editor.OutputDirectory = output;
+        foreach (ProfileEditorViewModel editor in new[] { fixture.ProfileEditor, fixture.BackupEditor })
+        {
+            Assert.True(editor.AddPatternInput(logs, "*.log"));
+            Assert.True(editor.AddPatternInput(logs, "DirPrefix*"));
+            editor.OutputDirectory = output;
+        }
 
         fixture.Dialogs.ProfileNames.Enqueue("Logs");
-        await fixture.ViewModel.SaveProfileCommand.ExecuteAsync(null);
+        await fixture.ProfilesPage.SaveProfileCommand.ExecuteAsync(null);
 
         // A profile that uses a 1.2.0 feature says so, and the older builds refuse it rather than read
         // it as less than it is.
         string profileJson = File.ReadAllText(Path.Combine(fixture.ProfilesDirectory, "Logs.json"));
         Assert.Contains("\"formatVersion\": 2", profileJson, StringComparison.Ordinal);
 
-        await fixture.ViewModel.BackupCommand.ExecuteAsync(null);
+        await fixture.BackupPage.BackupCommand.ExecuteAsync(null);
 
-        RunSummary backup = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        RunSummary backup = Assert.IsType<RunSummary>(fixture.RunDialog.LastSummary);
         Assert.True(backup.IsSuccess, backup.Headline);
 
         string archive = Assert.Single(Directory.GetFiles(output), static path => !path.EndsWith(".sha256", StringComparison.Ordinal));
 
         fixture.FilePicker.Archives.Enqueue(archive);
         fixture.FilePicker.Folders.Enqueue(restored);
-        await fixture.ViewModel.RestoreCommand.ExecuteAsync(null);
+        await fixture.VerifyRestorePage.RestoreCommand.ExecuteAsync(null);
 
-        RunSummary restore = Assert.IsType<RunSummary>(fixture.ViewModel.Summary);
+        RunSummary restore = Assert.IsType<RunSummary>(fixture.RunDialog.LastSummary);
         Assert.True(restore.IsSuccess, restore.Headline);
 
         // The second pattern over the same folder gets its own top-level name rather than merging.
@@ -283,6 +286,17 @@ public sealed class WindowEndToEndTests
 
         Assert.Equal(expected, ReadTree(restored).Keys.Order(StringComparer.Ordinal));
         Assert.Empty(fixture.Dialogs.Messages);
+    }
+
+    /// <summary>Fills an editor the way a user would: one folder, an output, the options and an exclude.</summary>
+    private static void Describe(ProfileEditorViewModel editor, string source, string output, CompressionAlgorithm compression, bool encrypt)
+    {
+        editor.AddInputs([source]);
+        editor.OutputDirectory = output;
+        editor.SelectedCompression = CompressionOption.For(compression);
+        editor.Encrypt = encrypt;
+        editor.NewExcludeGlob = "**/build/**";
+        editor.AddExcludeCommand.Execute(null);
     }
 
     private static Dictionary<string, byte[]> ReadTree(string root)
@@ -306,14 +320,13 @@ public sealed class WindowEndToEndTests
 
             ServiceCollection services = [];
 
-            // Registered before the two extensions, whose TryAdd calls then stand down. The overlay and
-            // the notification banner are among them because the real ones reach for host controls that
-            // only exist once a window has been shown.
+            // Registered before the two extensions, whose TryAdd calls then stand down. The run dialog
+            // is among them because the real one draws on a host control that only exists once a window
+            // has been shown.
             services.AddSingleton<IProfileStore>(new ProfileStore(profilesDirectory));
             services.AddSingleton<IFilePicker>(FilePicker);
             services.AddSingleton<IDialogService>(Dialogs);
-            services.AddSingleton<IProgressOverlay>(Overlay);
-            services.AddSingleton<INotificationService>(Notifications);
+            services.AddSingleton<IRunDialog>(RunDialog);
             services.AddSingleton<IUiDispatcher>(new ImmediateUiDispatcher());
 
             // Nothing in these flows opens a folder or a link, but the real launcher is one more seam
@@ -330,8 +343,12 @@ public sealed class WindowEndToEndTests
 
             ServiceProvider provider = services.BuildServiceProvider();
 
-            ViewModel = provider.GetRequiredService<MainWindowViewModel>();
-            Editor = ViewModel.Editor;
+            Shell = provider.GetRequiredService<MainWindowViewModel>();
+            BackupPage = Shell.BackupPage;
+            VerifyRestorePage = Shell.VerifyRestorePage;
+            ProfilesPage = Shell.ProfilesPage;
+            BackupEditor = BackupPage.Single;
+            ProfileEditor = ProfilesPage.Editor;
         }
 
         public string ProfilesDirectory { get; }
@@ -340,14 +357,22 @@ public sealed class WindowEndToEndTests
 
         public FakeDialogService Dialogs { get; } = new();
 
-        public FakeProgressOverlay Overlay { get; } = new();
-
-        public FakeNotificationService Notifications { get; } = new();
+        public FakeRunDialog RunDialog { get; } = new();
 
         public FakeShellLauncher Launcher { get; } = new();
 
-        public MainWindowViewModel ViewModel { get; }
+        public MainWindowViewModel Shell { get; }
 
-        public ProfileEditorViewModel Editor { get; }
+        public BackupPageViewModel BackupPage { get; }
+
+        public VerifyRestorePageViewModel VerifyRestorePage { get; }
+
+        public ProfilesPageViewModel ProfilesPage { get; }
+
+        /// <summary>The Backup page's one-off backup.</summary>
+        public ProfileEditorViewModel BackupEditor { get; }
+
+        /// <summary>The profile the Profiles page is editing.</summary>
+        public ProfileEditorViewModel ProfileEditor { get; }
     }
 }

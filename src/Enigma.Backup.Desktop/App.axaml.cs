@@ -75,15 +75,14 @@ public partial class App : Application
             // if this is skipped. The hosts' z-order is fixed in MainWindow.axaml, not here.
             IServiceProvider services = _host.Services;
             services.GetRequiredService<IContentDialogService>().RegisterHost(window.HostDialog);
-            services.GetRequiredService<IOverlayService>().RegisterHost(window.HostOverlay);
-            services.GetRequiredService<IInfoBarService>().RegisterHost(window.HostInfoBar);
             services.GetRequiredService<IFileDialogService>().SetStorageProvider(window.StorageProvider);
             services.GetRequiredService<IFolderDialogService>().SetStorageProvider(window.StorageProvider);
 
-            // Ours, wired the same way and for the same reason: a launcher belongs to a window, and
-            // there is none until this point. Resolved as the concrete type, because the seam the view
-            // models see names no Avalonia type at all.
+            // Ours, wired the same way and for the same reason: a launcher belongs to a window, and a
+            // run dialog to its host, and there is neither until this point. Resolved as the concrete
+            // types, because the seams the view models see name no Avalonia type at all.
             services.GetRequiredService<ShellLauncher>().SetTopLevel(window);
+            services.GetRequiredService<RunDialog>().SetHost(window.HostRunDialog);
 
             // The stored theme, applied before the window is shown so the app never opens in one
             // variant and repaints into the other. A missing or unreadable settings file leaves the

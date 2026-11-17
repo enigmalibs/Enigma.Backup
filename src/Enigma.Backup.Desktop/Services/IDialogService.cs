@@ -61,13 +61,6 @@ public interface IDialogService
     Task ShowMessageAsync(string title, string message, MessageSeverity severity, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Shows the app's preferences. Nothing comes back: every choice in there applies — and is
-    /// written out — the moment it is made, so the dialog is closed rather than accepted.
-    /// </summary>
-    /// <param name="cancellationToken">Closes the dialog without waiting for the user.</param>
-    Task ShowSettingsAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Says what this app is and which build of it is running — the About dialog every Enigma app
     /// shows. Nothing comes back: it asks nothing.
     /// </summary>
